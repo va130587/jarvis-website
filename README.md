@@ -1,82 +1,96 @@
-# Jarvis — my personal chief of staff
+# Jarvis
 
-Jarvis helps me keep every promise I make at work, build my case for promotion, and track my path to a CTO or CEO role.
+Jarvis is a free personal assistant website for Roshan. You can talk to it, like Siri, and it talks back.
 
-**Live app:** https://va130587.github.io/jarvis-website/
-**Blueprint presentation:** https://va130587.github.io/jarvis-website/blueprint/
+It helps you keep your promises, grow your skills, and track jobs, projects and courses.
 
-This is **version 1**. It runs in the web browser. It needs no account, no server and no AI key.
+- **Live app:** https://va130587.github.io/jarvis-website/
+- **Blueprint:** https://va130587.github.io/jarvis-website/blueprint/
 
-## What each screen does
+It is free. It needs **no account, no API key and no paid service**. It runs in your web browser.
 
-| Screen | What it is for |
+## What Jarvis does
+
+| Screen | What it shows |
 | --- | --- |
-| **Today** | Your morning brief: overdue items in red, what's due today and this week, your next career action, drafts waiting for approval and your best-fit role. |
-| **Commitments** | Every promise you make: what, to whom, by when, and where you said it. Type a sentence like *"I'll send the vendor comparison to Sara by Thursday"* in **Quick capture**. Jarvis fills in the details for you to check. |
-| **Promotion** | Your current level, the next level, and the criteria your company uses. Log wins, metrics and praise as evidence against each criterion. A criterion turns red when it has had no new evidence for 6 weeks. |
-| **Career radar** | CTO, VP Engineering and CEO roles you are watching, moved through stages: Interested → Applied → Interviewing → Offer. Each role gets a fit score from your own scoring rules. |
-| **Weekly review** | Every Friday: wins this week, promises kept, what slipped, the promotion gap that hasn't moved, and one suggested next step. |
-| **Approvals** | Messages to approve, edit or reject before they go out in your name. You add drafts yourself today. In version 2, AI writes them. |
-| **My profile** | Your career goal, non-negotiables, strengths, gaps, and your people map (manager, sponsors, mentors, key peers). |
-| **Blueprint** | The presentation explaining the full Jarvis architecture. |
+| **Today** | The glowing core, your greeting, how many promises are overdue, due today and due this week, and one suggested next step. |
+| **Commitments** | Your promises: what, to whom and by when. Type a sentence like *"I'll send the report to Omar by Friday"* in **Quick capture**. Jarvis finds the person and the date. |
+| **Growth** | Your goal, the skills you are building, and a log of your wins. A skill turns **red** after 6 weeks with no new win. |
+| **Opportunities** | Jobs, projects and courses. Each one has a match score and moves through four stages: Interested, Applied, In progress, Done. Amounts are shown in AED. |
+| **Weekly review** | Your wins this week, promises kept, what slipped, and one next step. |
+| **Approvals** | Draft messages. You can approve, edit or reject each one. Approving copies the text so you can paste and send it yourself. |
+| **My profile** | Your name, goal, strengths and important people. Voice settings and your data are here too. |
+| **Blueprint** | A link to the presentation in the `blueprint/` folder. |
+
+The first time you open Jarvis, it shows **sample data** marked with a gold "Sample" label. Click **Clear sample data** to remove it and start with your own.
 
 ## Talking to Jarvis
 
-Tap the glowing core, click **Talk to Jarvis**, or press **J** on your keyboard, then speak. The first time, your browser asks to use the microphone. Click **Allow**.
+To talk, do one of these:
 
-- **"Hey Jarvis" mode:** open the voice panel (the small orb at the bottom right) and switch on **"Hey Jarvis"**. While the page is open, say "Hey Jarvis" and then your request.
-- **Typing works too:** use the box on the Today screen or in the voice panel.
-- **Best browsers:** Chrome or Edge on a computer, and Chrome or Safari on a phone. Firefox can't listen, so type there instead.
+- Tap the glowing core on the Today screen.
+- Click **Talk to Jarvis**.
+- Press **J** on your keyboard.
 
-Things you can say:
+The first time, your browser asks to use the microphone. Click **Allow**.
+
+To stop Jarvis talking, say **"stop"**, tap the core, or press **Esc**.
+
+**Chat panel:** tap the small orb at the bottom right. It shows the conversation and has a box to type in, if you prefer typing.
+
+**"Hey Jarvis" mode:** switch it on in the chat panel or in My profile. While the page is open, say "Hey Jarvis" and then your request, for example "Hey Jarvis, what's due today?" If you just say "Hey Jarvis", it answers "Yes?" and waits for your request.
+
+**The core changes colour:** calm blue when idle, brighter and faster when listening, and gold when speaking.
+
+### Things you can say
 
 | Say | What Jarvis does |
 | --- | --- |
-| "Brief me" / "Good morning" | Reads your day: overdue items, what's due, drafts waiting, career focus |
-| "What's overdue?" / "What's coming up this week?" | Lists your commitments |
-| "Remind me to send the report to Omar by Friday" | Adds a commitment with the person and date |
-| "Mark the vendor comparison as done" | Finds the commitment and completes it |
-| "Log a win: cut cloud costs by 12 percent" | Adds promotion evidence under the right criterion |
-| "What's my next career step?" | Your biggest promotion gap and what to do about it |
-| "Any good jobs?" | Your best-fit role and interviews in progress |
-| "Open promotion" / "Show approvals" | Opens that screen |
-| "What time is it?" / "What can you do?" / "Stop" | The basics |
+| "Brief me" or "Good morning" | Reads your day: overdue items, what's due, drafts waiting, and your next step |
+| "What's overdue?" | Lists overdue promises |
+| "What's due today?" | Lists today's promises |
+| "What's coming up this week?" | Lists promises due by Friday |
+| "Remind me to send the report to Omar by Friday" | Adds a promise with the person and date |
+| "Mark the vendor comparison as done" | Finds the promise and completes it |
+| "Log a win: cut cloud costs by 12 percent" | Adds the win to your Growth log |
+| "What's my next step?" | Suggests the one thing to do next |
+| "Add opportunity Head of Engineering at Acme" | Adds it to Opportunities with a match score |
+| "Open growth" / "Show approvals" | Opens that screen |
+| "What time is it?" / "What's the date?" | Tells you, in Dubai time |
+| "How was my week?" | Reads your weekly review |
+| "What can you do?" | Lists what Jarvis understands |
+| "Stop" | Stops Jarvis talking |
 
-In version 1, Jarvis understands these set commands; it isn't a free conversation yet. Version 2 adds Claude AI, so you can ask anything.
+You can use your own words. For example, "what's late", "anything due today" and "catch me up" also work. Dates like "tomorrow", "Thursday", "next Monday", "end of the week", "in 3 days", "20 Oct" and "3/11" (day/month) are understood.
 
-**Privacy:** in Chrome and Edge, the browser sends your voice to its speech service to turn it into text. Your Jarvis data still stays on your device.
+If Jarvis doesn't understand, it tells you politely what it can do. Jarvis follows set commands. It is not a free-chat AI.
 
-## How to start
+**Best browsers:** Chrome or Edge on a computer, and Chrome or Safari on a phone. Firefox can't listen, so type in the chat panel instead. Jarvis picks a calm British English male voice if your device has one. You can choose another voice in My profile.
 
-1. Open the live app. It first shows **sample data** so you can see how it works.
-2. Click **Clear sample data**.
-3. Fill in **My profile**.
-4. In **Promotion**, click **Edit levels and criteria** and paste the criteria from your company's career framework, one per line.
-5. Each day, capture promises as you make them. Each Friday, open **Weekly review**.
+## UAE settings
 
-## Where my data is stored
+- All dates and times use the **Asia/Dubai** time zone.
+- The weekend is **Saturday and Sunday**, so "end of the week" means **Friday**.
+- Money is shown in **AED**.
 
-- Everything is saved **only in this browser, on this device**. Nothing is sent anywhere.
-- Clearing your browser data deletes it. Use **Export backup** regularly to download a copy.
-- To move to another computer or phone, export a backup there and use **Import backup**.
-- Don't type confidential company information into it unless your employer allows it.
+## Privacy
 
-## Version 2 plan
+- Your data is saved **only in this browser, on this device** (in "local storage"). Jarvis has no server and sends your data nowhere.
+- Clearing your browser data deletes it. Use **Export backup** often to download a copy.
+- To move to another device, export a backup and use **Import backup** there.
+- **Voice note:** in Chrome and Edge, the browser itself turns your speech into text using its own speech service, so your spoken words go to that service. Your Jarvis data still stays on your device. If you prefer, type instead.
 
-1. **Connect Outlook and Teams** (Microsoft Graph, read-only at first). Jarvis will find promises in your email and chat automatically and fill the Today screen from your calendar.
-2. **Add Claude AI drafting.** Jarvis will write replies in your voice and put them in Approvals. Nothing is sent without your approval.
-3. **Scheduled morning brief.** A summary emailed or sent in Teams every weekday morning.
-4. **Job feeds.** New roles at your target companies pulled from their public careers pages.
-5. **Secure storage.** Data moves from the browser to a private cloud database, with sign-in.
+## Accessibility
 
-See the Blueprint for the full architecture.
+- Everything works with the keyboard. Press **Tab** to move and **Enter** to choose.
+- If "reduce motion" is switched on in your device settings, Jarvis turns off all animation, including the start-up screen.
 
 ## Files
 
-- `index.html`, `app.css`, `app.js`: the Jarvis app (plain HTML, CSS and JavaScript, no build step)
-- `voice.js`: voice commands, spoken replies, the animated core, background and boot sequence
-- `blueprint/index.html`: the architecture presentation
+- `index.html`: the page structure
+- `app.css`: the design
+- `app.js`: data, dates and the screens
+- `voice.js`: listening, speaking, the chat panel, the animated core, the background and the start-up screen
+- `blueprint/`: the presentation (unchanged)
 
-## Note
-
-This is planning guidance, not legal advice. Check your employment contract and local data-protection rules before connecting work systems to a personal tool.
+There is no build step. To run it on your computer, open the folder with any simple web server, for example `python3 -m http.server`, then visit http://localhost:8000. It also runs free on GitHub Pages.
