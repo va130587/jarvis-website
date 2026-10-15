@@ -123,7 +123,7 @@
       cfg.onSave(vals);
     });
     $('#dialogCancel').addEventListener('click', J.closeForm);
-    $('#formDialog').addEventListener('close', function () { dialogCfg = null; });
+    $('#formDialog').addEventListener('close', function () { if (!this.open) dialogCfg = null; }); // a dialog opened right after another one closed keeps its settings
   }
   // Promise-based confirmation dialog.
   J.confirm = function (text, okLabel, title) {
@@ -549,7 +549,7 @@
             '<div class="field"><label for="pDegree">Degree</label><input id="pDegree" type="text" value="' + val('degree') + '" placeholder="BSc Computer Science"></div>' +
             '<div class="field"><label for="pField">Field of study</label><input id="pField" type="text" value="' + val('field') + '" placeholder="Computer Science"></div>' +
             '<div class="field"><label for="pUni">University</label><input id="pUni" type="text" value="' + val('university') + '"></div>' +
-            '<div class="field"><label for="pSkills">Skills</label><input id="pSkills" type="text" value="' + esc(J.skillsString ? J.skillsString(p) : p.skills.join(', ')) + '" placeholder="Python (advanced), SQL, Excel"><small>Comma separated. Add a level in brackets if you like: beginner, working, advanced. Used for job match scores.</small></div>' +
+            '<div class="field"><label for="pSkills">Skills</label><input id="pSkills" type="text" value="' + esc(J.skillsString ? J.skillsString(p) : p.skills.join(', ')) + '" placeholder="Python (strong), SQL, Excel"><small>Comma separated. Add a level in brackets if you like: beginner, working, strong. Used for job match scores.</small></div>' +
             '<div class="field"><label for="pLang">Languages</label><input id="pLang" type="text" value="' + val('languages') + '" placeholder="English, Arabic"></div>' +
             '<div class="field"><label for="pTitles">Desired job titles</label><input id="pTitles" type="text" value="' + val('titles') + '" placeholder="Data Analyst, Software Engineer"><small>Used for one-click job searches.</small></div>' +
             '<div class="field"><label for="pGoal">Career goal</label><input id="pGoal" type="text" value="' + val('goal') + '"></div>' +

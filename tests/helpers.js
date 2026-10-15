@@ -182,13 +182,16 @@ async function openApp(browser, opts) {
       Date = class extends RealDate { constructor(...a) { if (a.length) super(...a); else super(RealDate.now() + offset); } static now() { return RealDate.now() + offset; } };
     }
     (0, eval)(speech);
+    if (init.extra) (0, eval)(init.extra);
     if (init.fakeGis) (0, eval)(gis);
-  }, [FAKE_SPEECH, FAKE_GIS, { data: opts.data || null, now: opts.now || null, fakeGis: opts.realGis ? false : true }]);
+  }, [FAKE_SPEECH, FAKE_GIS, { data: opts.data || null, now: opts.now || null, fakeGis: opts.realGis ? false : true, extra: opts.init || '' }]);
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   if (!opts.realGis) await ctx.route('https://accounts.google.com/gsi/client', r => r.fulfill({ status: 200, contentType: 'text/javascript', body: '/* fake GIS already installed */' }));
   await ctx.route(/https:\/\/www\.googleapis\.com\/calendar\/v3\//, googleApi(google));
   await ctx.route(/\/vendor\/msal-browser-[\d.]+\.min\.js$/, r => r.fulfill({ status: 200, contentType: 'text/javascript', body: FAKE_MSAL }));
   await ctx.route(/https:\/\/graph\.microsoft\.com\//, graphApi(graph));
+  // opts.jobs: the collected data/jobs.json the page should see (an object, or a function returning one so a test can change it later).
+  if (opts.jobs) await ctx.route(/\/data\/jobs\.json/, r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(typeof opts.jobs === 'function' ? opts.jobs() : opts.jobs) }));
   await ctx.route(/boards-api|api\.lever\.co|api\.ashbyhq\.com|api\.open-meteo\.com/, r => r.abort());
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));

@@ -348,7 +348,7 @@
   /** Skills that would open the most jobs: [{ id, name, count, links }] */
   function skillGaps(results) {
     var count = {};
-    results.forEach(function (r) { if (r.verdict === 'no') return; r.missingIds.forEach(function (id) { count[id] = (count[id] || 0) + 1; }); });
+    results.forEach(function (r) { r = r.eval || r; if (r.verdict === 'no') return; r.missingIds.forEach(function (id) { count[id] = (count[id] || 0) + 1; }); });
     return Object.keys(count).map(function (id) { return { id: id, name: BY_ID[id].name, count: count[id], links: BY_ID[id].learn.map(function (l) { return { title: l[0], url: l[1] }; }) }; })
       .sort(function (a, b) { return b.count - a.count || a.name.localeCompare(b.name); });
   }
