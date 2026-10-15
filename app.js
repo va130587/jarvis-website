@@ -51,7 +51,8 @@
     right: '<path d="M9 6l6 6-6 6"/>',
     open: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
-    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>'
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+    cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M12 13v5M9.5 15.5h5"/>'
   };
   J.ICON = ICON;
   J.iconBtn = function (act, id, label, icon, cls) {
@@ -81,6 +82,7 @@
     dialogCfg = cfg;
     $('#formTitle').textContent = cfg.title;
     $('#dialogSave').textContent = cfg.submit || 'Save';
+    $('#dialogCancel').hidden = !!cfg.hideCancel; // information-only dialogs need just one button
     $('#formError').textContent = '';
     $('#dialogFields').innerHTML = cfg.fields.map(fieldHTML).join('');
     if (typeof dlg.showModal === 'function') { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
@@ -239,6 +241,15 @@
       var seen = {};
       var agenda = soon.concat(timed).filter(function (x) { var k = x.date + x.text; if (seen[k]) return false; seen[k] = 1; return true; })
         .sort(function (a, b) { return (a.date + (a.time || '99')).localeCompare(b.date + (b.time || '99')); }).slice(0, 6);
+      if (J.cal) {
+        // Calendar events (Google, Outlook, .ics) in the next 7 days join the agenda.
+        var evMap = J.cal.itemsByDay(t, J.addDays(t, 7));
+        Object.keys(evMap).forEach(function (dd) { evMap[dd].forEach(function (it) { if (it.kind === 'event' && !it.cont && (it.allDay || it.endTs > Date.now())) agenda.push({ date: dd, time: it.allDay ? '' : it.time, text: it.title, kind: 'event', source: it.source }); }); });
+        agenda.sort(function (a, b) { return (a.date + (a.time || '99')).localeCompare(b.date + (b.time || '99')); });
+        agenda = agenda.slice(0, 6);
+      }
+      var nx = J.cal ? J.cal.next() : null;
+      var nextLine = nx ? '<p class="next-event"><span class="dot" style="background:' + esc(nx.color || 'var(--gold)') + '"></span>Next: <b>' + esc(nx.title) + '</b> ' + esc(nx.date === t ? 'at ' + J.fmtTime(nx.time) : J.when(nx.date, nx.time)) + ' <span class="muted">· ' + esc(nx.source) + '</span></p>' : '';
       var newJobs = J.jobs ? J.jobs.newJobs() : [];
       var hasCache = J.jobs && J.jobs.cache();
       return '<section class="hero">' +
@@ -247,7 +258,7 @@
           '<div>' +
             '<p class="eyebrow">' + esc(J.longDate(t)) + ' · Dubai</p>' +
             '<h1 class="greet" data-decode>' + esc(greeting()) + ', ' + esc(name) + '</h1>' +
-            '<p class="lead">' + esc(line) + '</p>' +
+            '<p class="lead">' + esc(line) + '</p>' + nextLine +
             '<div class="btn-row"><button type="button" class="btn primary" data-act="talk"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.mic + '</svg>Talk to Jarvis</button>' +
             '<button type="button" class="btn" data-act="say" data-say="brief me">Brief me</button></div>' +
             '<p class="hint">Tap the core, press <kbd>J</kbd>' + (J.data.settings.wake ? ' or say <q>Hey Jarvis</q>' : '') + '. Try <q>what\'s due today</q>.</p>' +
@@ -262,10 +273,10 @@
         '</div>' +
         '<div class="grid-3">' +
           '<article class="panel' + (ns.tone === 'red' ? ' red' : ' gold') + '"><h2 class="label">Suggested next step</h2><p class="next-text">' + esc(ns.text) + '</p><a class="btn small" href="#' + ns.view + '">' + esc(ns.label) + '</a></article>' +
-          '<article class="panel"><div class="panel-head"><h2 class="label">Deadlines &amp; reminders</h2><a class="btn small ghost" href="#calendar">Calendar</a></div>' +
+          '<article class="panel"><div class="panel-head"><h2 class="label">Agenda &amp; deadlines</h2><a class="btn small ghost" href="#calendar">Calendar</a></div>' +
             (agenda.length ? '<ul class="mini-list">' + agenda.map(function (x) {
               return '<li><span class="when">' + esc(J.dueLabel(x.date, x.time)) + '</span><span class="what">' + esc(x.text) + '<small>' + esc(x.kind === 'interview' ? 'Interview' : x.kind === 'deadline' ? 'Application deadline' : x.kind === 'reminder' ? 'Reminder' : 'High priority') + '</small></span></li>';
-            }).join('') + '</ul>' : J.empty('No deadlines or timed reminders in the next 7 days.')) +
+            }).join('') + '</ul>' : J.empty('Nothing on your calendar, and no deadlines or timed reminders, in the next 7 days.')) +
           '</article>' +
           '<article class="panel"><div class="panel-head"><h2 class="label">New jobs found</h2><a class="btn small ghost" href="#jobs">Job finder</a></div>' +
             (newJobs.length ? '<p class="small-text muted" style="margin:0 0 8px"><b class="gold-text">' + newJobs.length + '</b> new fresher-friendly ' + (newJobs.length === 1 ? 'role' : 'roles') + ' since you last looked.</p><ul class="mini-list">' + newJobs.slice(0, 3).map(function (j) {
@@ -289,7 +300,7 @@
         '<span class="due">' + (x.status === 'done' ? 'Done' + (x.doneOn ? ' ' + esc(J.fmt(x.doneOn)) : '') : esc(J.dueLabel(x.due, x.time))) + '</span>' +
         (x.priority === 'high' ? J.tag('High', 'gold') : x.priority === 'low' ? J.tag('Low', 'dim') : '') +
         (x.status === 'doing' ? J.tag('In progress') : '') + kind + J.sampleTag(x) +
-      '</p></div><div class="item-actions">' + J.iconBtn('editTask', x.id, 'Edit task: ' + x.title, 'edit') + J.iconBtn('delTask', x.id, 'Delete task: ' + x.title, 'del', 'del') + '</div></li>';
+      '</p></div><div class="item-actions">' + (x.due && x.status !== 'done' ? J.iconBtn('calAdd', x.id, 'Add to Google, Outlook or Apple calendar: ' + x.title, 'cal') : '') + J.iconBtn('editTask', x.id, 'Edit task: ' + x.title, 'edit') + J.iconBtn('delTask', x.id, 'Delete task: ' + x.title, 'del', 'del') + '</div></li>';
   }
   J.taskRow = taskRow;
   J.screens.tasks = {
@@ -335,8 +346,15 @@
         { name: 'priority', label: 'Priority', type: 'select', options: PRI, value: x ? x.priority : (preset.priority || 'medium'), half: true },
         { name: 'due', label: 'Due date', type: 'date', value: x ? x.due : preset.due, half: true },
         { name: 'time', label: 'Time (reminder)', type: 'time', value: x ? x.time : preset.time, half: true, hint: 'Jarvis reminds you at this time while the site is open.' },
-        { name: 'status', label: 'Status', type: 'select', options: STATUS, value: x ? x.status : 'todo' }
+        { name: 'status', label: 'Status', type: 'select', options: STATUS, value: x ? x.status : 'todo' },
+        { type: 'html', html: '<p class="form-warn" id="clashWarn" aria-live="polite"></p>' }
       ],
+      after: function (root) {
+        // Warn about calendar clashes while the date or time is being chosen.
+        function check() { var w = $('#clashWarn'); if (w) w.textContent = J.clashNote ? J.clashNote($('#f_due').value, $('#f_time').value, x && x.id, x && x.kind) : ''; }
+        ['f_due', 'f_time'].forEach(function (id) { var el = $('#' + id, root); if (el) el.addEventListener('input', check); });
+        check();
+      },
       validate: function (v) { if (v.time && !v.due) return 'Pick a date for the reminder time.'; },
       onSave: function (v) {
         if (x) {
@@ -345,11 +363,13 @@
           Object.assign(x, { title: J.cap(v.title), person: v.person, priority: v.priority, due: v.due, time: v.time, status: v.status });
           if (v.status === 'done' && !wasDone) x.doneOn = J.today();
           if (v.status !== 'done') x.doneOn = '';
-          J.commit(); J.toast('Task updated.');
-        } else { J.addTask(v); J.toast('Task added.'); }
+          J.commit(); J.toast('Task updated.' + clash(v.due, v.time, x.id, x.kind));
+        } else { var nt = J.addTask(v); J.toast('Task added.' + clash(v.due, v.time, nt.id)); }
       }
     });
   };
+  function clash(date, time, id, kind) { var n = J.clashNote ? J.clashNote(date, time, id, kind) : ''; return n ? ' ' + n : ''; }
+  J.clash = clash;
   Object.assign(J.actions, {
     addTask: function () { J.taskForm(null); },
     editTask: function (id) { var x = J.byId(J.data.tasks, id); if (x) J.taskForm(x); },
@@ -366,8 +386,8 @@
     if (!v) { inp.focus(); return; }
     var p = J.parseTask(v);
     if (!p.title) { J.toast('Add what you need to do.'); return; }
-    J.addTask(p);
-    J.toast('Added: ' + p.title + (p.due ? ', ' + J.when(p.due, p.time) : '') + '.');
+    var added = J.addTask(p);
+    J.toast('Added: ' + p.title + (p.due ? ', ' + J.when(p.due, p.time) : '') + '.' + clash(p.due, p.time, added.id));
     var again = $('#capIn'); if (again) { again.value = ''; again.focus(); capPreview(); }
   };
   function capPreview() {
@@ -379,39 +399,7 @@
     out.innerHTML = '<span>Task: <b>' + esc(p.title || '—') + '</b></span><span>Person: <b>' + esc(p.person || '—') + '</b></span><span>Due: <b>' + esc(p.due ? J.dueLabel(p.due, p.time) : 'No date') + '</b></span><span>Priority: <b>' + esc(J.cap(p.priority)) + '</b></span>';
   }
 
-  /* ================= CALENDAR ================= */
-  J.weekEvents = function (offset) {
-    var t = J.today(), ws = J.addDays(J.weekStart(t), (offset || 0) * 7), days = [], events = {}, i;
-    for (i = 0; i < 7; i++) { days.push(J.addDays(ws, i)); events[days[i]] = []; }
-    J.data.tasks.forEach(function (x) { if (x.due && events[x.due]) events[x.due].push({ kind: x.kind || 'task', time: x.time, text: J.taskPhrase(x), id: x.id, late: x.status !== 'done' && x.due < t, done: x.status === 'done' }); });
-    J.data.apps.forEach(function (a) {
-      if (a.deadline && events[a.deadline] && !J.data.tasks.some(function (x) { return x.appId === a.id && x.kind === 'deadline' && x.due === a.deadline; }))
-        events[a.deadline].push({ kind: 'deadline', time: '', text: 'Deadline: ' + a.title + ' at ' + a.company, app: a.id });
-    });
-    days.forEach(function (d) { events[d].sort(function (a, b) { return (a.time || '99').localeCompare(b.time || '99'); }); });
-    return { days: days, events: events };
-  };
-  J.screens.calendar = {
-    render: function () {
-      var t = J.today(), wk = J.weekEvents(ui.calOffset), days = wk.days;
-      var label = J.fmt(days[0], { weekday: undefined }) + ' – ' + J.fmt(days[6], { weekday: undefined, year: 'numeric' });
-      var nav = '<button type="button" class="btn small ghost" data-act="calMove" data-id="-1" aria-label="Previous week"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.left + '</svg></button>' +
-        '<button type="button" class="btn small" data-act="calMove" data-id="0">This week</button>' +
-        '<button type="button" class="btn small ghost" data-act="calMove" data-id="1" aria-label="Next week"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.right + '</svg></button>';
-      return J.head('Schedule', 'Calendar', esc(label) + '. Work week Monday to Friday; Saturday and Sunday are the UAE weekend.', nav) +
-        '<div class="legend" aria-hidden="true"><span><i></i>Task</span><span><i class="g"></i>Deadline or interview</span><span><i class="r"></i>Overdue</span></div>' +
-        '<div class="week">' + days.map(function (d) {
-          var ev = wk.events[d];
-          return '<section class="day' + (J.isWeekend(d) ? ' weekend' : '') + (d === t ? ' today' : '') + '" aria-label="' + esc(J.longDate(d)) + '">' +
-            '<div class="day-head"><b>' + esc(J.fmt(d, { day: undefined, month: undefined })) + '</b>' + (d === t ? '<span class="day-tag">Today</span>' : J.isWeekend(d) ? '<span class="day-tag">Weekend</span>' : '') + '<span class="dn">' + J.fmt(d, { weekday: undefined, month: undefined }) + '</span></div>' +
-            ev.map(function (e) {
-              return '<button type="button" class="ev ' + esc(e.kind) + (e.late ? ' late' : '') + (e.done ? ' done' : '') + '" data-act="' + (e.app ? 'openApp' : 'editTask') + '" data-id="' + esc(e.app || e.id) + '"><small>' + esc(e.time ? J.fmtTime(e.time) : e.kind === 'deadline' ? 'Deadline' : 'All day') + '</small>' + esc(e.text) + '</button>';
-            }).join('') +
-            '<button type="button" class="day-add" data-act="addOnDay" data-id="' + d + '" aria-label="Add task on ' + esc(J.longDate(d)) + '">+ Add</button></section>';
-        }).join('') + '</div>';
-    }
-  };
-  J.actions.calMove = function (id) { ui.calOffset = +id === 0 ? 0 : ui.calOffset + +id; render(false); };
+  /* ================= CALENDAR: see calendar.js ================= */
   J.actions.addOnDay = function (id) { J.taskForm(null, { due: id }); };
 
   /* ================= NOTES ================= */
@@ -629,6 +617,7 @@
             '<p class="small-text muted" id="voiceSupport" style="margin:12px 0 0"></p>' +
           '</article>' +
         '</div>' +
+        (J.calSettingsHTML ? J.calSettingsHTML() : '') +
         '<article class="panel"><h2 class="label">Your data</h2>' +
           '<p class="small-text muted" style="margin:0 0 12px">Everything is saved only in this browser, on this device. Export a backup regularly; import it to restore or move to another device.</p>' +
           '<div class="btn-row"><button type="button" class="btn" data-act="export">Export backup (JSON)</button><button type="button" class="btn" data-act="import">Import backup</button>' +
@@ -649,7 +638,8 @@
     ['Tasks and reminders', [['Add task submit report to Dr. Ahmed by Sunday', 'Adds a task with person and date'], ['Remind me to call HR tomorrow at 10am', 'Timed reminder: spoken + notification'], ['Mark submit report as done', 'Completes a task'], ['Delete task call HR', 'Asks you to confirm with yes or no']]],
     ['Notes and growth', [['Add note bring printed CVs to the fair', 'Saves a note'], ['Read my notes', 'Reads your latest notes'], ['Log a win finished the SQL course', 'Adds to Growth']]],
     ['Jobs and applications', [['Find internships', 'Live intern roles in the UAE'], ['Find fresher jobs in Dubai', 'Entry-level roles in a city'], ['Show new jobs', 'New since you last looked'], ['Save this job', 'Saves the job Jarvis just mentioned'], ['How many applications do I have?', 'Counts by stage'], ['What deadlines are coming up?', 'Deadlines and interviews']]],
-    ['Calendar', [['What\'s on my calendar this week?', 'Tasks, deadlines and interviews']]],
+    ['Calendar', [['What\'s on my calendar today?', 'Also: tomorrow, this week, on Monday'], ['What\'s my next meeting?', 'Your next event or interview'], ['Am I free at 3 pm tomorrow?', 'Checks your calendar and tasks'], ['When am I free on Monday?', 'Free time inside your working hours'],
+      ['Add interview with Careem on Sunday at 11am', 'Asks you to confirm, then adds it'], ['Move my 3 pm meeting to 4 pm', 'Asks you to confirm first'], ['Cancel the call with HR', 'Asks yes or no first'], ['Sync my calendar', 'Refreshes Google and Outlook']]],
     ['Navigation and voice', [['Open calendar', 'Any screen: tasks, notes, jobs, applications…'], ['Go back', 'Previous screen'], ['Voice off', 'Text replies only ("voice on" to undo)'], ['Turn on wake mode', 'Listen for "Hey Jarvis"'], ['Speak slower', 'Or "speak faster"']]]
   ];
   J.HELP = HELP;

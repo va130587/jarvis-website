@@ -501,6 +501,11 @@
     /* ---- answers to a question Jarvis asked ---- */
     if (pending) {
       var pd = pending; pending = null;
+      if (pd.type === 'confirmFn') {
+        if (YES.test(t)) return pd.yes();
+        if (NO.test(t)) return 'Okay, I left it as it is.';
+        pending = pd; return 'Please say yes or no.';
+      }
       if (pd.type === 'confirmDelete') {
         if (YES.test(t)) { J.removeTask(pd.task.id); return 'Deleted "' + pd.task.title + '".'; }
         if (NO.test(t)) return 'Okay, I kept it.';
@@ -516,6 +521,7 @@
         return 'Done. I\'ll remind you to ' + lower(J.taskPhrase(task)) + ', ' + J.when(task.due, task.time) + '.';
       }
       if (pd.type === 'askNote') { J.addNote(orig); return 'Note saved.'; }
+      if (pd.type === 'askFn') return wrapCal(pd.answer(orig, t));
       if (pd.type === 'askWin') { var w = J.addWin(orig); return 'Logged: ' + w.win.text + '. Well done.'; }
     }
 
@@ -537,6 +543,12 @@
     /* ---- time and date ---- */
     if (/\b(what time|the time|time is it|current time|time now)\b/.test(t)) return 'It\'s ' + J.timeNow() + ' in Dubai.';
     if (/\b(what's the date|today's date|what day is it|what's today|the date|which day is it|date today)\b/.test(t)) return 'Today is ' + J.longDate(J.today()) + '.';
+
+    /* ---- calendar (calendar.js): sync, next meeting, free time, add / move / cancel ---- */
+    if (J.calVoice && !/^(open|go to|goto|take me to|switch to|display|view|bring up|launch)\s/.test(t)) {
+      var calr = J.calVoice(t, orig);
+      if (calr) return wrapCal(calr);
+    }
 
     /* ---- navigation ---- */
     if (/^(go back|back|previous screen|go to the previous (screen|page))$/.test(t)) { history.back(); return 'Going back.'; }
@@ -657,12 +669,6 @@
       var o = J.overdue();
       return o.length ? J.plural(o.length, 'overdue task') + ': ' + list3(o, J.taskPhrase) + '.' : 'Nothing is overdue.';
     }
-    if (/\b(calendar|schedule|agenda|plans?)\b/.test(t) || /what's on (this|my|the) week/.test(t)) {
-      var wk = J.weekEvents(0), today = J.today(), evs = [];
-      wk.days.forEach(function (d) { if (d >= today) wk.events[d].forEach(function (e) { if (!e.done) evs.push({ d: d, e: e }); }); });
-      if (!evs.length) return 'Your calendar is clear for the rest of this week.';
-      return J.plural(evs.length, 'item') + ' on your calendar this week: ' + list3(evs, function (x) { return x.e.text + ', ' + J.when(x.d, x.e.time); }) + '.';
-    }
     if (/\b(due today|today's tasks|for today|on today|have today|do today|today)\b/.test(t)) {
       var d = J.dueToday(), o2 = J.overdue().length;
       return (d.length ? J.plural(d.length, 'task') + ' due today: ' + list3(d, function (x) { return J.taskPhrase(x) + (x.time ? ' at ' + J.fmtTime(x.time) : ''); }) + '.' : 'Nothing is due today.') + (o2 ? ' Also ' + J.plural(o2, 'overdue task') + '.' : '');
@@ -689,6 +695,14 @@
     if (/^(yes|no|yeah|nope|ok|okay)$/.test(t)) return 'Okay.';
 
     return { text: 'Sorry, I didn\'t catch that. You could try one of these.', chips: three() };
+  }
+  // Calendar replies may be text, a promise, a yes/no question or a follow-up question.
+  function wrapCal(r) {
+    if (r && typeof r === 'object' && typeof r.then !== 'function' && (r.confirm || r.ask)) {
+      pending = r.confirm ? { type: 'confirmFn', yes: r.confirm } : { type: 'askFn', answer: r.ask };
+      return r.text;
+    }
+    return r;
   }
   function addTaskFrom(text, isReminder) {
     if (/^(?:add|create|new|make|set)(?: a| another| new)? (?:task|to-?do|reminder)$|^(?:remind me|set a reminder)$/i.test(text.trim())) { pending = { type: 'askTask', reminder: isReminder }; return 'What\'s the task?'; }

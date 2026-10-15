@@ -288,7 +288,7 @@
       profile: { name: 'Roshan', field: '', degree: '', university: '', skills: [], languages: [], cities: [], titles: [], jobTypes: [], goal: '', goalSample: false, sampleFields: [] },
       people: [], tasks: [], notes: [], skills: [], wins: [], apps: [],
       sources: null, // null means "use the starter list"
-      seenJobs: [],
+      seenJobs: [], cal: null, extEvents: [],
       settings: { voice: true, voiceURI: '', rate: 1, wake: false, sounds: false, notify: false, weeklyGoal: 5 }
     };
   }
@@ -344,7 +344,10 @@
       profile: Object.assign(b.profile, x.profile || {}),
       settings: Object.assign(b.settings, x.settings || {}),
       sources: Array.isArray(x.sources) ? x.sources : null,
-      seenJobs: Array.isArray(x.seenJobs) ? x.seenJobs.slice(-800) : []
+      seenJobs: Array.isArray(x.seenJobs) ? x.seenJobs.slice(-800) : [],
+      // Calendar connections (settings only, never tokens) and events synced from Google, Outlook or .ics files.
+      cal: x.cal && typeof x.cal === 'object' ? x.cal : null,
+      extEvents: Array.isArray(x.extEvents) ? x.extEvents.filter(function (e) { return e && typeof e === 'object' && e.key; }) : []
     };
     ['people', 'tasks', 'notes', 'skills', 'wins', 'apps'].forEach(function (k) { out[k] = Array.isArray(x[k]) ? x[k].filter(function (i) { return i && typeof i === 'object'; }) : []; });
     ['skills', 'languages', 'cities', 'titles', 'jobTypes', 'sampleFields'].forEach(function (k) { out.profile[k] = list(out.profile[k]); });
