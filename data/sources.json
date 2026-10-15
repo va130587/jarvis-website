@@ -1,0 +1,405 @@
+{
+ "_note": "Candidate sources. The first GitHub Action run checks every one with a real request; failures are listed in data/SOURCES.md and skipped. Edit this file to add, remove or turn off a source. Find a board name in a careers page address: boards.greenhouse.io/NAME, jobs.lever.co/NAME or jobs.ashbyhq.com/NAME.",
+ "sources": [
+  {
+   "id": "greenhouse:careem",
+   "type": "greenhouse",
+   "slug": "careem",
+   "name": "Careem",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:cobblestoneenergy4",
+   "type": "greenhouse",
+   "slug": "cobblestoneenergy4",
+   "name": "Cobblestone Energy",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:tabby",
+   "type": "greenhouse",
+   "slug": "tabby",
+   "name": "Tabby",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:tamara",
+   "type": "greenhouse",
+   "slug": "tamara",
+   "name": "Tamara",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:talabat",
+   "type": "greenhouse",
+   "slug": "talabat",
+   "name": "Talabat",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:noon",
+   "type": "greenhouse",
+   "slug": "noon",
+   "name": "Noon",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:propertyfinder",
+   "type": "greenhouse",
+   "slug": "propertyfinder",
+   "name": "Property Finder",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:dubizzle",
+   "type": "greenhouse",
+   "slug": "dubizzle",
+   "name": "Dubizzle",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:bayut",
+   "type": "greenhouse",
+   "slug": "bayut",
+   "name": "Bayut",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:bayzat",
+   "type": "greenhouse",
+   "slug": "bayzat",
+   "name": "Bayzat",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:swvl",
+   "type": "greenhouse",
+   "slug": "swvl",
+   "name": "Swvl",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:anghami",
+   "type": "greenhouse",
+   "slug": "anghami",
+   "name": "Anghami",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:deliveryhero",
+   "type": "greenhouse",
+   "slug": "deliveryhero",
+   "name": "Delivery Hero",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:datadog",
+   "type": "greenhouse",
+   "slug": "datadog",
+   "name": "Datadog",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:databricks",
+   "type": "greenhouse",
+   "slug": "databricks",
+   "name": "Databricks",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:mongodb",
+   "type": "greenhouse",
+   "slug": "mongodb",
+   "name": "MongoDB",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:gitlab",
+   "type": "greenhouse",
+   "slug": "gitlab",
+   "name": "GitLab",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:stripe",
+   "type": "greenhouse",
+   "slug": "stripe",
+   "name": "Stripe",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:cloudflare",
+   "type": "greenhouse",
+   "slug": "cloudflare",
+   "name": "Cloudflare",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:twilio",
+   "type": "greenhouse",
+   "slug": "twilio",
+   "name": "Twilio",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:okta",
+   "type": "greenhouse",
+   "slug": "okta",
+   "name": "Okta",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:elastic",
+   "type": "greenhouse",
+   "slug": "elastic",
+   "name": "Elastic",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:hubspot",
+   "type": "greenhouse",
+   "slug": "hubspot",
+   "name": "HubSpot",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:coinbase",
+   "type": "greenhouse",
+   "slug": "coinbase",
+   "name": "Coinbase",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:anthropic",
+   "type": "greenhouse",
+   "slug": "anthropic",
+   "name": "Anthropic",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:figma",
+   "type": "greenhouse",
+   "slug": "figma",
+   "name": "Figma",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:monzo",
+   "type": "greenhouse",
+   "slug": "monzo",
+   "name": "Monzo",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:checkoutcom",
+   "type": "greenhouse",
+   "slug": "checkoutcom",
+   "name": "Checkout.com",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:airwallex",
+   "type": "greenhouse",
+   "slug": "airwallex",
+   "name": "Airwallex",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:samsara",
+   "type": "greenhouse",
+   "slug": "samsara",
+   "name": "Samsara",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:remotecom",
+   "type": "greenhouse",
+   "slug": "remotecom",
+   "name": "Remote.com",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:rippling",
+   "type": "greenhouse",
+   "slug": "rippling",
+   "name": "Rippling",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:cultureamp",
+   "type": "greenhouse",
+   "slug": "cultureamp",
+   "name": "Culture Amp",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse:wiseplc",
+   "type": "greenhouse",
+   "slug": "wiseplc",
+   "name": "Wise",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse-eu:huspy",
+   "type": "greenhouse-eu",
+   "slug": "huspy",
+   "name": "Huspy",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse-eu:sumup",
+   "type": "greenhouse-eu",
+   "slug": "sumup",
+   "name": "SumUp",
+   "enabled": true
+  },
+  {
+   "id": "greenhouse-eu:n26",
+   "type": "greenhouse-eu",
+   "slug": "n26",
+   "name": "N26",
+   "enabled": true
+  },
+  {
+   "id": "lever:binance",
+   "type": "lever",
+   "slug": "binance",
+   "name": "Binance",
+   "enabled": true
+  },
+  {
+   "id": "lever:kitopi",
+   "type": "lever",
+   "slug": "kitopi",
+   "name": "Kitopi",
+   "enabled": true
+  },
+  {
+   "id": "lever:spotify",
+   "type": "lever",
+   "slug": "spotify",
+   "name": "Spotify",
+   "enabled": true
+  },
+  {
+   "id": "lever:palantir",
+   "type": "lever",
+   "slug": "palantir",
+   "name": "Palantir",
+   "enabled": true
+  },
+  {
+   "id": "lever:rapyd",
+   "type": "lever",
+   "slug": "rapyd",
+   "name": "Rapyd",
+   "enabled": true
+  },
+  {
+   "id": "lever:plaid",
+   "type": "lever",
+   "slug": "plaid",
+   "name": "Plaid",
+   "enabled": true
+  },
+  {
+   "id": "lever:outreach",
+   "type": "lever",
+   "slug": "outreach",
+   "name": "Outreach",
+   "enabled": true
+  },
+  {
+   "id": "lever:mistral",
+   "type": "lever",
+   "slug": "mistral",
+   "name": "Mistral AI",
+   "enabled": true
+  },
+  {
+   "id": "lever:crypto",
+   "type": "lever",
+   "slug": "crypto",
+   "name": "Crypto.com",
+   "enabled": true
+  },
+  {
+   "id": "ashby:deel",
+   "type": "ashby",
+   "slug": "deel",
+   "name": "Deel",
+   "enabled": true
+  },
+  {
+   "id": "ashby:notion",
+   "type": "ashby",
+   "slug": "notion",
+   "name": "Notion",
+   "enabled": true
+  },
+  {
+   "id": "ashby:ramp",
+   "type": "ashby",
+   "slug": "ramp",
+   "name": "Ramp",
+   "enabled": true
+  },
+  {
+   "id": "ashby:openai",
+   "type": "ashby",
+   "slug": "openai",
+   "name": "OpenAI",
+   "enabled": true
+  },
+  {
+   "id": "ashby:linear",
+   "type": "ashby",
+   "slug": "linear",
+   "name": "Linear",
+   "enabled": true
+  },
+  {
+   "id": "ashby:supabase",
+   "type": "ashby",
+   "slug": "supabase",
+   "name": "Supabase",
+   "enabled": true
+  },
+  {
+   "id": "ashby:perplexity",
+   "type": "ashby",
+   "slug": "perplexity",
+   "name": "Perplexity",
+   "enabled": true
+  },
+  {
+   "id": "ashby:cohere",
+   "type": "ashby",
+   "slug": "cohere",
+   "name": "Cohere",
+   "enabled": true
+  },
+  {
+   "id": "ashby:remote",
+   "type": "ashby",
+   "slug": "remote",
+   "name": "Remote",
+   "enabled": true
+  },
+  {
+   "id": "ashby:bitpanda",
+   "type": "ashby",
+   "slug": "bitpanda",
+   "name": "Bitpanda",
+   "enabled": true
+  },
+  {
+   "id": "remotive:all",
+   "type": "remotive",
+   "slug": "all",
+   "name": "Remotive (free remote-jobs API)",
+   "enabled": true,
+   "everyHours": 24
+  }
+ ]
+}
