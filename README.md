@@ -20,6 +20,32 @@ This is **version 1**. It runs in the web browser. It needs no account, no serve
 | **My profile** | Your career goal, non-negotiables, strengths, gaps, and your people map (manager, sponsors, mentors, key peers). |
 | **Blueprint** | The presentation explaining the full Jarvis architecture. |
 
+## Talking to Jarvis
+
+Tap the glowing core, click **Talk to Jarvis**, or press **J** on your keyboard, then speak. The first time, your browser asks to use the microphone. Click **Allow**.
+
+- **"Hey Jarvis" mode:** open the voice panel (the small orb at the bottom right) and switch on **"Hey Jarvis"**. While the page is open, say "Hey Jarvis" and then your request.
+- **Typing works too:** use the box on the Today screen or in the voice panel.
+- **Best browsers:** Chrome or Edge on a computer, and Chrome or Safari on a phone. Firefox can't listen, so type there instead.
+
+Things you can say:
+
+| Say | What Jarvis does |
+| --- | --- |
+| "Brief me" / "Good morning" | Reads your day: overdue items, what's due, drafts waiting, career focus |
+| "What's overdue?" / "What's coming up this week?" | Lists your commitments |
+| "Remind me to send the report to Omar by Friday" | Adds a commitment with the person and date |
+| "Mark the vendor comparison as done" | Finds the commitment and completes it |
+| "Log a win: cut cloud costs by 12 percent" | Adds promotion evidence under the right criterion |
+| "What's my next career step?" | Your biggest promotion gap and what to do about it |
+| "Any good jobs?" | Your best-fit role and interviews in progress |
+| "Open promotion" / "Show approvals" | Opens that screen |
+| "What time is it?" / "What can you do?" / "Stop" | The basics |
+
+In version 1, Jarvis understands these set commands; it isn't a free conversation yet. Version 2 adds Claude AI, so you can ask anything.
+
+**Privacy:** in Chrome and Edge, the browser sends your voice to its speech service to turn it into text. Your Jarvis data still stays on your device.
+
 ## How to start
 
 1. Open the live app. It first shows **sample data** so you can see how it works.
@@ -48,6 +74,7 @@ See the Blueprint for the full architecture.
 ## Files
 
 - `index.html`, `app.css`, `app.js`: the Jarvis app (plain HTML, CSS and JavaScript, no build step)
+- `voice.js`: voice commands, spoken replies, the animated core, background and boot sequence
 - `blueprint/index.html`: the architecture presentation
 
 ## Note

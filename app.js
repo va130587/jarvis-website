@@ -4,7 +4,6 @@
   'use strict';
 
   var KEY = 'jarvis.v1';
-  var THEME_KEY = 'jarvis.theme';
   var STALE_DAYS = 42;
   var DEFAULT_TARGET = 3;
 
@@ -56,7 +55,7 @@
     var s = emptyState();
     s.sample = true;
     s.profile = {
-      name: 'Alex', role: 'Director of Engineering', goal: 'CTO', timeframe: 'Within 3 years',
+      name: 'Roshan', role: 'Director of Engineering', goal: 'CTO', timeframe: 'Within 3 years',
       thesis: 'Become CTO of a growth-stage technology or fintech company in the Gulf, owning technology strategy, engineering and data.',
       nonneg: 'Based in Dubai. Reports to the CEO. Real budget ownership.',
       strengths: 'Delivery at scale, cloud platforms, building teams.',
@@ -94,9 +93,9 @@
       { id: uid(), company: 'Global SaaS company', title: 'Head of Engineering, MEA', location: 'Riyadh', status: 'interested', link: '', notes: '', r: { remit: 2, scale: 4, location: 2, reporting: 2, pay: 4 }, added: addDays(-1) }
     ];
     s.drafts = [
-      { id: uid(), to: 'Sara', subject: 'Vendor comparison', body: 'Hi Sara,\n\nApologies for the delay. The vendor comparison is attached. My recommendation is option B, mainly for support terms. Happy to go through it tomorrow.\n\nThanks,\nAlex', status: 'pending', created: addDays(0) },
-      { id: uid(), to: 'Omar', subject: 'Q4 hiring plan', body: 'Hi Omar,\n\nHere is the Q4 hiring plan: 6 roles, with platform and data as the priority. Two need budget approval. Can we cover it in Monday\'s 1:1?\n\nAlex', status: 'pending', created: addDays(0) },
-      { id: uid(), to: 'David', subject: 'Coffee this month?', body: 'Hi David,\n\nWould you have time for coffee this month? I\'d value your view on getting more board exposure.\n\nAlex', status: 'approved', created: addDays(-3) }
+      { id: uid(), to: 'Sara', subject: 'Vendor comparison', body: 'Hi Sara,\n\nApologies for the delay. The vendor comparison is attached. My recommendation is option B, mainly for support terms. Happy to go through it tomorrow.\n\nThanks,\nRoshan', status: 'pending', created: addDays(0) },
+      { id: uid(), to: 'Omar', subject: 'Q4 hiring plan', body: 'Hi Omar,\n\nHere is the Q4 hiring plan: 6 roles, with platform and data as the priority. Two need budget approval. Can we cover it in Monday\'s 1:1?\n\nRoshan', status: 'pending', created: addDays(0) },
+      { id: uid(), to: 'David', subject: 'Coffee this month?', body: 'Hi David,\n\nWould you have time for coffee this month? I\'d value your view on getting more board exposure.\n\nRoshan', status: 'approved', created: addDays(-3) }
     ];
     return s;
   }
@@ -276,7 +275,10 @@
     }
     main.innerHTML = '<div class="view">' + html + VIEW_FN[v]() + '</div>';
     updateBadge();
+    var hv = document.getElementById('hudView'); if (hv) hv.textContent = VIEW_LABEL[v];
+    document.dispatchEvent(new CustomEvent('jarvis:render', { detail: { view: v } }));
   }
+  var VIEW_LABEL = { today: 'Today', commitments: 'Commitments', promotion: 'Promotion', radar: 'Career radar', review: 'Weekly review', inbox: 'Approvals', profile: 'My profile' };
   function updateBadge() {
     var n = state.drafts.filter(function (d) { return d.status === 'pending'; }).length;
     var b = $('#inboxBadge'); if (!b) return;
@@ -330,8 +332,14 @@
       return '<div class="card"><div class="card-head"><h2>' + esc(title) + '</h2><span class="pill">' + items.length + '</span></div>' +
         (items.length ? '<div class="list">' + items.map(commitmentRow).join('') + '</div>' : '<p class="empty">' + esc(emptyMsg) + '</p>') + '</div>';
     }
-    return '<div class="hello"><span class="date">' + esc(new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</span>' +
-      '<h1>' + esc(greet + name) + '</h1><p class="muted">Here is what needs you today.</p></div>' +
+    return '<section class="core-hero"><div class="scan" aria-hidden="true"></div>' +
+      '<div class="core-wrap"><canvas id="heroOrb" aria-hidden="true"></canvas><button class="core-btn" type="button" data-voice="listen" aria-label="Talk to Jarvis"></button></div>' +
+      '<div class="core-text"><span class="date mono">' + esc(new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</span>' +
+      '<h1>' + esc(greet + name) + '</h1>' +
+      '<p id="heroStatus">Tap the core or press J to talk.</p>' +
+      '<div class="btn-row"><button class="btn primary" type="button" data-voice="listen">Talk to Jarvis</button><button class="btn" type="button" data-voice="brief">Brief me</button></div>' +
+      '<form class="cmd" data-form="cmd"><input type="text" name="cmd" id="heroCmd" autocomplete="off" placeholder="Or type: What is overdue?" aria-label="Type a command to Jarvis"><button class="btn" type="submit">Send</button></form>' +
+      '</div></section>' +
       '<div class="stat-strip">' +
       '<div class="stat' + (overdue.length ? ' alert' : '') + '"><b>' + overdue.length + '</b><span>Overdue</span></div>' +
       '<div class="stat"><b>' + dueToday.length + '</b><span>Due today</span></div>' +
@@ -640,7 +648,7 @@
     var id = el.dataset.id, x;
     switch (act) {
       case 'clear-sample':
-        confirmThen('Clear sample data?', 'This removes all the example items so you can start with your own. Your theme setting stays.', 'Clear sample data', function () { state = emptyState(); toast('Sample data cleared. Start with your profile.'); location.hash = '#profile'; });
+        confirmThen('Clear sample data?', 'This removes all the example items so you can start with your own.', 'Clear sample data', function () { state = emptyState(); toast('Sample data cleared. Start with your profile.'); location.hash = '#profile'; });
         break;
       case 'reset':
         confirmThen('Delete all data?', 'This permanently deletes everything stored in Jarvis on this device. Export a backup first if you want to keep it.', 'Delete everything', function () { state = emptyState(); toast('All data deleted'); });
@@ -743,28 +751,23 @@
   });
 
   // ---------- sidebar tools ----------
-  var THEMES = ['system', 'light', 'dark'];
-  function getTheme() { try { return localStorage.getItem(THEME_KEY) || 'system'; } catch (e) { return 'system'; } }
-  function applyTheme(t) {
-    if (t === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
-    $('#themeBtn').textContent = 'Theme: ' + cap(t);
-  }
-  $('#themeBtn').addEventListener('click', function () {
-    var t = THEMES[(THEMES.indexOf(getTheme()) + 1) % 3];
-    try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignore */ }
-    applyTheme(t);
-  });
   $('#exportBtn').addEventListener('click', exportData);
   $('#importBtn').addEventListener('click', function () { $('#importFile').click(); });
   $('#importFile').addEventListener('change', function (e) { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
 
   window.addEventListener('hashchange', function () { render(); main.focus({ preventScroll: true }); window.scrollTo(0, 0); });
 
-  // expose parser for tests
+  // shared core for the voice assistant (voice.js) and tests
+  window.JarvisCore = {
+    state: function () { return state; },
+    save: save, render: render, toast: toast, uid: uid, addDays: addDays, daysFrom: daysFrom, fmtDate: fmtDate,
+    parseCapture: parseCapture, careerAction: careerAction, critStats: critStats, fitScore: fitScore,
+    cState: cState, openItems: openItems, byDue: byDue, plural: plural, view: currentView,
+    go: function (v) { location.hash = '#' + v; }
+  };
   window.JarvisTest = { parseCapture: parseCapture, fitScore: function (r) { return fitScore(r); } };
 
   state = load();
-  applyTheme(getTheme());
   save();
   render();
 })();

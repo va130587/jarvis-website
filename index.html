@@ -4,20 +4,34 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jarvis</title>
-<meta name="description" content="Jarvis: a personal chief of staff that tracks commitments, promotion evidence and the path to a CTO or CEO role.">
+<meta name="description" content="Jarvis: a voice-enabled personal chief of staff that tracks commitments, promotion evidence and the path to a CTO or CEO role.">
+<meta name="theme-color" content="#04070c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="app.css">
-<script>try{var t=localStorage.getItem('jarvis.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
+<canvas id="bgfx" aria-hidden="true"></canvas>
+
+<div id="boot" aria-hidden="true">
+  <div class="boot-core"><i></i><i></i><i></i><b></b></div>
+  <div class="boot-name">JARVIS</div>
+  <ol class="boot-log">
+    <li>Initializing core systems</li>
+    <li>Loading personal profile</li>
+    <li>Syncing commitments ledger</li>
+    <li>Calibrating voice interface</li>
+    <li class="ok">All systems online</li>
+  </ol>
+</div>
+
 <a class="skip" href="#main">Skip to content</a>
 <div class="app">
   <aside class="side">
     <div class="brand">
-      <span class="mark" aria-hidden="true">J</span>
-      <div><b>Jarvis</b><small>Personal chief of staff</small></div>
+      <span class="mark" aria-hidden="true"><i></i></span>
+      <div><b>JARVIS</b><small>Personal chief of staff</small></div>
     </div>
     <nav class="nav" aria-label="Main">
       <a href="#today" data-view="today"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span>Today</span></a>
@@ -30,13 +44,38 @@
       <a href="blueprint/" class="ext"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h10l6 6v10H4z"/><path d="M14 4v6h6M8 14h8M8 17h5"/></svg><span>Blueprint</span></a>
     </nav>
     <div class="side-tools">
-      <button type="button" class="tool" id="themeBtn">Theme: System</button>
       <button type="button" class="tool" id="exportBtn">Export backup</button>
       <button type="button" class="tool" id="importBtn">Import backup</button>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
     </div>
   </aside>
-  <main id="main" tabindex="-1"></main>
+
+  <div class="content">
+    <header class="hud-top">
+      <div class="hud-path"><span class="live" aria-hidden="true"></span><span>JARVIS</span><span class="sep">/</span><span id="hudView">Today</span></div>
+      <div class="hud-stats"><span id="hudVoice">Voice ready</span><span class="mono" id="hudClock">--:--:--</span></div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<div class="dock" id="dock">
+  <section class="dock-panel" id="dockPanel" aria-label="Talk to Jarvis" hidden>
+    <div class="dock-head">
+      <b>JARVIS</b><span id="dockState" class="mono">Standing by</span>
+      <button type="button" class="icon-btn" id="dockClose" aria-label="Close voice panel">Close</button>
+    </div>
+    <div class="log" id="voiceLog" aria-live="polite"></div>
+    <form class="cmd" id="dockForm">
+      <input id="dockInput" type="text" autocomplete="off" placeholder="Type a command…" aria-label="Type a command to Jarvis">
+      <button class="btn sm primary" type="submit">Send</button>
+    </form>
+    <div class="dock-tools">
+      <button type="button" class="tool" id="wakeBtn" aria-pressed="false">“Hey Jarvis”: off</button>
+      <button type="button" class="tool" id="muteBtn" aria-pressed="false">Spoken replies: on</button>
+    </div>
+  </section>
+  <button class="dock-orb" id="dockOrb" type="button" aria-label="Talk to Jarvis"><canvas id="dockCanvas" aria-hidden="true"></canvas></button>
 </div>
 
 <dialog id="dlg" aria-labelledby="dlgTitle">
@@ -52,5 +91,6 @@
 </dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="app.js"></script>
+<script src="voice.js"></script>
 </body>
 </html>
