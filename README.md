@@ -14,6 +14,7 @@ It is completely free. There is **no account, no API key, no paid service and no
 - Keeps quick, searchable **notes**.
 - Tracks your **goal, skills, wins and certificates**.
 - Finds **internships, fresher and graduate jobs in the UAE**, and tracks your **applications**.
+- **Automatic job assistant:** collects real jobs every 6 hours, works out which ones could hire you, explains why, and tells you what to learn to get more. See [The automatic job assistant](#the-automatic-job-assistant).
 - Gives you a **weekly review** and one suggested next step.
 - Understands **voice commands** and answers in a calm British voice.
 
@@ -29,6 +30,7 @@ The first time you open Jarvis, it shows **sample data** with a gold "Sample" la
 | **Tasks** | Add tasks with a title, person, date, time, priority and status. In **Quick capture**, type plain English such as *"Submit report to Dr. Ahmed by Sunday"* or *"Call HR tomorrow at 10am"*. Search, filter, edit, complete or delete. Deleting can be undone. |
 | **Calendar** | Week and month views of your tasks, interviews, application deadlines and events from Google, Outlook or .ics files (each calendar in its own colour). Saturday and Sunday are shaded as the weekend. Click an event for details; **+ Add** adds a task on a day. See [Calendar connections](#calendar-connections). |
 | **Notes** | Write a note, search your notes, and edit or delete them. |
+| **Jobs for you** | The job assistant's dashboard: **Best matches**, **Stretch**, **New today**, **Closing soon** and **Not eligible**, with filters, a **Why this job?** panel on every card, and a list of skills that would unlock more jobs. |
 | **Job finder** | One-click searches on the big job sites, plus a live feed of jobs from company job boards. See [How the job finder works](#how-the-job-finder-works). |
 | **Applications** | Your tracker: Saved → Applied → Interview → Offer or Rejected. Open a card for details, dates, notes, the checklist and copy-ready cover letter and follow-up email templates. Deadlines and interviews become reminders automatically. Set a weekly application goal at the top. |
 | **Growth** | Your goal, the skills you are learning (drag the slider to update progress), and a log of wins and certificates. |
@@ -77,6 +79,17 @@ You can use your own words. These are examples.
 | "Find internships" / "Find fresher jobs in Dubai" | Searches the live job feed and opens the job finder |
 | "Show new jobs" | Jobs found since you last looked |
 | "Save this job" / "Next" / "Save the second job" | Saves the job Jarvis mentioned, or moves to the next one |
+| "What jobs can hire me?" / "Find jobs I can get" / "Show my best matches" | Your best matches, top three read out |
+| "Why did you match this job?" / "What am I missing for this job?" | The reasons for and against the job Jarvis just mentioned |
+| "Show new jobs since yesterday" / "Read the top three" | New matches, and the top three read out |
+| "Which job should I apply to first?" | Best score, plus nearest deadline |
+| "What should I learn to get more jobs?" | Skills that would unlock the most jobs, with a free link |
+| "Set an alert for data analyst jobs in Dubai above 70 percent" | Asks you to confirm, then saves a rule |
+| "Turn job alerts on" / "Turn job alerts off" | Switches spoken job alerts |
+| "Run the job search now" / "When did you last check?" | Reloads the job list / says when jobs were last collected |
+| "Prepare an application for this job" | Asks you to confirm, then saves it with a checklist, cover letter, CV keywords, interview questions and reminders |
+| "Read my job digest" / "Weekly job report" | The daily digest, or the weekly report |
+| "Set up my job profile" | Asks short questions by voice (say "skip" to pass one, "cancel" to stop) |
 | "How many applications do I have?" | Counts by stage and your weekly goal |
 | "What deadlines are coming up?" | Application deadlines and interviews |
 | "What's on my calendar today / tomorrow / this week?" | Events, interviews and tasks for that day or week |
@@ -172,6 +185,113 @@ Jarvis asks for **Calendars.Read** (read only) or **Calendars.ReadWrite** (two-w
 - the Calendar API is not enabled;
 - the Client ID or web address is wrong (it shows which address to add).
 
+## The automatic job assistant
+
+Jarvis finds jobs for you **automatically**, even when your browser is closed, and explains why each one fits.
+
+**How it works, in four steps**
+
+1. **A free GitHub Action collects jobs every 6 hours.** It reads the public job boards of real companies (Greenhouse, Lever and Ashby), keeps jobs in the UAE (or remote jobs open to this region) that are friendly to freshers, removes duplicates, and flags or drops scams. It saves the result in `data/jobs.json`. Jobs that disappear from a company's board are removed. After 45 days a job is moved to an archive.
+2. **Your browser reads `data/jobs.json`.** If the file is missing or older than 12 hours, your browser fetches the boards itself as a fallback. The **Refresh** button does this on demand. Every job shows its **source**, a **link** to the official page, and when it was **last seen**. Jarvis never invents a job.
+3. **Jarvis matches the jobs to your profile on your device.** Your profile never leaves your browser.
+4. **Jarvis tells you.** Strong new matches are spoken and shown while Jarvis is open. With ntfy (optional, free) they also reach your phone when Jarvis is closed.
+
+**Jarvis never applies for you.** You always press **View & apply** on the company's own page.
+
+### How matching works
+
+Every job gets a score from **0 to 100**, made of six parts you can see in **Why this job?**:
+
+| Part | Points | What it checks |
+| --- | --- | --- |
+| Job title | 30 | Does the title match the roles you want? |
+| Skills | 35 | How many of the skills the listing mentions do you have? (a skill you rate "strong" counts more than "beginner") |
+| Experience level | 15 | Is it an internship, graduate or entry-level job, and does the "years of experience" fit you? |
+| Location | 10 | Your preferred cities, remote work, and your visa |
+| Freshness | 5 | Recently posted jobs score higher |
+| Languages | 5 | Languages the listing asks for |
+
+On top of the score, Jarvis gives a plain verdict:
+
+- **You can apply:** nothing blocks you.
+- **Stretch: apply anyway:** a gap such as one year too little experience, a missing degree, or a language. Many fresher jobs are still worth a try.
+- **Probably not eligible:** for example "UAE nationals only", 3 or more years required, a visit visa for a job that needs residence, or a scam sign.
+
+It also lists **reasons for** the match, **gaps against** it, and **skills to learn** with free links. The **skills gap summary** says things like *"Learning Tableau would open 2 more jobs"*.
+
+The rules are in `match.js`, written in plain JavaScript, so you can read exactly how a score was made. **Scores are estimates, not a promise of being hired.** Jarvis does not guess salaries: it shows pay only when the listing states it.
+
+### Set up your job profile (2 minutes)
+
+Open **Jobs for you → Job profile** (or say **"Set up my job profile"**). It asks for your degree and field, graduation date, GPA, skills with levels (beginner, working, strong), tools, languages, years of experience, internships and projects, nationality and visa status, preferred cities, job types, remote preference, salary floor in AED, notice period, target job titles and industries to avoid. You can type it or answer by voice. **All of it stays in this browser.**
+
+### Turn the automation on (exact clicks)
+
+You do this once, on github.com, in the `va130587/jarvis-website` repository. The repository must be **public** (GitHub Actions are free for public repositories).
+
+1. Open the repository → **Settings** → **Actions** → **General**.
+2. Under **Workflow permissions**, choose **Read and write permissions** and click **Save**.
+3. Open the **Actions** tab. If GitHub asks, click **I understand my workflows, go ahead and enable them**.
+4. Click **Collect jobs** in the left list → **Run workflow** → **Run workflow**. Wait about 2 minutes.
+5. Open the finished run. The summary lists every source and whether it worked. The workflow also saves the results in `data/jobs.json` and a table in `data/SOURCES.md`.
+6. Make sure GitHub Pages publishes your site: **Settings** → **Pages** → **Source: Deploy from a branch** → branch **main** → **Save**.
+7. After this the job runs by itself every 6 hours. Open Jarvis and look at **Jobs for you**.
+
+**If you only see "No jobs loaded yet":** the Action has not run yet. Do steps 1 to 4, or press **Refresh** in Jarvis to use your browser's own fetch.
+
+**Good to know:** the first run checks every source in `data/sources.json` and records which ones work in `data/SOURCES.md`. A source that fails four times in a row is skipped, and tried again every Monday. If a run finds nothing new, it does not save a commit.
+
+### Phone alerts with ntfy (free, optional)
+
+[ntfy.sh](https://ntfy.sh) sends a push notification to your phone. There is no account.
+
+1. Install the **ntfy** app on your phone (iPhone or Android).
+2. In the app, tap **+** and subscribe to a **topic name that only you know**, for example `roshan-jobs-k7x2q9m4` (treat it like a password: anyone who knows it can read your alerts).
+3. On github.com: repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**. Name: `NTFY_TOPIC`. Value: your topic. Click **Add secret**.
+4. Optional: under the **Variables** tab, add these so the Action knows what to look for. They are only used to choose which jobs to send:
+   `ALERT_TITLES` (for example `Data Analyst, Software Engineer`), `ALERT_SKILLS` (for example `Python, SQL, Excel`), `ALERT_CITIES` (for example `Dubai, Abu Dhabi`), `ALERT_MIN_SCORE` (default 70), `ALERT_VISA` (`resident`, `golden`, `visit` or `needs-sponsorship`), `ALERT_YEARS` (default 0), `ALERT_NATIONALITY`.
+5. Run the **Collect jobs** workflow again. From then on, you get one message with the top five new matches (and "and N more") whenever the Action finds strong new ones. Nothing is sent when there is nothing new.
+
+The topic lives **only** in the repository secret. It is never written to any file and never printed in the logs.
+
+### Alerts, saved searches and reminders in Jarvis
+
+- **Saved searches (rules):** *Jobs for you → Alerts & rules*, or say *"Set an alert for data analyst jobs in Dubai above 70 percent"*. A rule that notifies you speaks and shows a message when a new matching job appears while Jarvis is open.
+- **Strong new matches** (your score threshold in Settings, 75% by default) are spoken once and shown. Turn them on or off by voice or in Settings. If you allowed browser notifications, you also get a system notification. The first time Jarvis loads jobs, nothing counts as "new", so you do not get a flood.
+- **Daily digest** on **Today** and by voice: new matches, best match, closing soon, follow-ups due.
+- **Weekly report** in **Weekly review** (and by voice): jobs found, best match, what to learn, and applications.
+- **Save & prepare** on any card makes an application with a checklist, a **deadline reminder** when the listing gives a closing date, a **follow-up reminder 7 days later**, a **tailored cover letter**, **CV keywords** to include, and **interview preparation questions**. It is saved, never submitted.
+
+### Smart mode (optional, off by default)
+
+**Settings → Smart mode** switches on a small AI that runs **on your device**. It can explain a match in plain words, polish a cover-letter draft, and guess what you meant when a voice command is unclear (it always asks "yes or no" before doing anything). It only **suggests**: it never changes your data or applies for anything.
+
+- It works with **Chrome's built-in AI** where available, or **WebLLM** on browsers with WebGPU.
+- Turning it on shows a clear message, and the **model is downloaded once** (roughly 0.5 to 2 GB) only after you click Download. A progress bar shows the download.
+- Nothing you type is sent to a server. If your browser cannot run it, Jarvis says so and keeps working with the normal rule-based matching.
+
+### Staying safe from job scams
+
+Every job shows its source and date. Jarvis flags listings that mention a fee or deposit in **red**. Each **Why this job?** panel has a **Verify the company** tip: check that the company has a real website and a careers page listing the job, that emails come from its own domain, and that nobody asks for money or passport copies before a written offer. Real UAE employers never charge applicants. The dashboard also shows how many listings Jarvis **scanned, kept and hid**, and why.
+
+### Add or remove job sources
+
+Open `data/sources.json` and add a line, for example:
+
+```
+{ "type": "greenhouse", "slug": "careem", "name": "Careem" }
+```
+
+Types are `greenhouse`, `greenhouse-eu`, `lever`, `ashby` and `remotive`. The slug is in the company's careers address (`boards.greenhouse.io/careem` → `careem`). To turn a source off, add `"enabled": false`, or delete its line. The next run checks it and records the result in `data/SOURCES.md`.
+
+**Not used on purpose:** LinkedIn, Indeed, Glassdoor and Bayt do not allow scraping, so Jarvis only opens their normal search pages for you (the one-click searches).
+
+### What is public and what is private
+
+- The repository is public, so **`data/jobs.json`, `data/sources.json` and the workflow are public**. They contain only public job listings and company names. No personal data is ever written there (a test checks this).
+- **Your profile, applications, notes and rules stay in your browser** and are never uploaded.
+- **Secrets** (the ntfy topic) live in GitHub repository secrets, not in files.
+
 ## How the job finder works
 
 **1. One-click searches.** Choose keywords, a level (internship, fresher, graduate or entry level) and a city, then click a site. Jarvis opens a ready-made search **in a new tab** on:
@@ -228,7 +348,13 @@ The starter list is Careem, Cobblestone Energy, Huspy, Datadog, Databricks, Mong
 - `app.css`: the design.
 - `core.js`: data, Dubai dates, plain-English date and task parsing, and storage.
 - `app.js`: screens, reminders and the clock.
-- `jobs.js`: the job finder, live feed and application tracker.
+- `match.js`: the transparent job-matching rules (also used by the collector).
+- `matches.js`: the Jobs for you dashboard, Why panel, rules and alerts, digest, weekly report, application pack, profile questions and job voice commands.
+- `smart.js`: optional on-device Smart mode.
+- `jobs.js`: the job finder, live feed, `data/jobs.json` loader and application tracker.
+- `scripts/collect-jobs.js`: the one dependency-free Node script the Action runs; `scripts/check-links.js` checks the learning links weekly.
+- `data/`: `sources.json` (where to look), `jobs.json` (collected jobs), `SOURCES.md` (which sources work), `links-status.json`.
+- `.github/workflows/collect-jobs.yml`: the 6-hourly Action.
 - `voice.js`: the animated core, voice, wake mode, chat and commands.
 - `calendar.js`: Google Calendar and Outlook connections, sync, the calendar screens, reminders, clashes and free time.
 - `ics.js`: reading and writing `.ics` calendar files, and the "add to Google / Outlook" links.
@@ -248,6 +374,12 @@ The tests check every calendar feature automatically:
 - Every screen at 1440, 768 and 390 pixels wide: no sideways scrolling, no overlaps, no console errors.
 - Live checks that Google's real sign-in library and Calendar API answer the browser.
 
+The job assistant is tested too:
+- **Matching:** 45 sample job descriptions with expected verdicts and score parts, plus years, skills, scams and learning links.
+- **Collector:** fixtures for each kind of source: normalising, filtering, duplicates, removed and old jobs, failing sources, no pointless commits, the phone message (with a stand-in for ntfy), the workflow file, and a check that no secret or personal data is committed.
+- **Browser:** the dashboard, tabs, filters, Why panel, saved searches, alerts, application pack, digest and profile; every new voice command typed; Smart mode with a stand-in model (detection, consent, progress, fallback, no action without confirmation).
+- **Layout** at 1440, 768 and 390 pixels, **keyboard-only** use, and an **axe-core** accessibility scan (no serious or critical problems).
+
 To run them, install Node.js, then in this folder:
 
 ```
@@ -256,4 +388,4 @@ npx playwright install chromium
 npm test
 ```
 
-`npm test -- calendar` runs only the calendar tests. Screenshots of every screen are saved in `tests/screenshots/`.
+`npm test -- calendar` runs only the calendar tests; `npm test -- jobs`, `match`, `collector` and `smart` run the job assistant tests. Screenshots of every screen are saved in `tests/screenshots/`.
