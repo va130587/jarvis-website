@@ -102,26 +102,23 @@
     return 'junior';
   }
   var LEVEL_NAMES = { intern: 'Internship', graduate: 'Graduate', trainee: 'Trainee', junior: 'Entry level' };
-  function score(job) {
+  // Scores come from match.js (an explainable rule-based engine). Results are remembered until the profile changes.
+  var evalMemo = {}, evalSig = '';
+  function profileSig() {
     var p = J.data.profile;
-    var jt = J.tokens(job.title + ' ' + (job.dept || ''));
-    var best = 0;
-    (p.titles.length ? p.titles : [p.field || '']).forEach(function (t) {
-      var tt = J.tokens(t);
-      if (!tt.length) return;
-      var hits = tt.filter(function (w) { return jt.some(function (x) { return x === w || (w.length > 3 && x.slice(0, 4) === w.slice(0, 4)); }); }).length;
-      best = Math.max(best, hits / tt.length);
-    });
-    var hay = (job.title + ' ' + (job.dept || '') + ' ' + (job.text || '')).toLowerCase();
-    var skillHits = p.skills.filter(function (s) { return s && hay.indexOf(s.toLowerCase()) >= 0; }).length;
-    var fieldHit = p.field && J.tokens(p.field).some(function (w) { return hay.indexOf(w) >= 0; }) ? 8 : 0;
-    var cityHit = p.cities.indexOf(job.city) >= 0 ? 5 : 0;
-    return J.clamp(Math.round(30 + best * 40 + Math.min(24, skillHits * 8) + fieldHit + cityHit), 5, 99);
+    return JSON.stringify([p.titles, p.field, p.degree, p.skills, p.skillLevels, p.tools, p.languages, p.yearsExp, p.visa, p.nationality, p.cities, p.remote, p.salaryFloor, p.avoidIndustries, p.gradDate]);
   }
+  function evalJob(job) {
+    var sig = profileSig();
+    if (sig !== evalSig) { evalSig = sig; evalMemo = {}; }
+    var k = job.key + '|' + job.date + '|' + (job.text || '').length;
+    return evalMemo[k] || (evalMemo[k] = window.JarvisMatch.evaluate(job, J.data.profile, { today: J.today() }));
+  }
+  function score(job) { return evalJob(job).score; }
   function normalizeJob(src, raw) {
     var j;
     if (src.type === 'greenhouse' || src.type === 'greenhouse-eu') {
-      j = { id: raw.id, title: raw.title, url: raw.absolute_url, loc: (raw.location && raw.location.name) || '', date: raw.updated_at || raw.first_published || '', type: '', remote: false, text: '' };
+      j = { id: raw.id, title: raw.title, url: raw.absolute_url, loc: (raw.location && raw.location.name) || '', date: raw.first_published || raw.updated_at || '', type: '', remote: false, text: '' };
     } else if (src.type === 'lever') {
       var c = raw.categories || {};
       j = { id: raw.id, title: raw.text, url: raw.hostedUrl || raw.applyUrl, loc: [c.location].concat(c.allLocations || []).filter(Boolean).join(' / '), date: raw.createdAt ? new Date(raw.createdAt).toISOString() : '', type: c.commitment || '', dept: c.team || c.department || '', remote: raw.workplaceType === 'remote', text: (raw.descriptionPlain || '').slice(0, 4000) };
@@ -145,11 +142,11 @@
   }
   function finish(j) {
     var out = {
-      key: j.key, title: j.title, company: j.company, url: j.url, city: cityOf(j.loc) || (j.remote ? 'Remote' : 'UAE'), loc: j.loc,
+      key: j.key, title: j.title, company: j.company, url: j.url, city: cityOf(j.loc) || (j.remote ? 'Remote' : 'UAE'), loc: j.loc, location: j.loc, remote: !!j.remote,
       level: levelOf(j.title, j.type), type: j.type ? J.cap(String(j.type).replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()) : '', date: j.date ? String(j.date).slice(0, 10) : '',
-      dept: j.dept || '', scam: SCAM_RX.test(j.title + ' ' + (j.text || '')), source: j.source
+      dept: j.dept || '', scam: SCAM_RX.test(j.title + ' ' + (j.text || '')), source: j.source, sourceName: j.source, salary: '', firstSeen: J.today(), lastSeen: J.today(), live: true
     };
-    out.text = j.text ? j.text.slice(0, 600) : '';
+    out.text = j.text ? j.text.slice(0, 3000) : '';
     return out;
   }
 
@@ -205,10 +202,45 @@
     });
     return loadPromise;
   }
-  function fresh() { return memCache && Date.now() - memCache.at < TTL; }
-  function ensure() { return fresh() ? Promise.resolve(memCache) : refresh(); }
+  /* ----- the automatic collection: data/jobs.json, written by the GitHub Action ----- */
+  var STATIC_FRESH = 12 * 3600e3;
+  var staticLoading = null;
+  function fromStatic(d) {
+    var srcs = d.sources || [];
+    return {
+      at: Date.parse(d.generatedAt) || 0, collector: true, stats: d.stats || {}, archived: d.archived || [], sourcesInfo: srcs, scanned: (d.stats && d.stats.scanned) || 0,
+      jobs: (d.jobs || []).map(function (j) { return Object.assign({ loc: j.location || '', scam: false }, j); }),
+      ok: srcs.filter(function (x) { return x.status === 'ok' || x.status === 'skipped'; }).map(function (x) { return { name: x.name, count: x.listed }; }),
+      failed: srcs.filter(function (x) { return x.status === 'failed'; }).map(function (x) { return { name: x.name, type: TYPES[x.type] || x.type, slug: x.slug, reason: x.error || 'failed' }; })
+    };
+  }
+  function loadStatic() {
+    if (staticLoading) return staticLoading;
+    staticLoading = fetch('data/jobs.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        if (!d || !Array.isArray(d.jobs) || !d.generatedAt) return null; // the Action has not run yet
+        var c = fromStatic(d);
+        // Keep jobs the person found with the live fetch only when the collection is older.
+        memCache = c; return c;
+      }, function () { return null; })
+      .then(function (c) { staticLoading = null; return c; });
+    return staticLoading;
+  }
+  function fresh() { return memCache && Date.now() - memCache.at < (memCache.collector ? STATIC_FRESH : TTL); }
+  // Order: the collected file first, then (only if it is missing or older than 12 hours) the browser's own live fetch.
+  function ensure() {
+    if (fresh()) return Promise.resolve(memCache);
+    return loadStatic().then(function (c) { return c && fresh() ? c : refresh(); });
+  }
+  function reload() {
+    return loadStatic().then(function (c) { return c && fresh() ? c : refresh(); }).then(function (c) { notifyLoaded(); return c; });
+  }
+  var loadedListeners = [];
+  function onLoaded(fn) { loadedListeners.push(fn); }
+  function notifyLoaded() { loadedListeners.forEach(function (fn) { try { fn(memCache); } catch (e) { setTimeout(function () { throw e; }); } }); }
+  function init() { return ensure().then(function (c) { notifyLoaded(); return c; }); }
   function allJobs() {
-    return (memCache ? memCache.jobs : []).map(function (j) { j.score = score(j); return j; });
+    return (memCache ? memCache.jobs : []).map(function (j) { var r = evalJob(j); j.score = r.score; j.eval = r; return j; });
   }
   function newJobs() {
     var seen = J.data.seenJobs;
@@ -228,7 +260,10 @@
     var existing = J.data.apps.filter(function (a) { return a.jobKey === job.key; })[0];
     if (existing) return { app: existing, existed: true };
     var a = { id: J.uid(), jobKey: job.key, title: job.title, company: job.company, city: job.city, url: job.url, stage: 'saved', appliedOn: '', deadline: '', interview: '', notes: '', checklist: {}, created: J.today(), updated: J.today(), scam: job.scam };
+    // The closing date (if the listing has one) becomes a reminder; the follow-up reminder is created 7 days out; the pack is prepared.
+    if (J.matches) { var cl = J.matches.closeDate(job); if (cl && cl >= J.today()) a.deadline = cl; a.prep = J.matches.makePrep(job); }
     J.data.apps.push(a);
+    J.syncAppTasks(a);
     J.commit();
     return { app: a, existed: false };
   }
@@ -263,9 +298,9 @@
       var list = filterJobs({ q: ui.jq, city: ui.jcity, level: ui.jlevel, sort: ui.jsort });
       var c = memCache;
       var feedHead = loading ? '<p class="loading"><i aria-hidden="true"></i>Checking ' + sources().filter(function (s) { return s.enabled; }).length + ' company job boards…</p>' : '';
-      var status = c ? 'Updated ' + J.ago(c.at) + ' · ' + (c.ok || []).length + ' of ' + ((c.ok || []).length + (c.failed || []).length) + ' sources loaded · ' + c.jobs.length + ' fresher-friendly UAE/remote roles from ' + (c.scanned || 0) + ' listings' : 'Not loaded yet.';
+      var status = c ? (c.collector ? 'Collected automatically · ' : 'Loaded by your browser · ') + 'updated ' + J.ago(c.at) + ' · ' + (c.ok || []).length + ' of ' + ((c.ok || []).length + (c.failed || []).length) + ' sources worked · ' + c.jobs.length + ' fresher-friendly UAE/remote roles from ' + (c.scanned || 0) + ' listings' : 'Not loaded yet.';
       var titleChips = (p.titles.length ? p.titles : ['Graduate']).slice(0, 5);
-      return J.head('Career', 'Job finder', 'Fresher, graduate and internship roles in the UAE. Searches open on each site in a new tab; the live feed reads official public company job boards.', '') +
+      return J.head('Career', 'Job finder', 'Fresher, graduate and internship roles in the UAE. Searches open on each site in a new tab; the live feed reads official public company job boards.', '<a class="btn primary" href="#matches">Jobs that can hire you</a>') +
         '<article class="panel tip gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 20h18z"/><path d="M12 10v4M12 17h.01"/></svg><p><b>Scam safety:</b> real UAE employers never ask you to pay for a job, a visa, training or a “registration fee”. Never send money or passport copies before a verified offer. Jobs mentioning fees or deposits are flagged in red.</p></article>' +
         '<article class="panel"><h2 class="label">One-click searches</h2>' +
           '<form class="row" data-form="jobSearch" autocomplete="off" style="margin-bottom:12px">' +
@@ -291,8 +326,8 @@
         '</article>';
     },
     after: function () {
-      if (!memCache && !loading) refresh();
-      else if (memCache && !fresh() && !loading) refresh();
+      if (!memCache && !loading) ensure().then(function () { J.render(false); });
+      else if (memCache && !fresh() && !loading) ensure().then(function () { J.render(false); });
       if (memCache) markSeen();
     }
   };
@@ -309,7 +344,7 @@
   function byKey(key) { return allJobs().filter(function (j) { return j.key === key; })[0]; }
   Object.assign(J.actions, {
     useKw: function (id) { ui.sKw = id; J.render(false); },
-    refreshJobs: function () { refresh().then(function (c) { J.toast(c.jobs.length + ' roles found from ' + c.ok.length + ' sources.'); }); },
+    refreshJobs: function () { reload().then(function (c) { J.toast(c.jobs.length + ' roles from ' + c.ok.length + ' sources' + (c.collector ? ' (collected automatically ' + J.ago(c.at) + ').' : '.')); }); J.render(false); },
     saveJob: function (key) {
       var r = save(byKey(key));
       if (r) J.toast(r.existed ? 'Already in your applications.' : 'Saved to Applications.');
@@ -478,7 +513,7 @@
         { name: 'deadline', label: 'Application deadline', type: 'date', value: x.deadline, half: true, hint: 'Becomes a reminder at 9 am.' },
         { name: 'interview', label: 'Interview date and time', type: 'datetime-local', value: x.interview, hint: 'Becomes a timed reminder.' },
         { name: 'notes', label: 'Notes', type: 'textarea', rows: 3, value: x.notes },
-        { type: 'html', html: checks + tpls }
+        { type: 'html', html: checks + tpls + (a && a.prep && J.matches ? J.matches.prepHTML(a) : '') }
       ],
       collect: function (v, root) { v.checklist = {}; $$('[data-check]', root).forEach(function (c) { if (c.checked) v.checklist[c.getAttribute('data-check')] = true; }); },
       validate: function (v) { if (v.url && !/^https?:\/\//i.test(v.url)) return 'The job page must start with https://'; },
@@ -498,7 +533,7 @@
   /* ================= public API (used by Today and voice) ================= */
   J.jobs = {
     cache: function () { return memCache; }, loading: function () { return loading; },
-    refresh: refresh, ensure: ensure, all: allJobs, newJobs: newJobs, filter: filterJobs, save: save, isSaved: isSaved,
+    refresh: refresh, ensure: ensure, reload: reload, init: init, loadStatic: loadStatic, onLoaded: onLoaded, eval: evalJob, byKey: byKey, all: allJobs, newJobs: newJobs, filter: filterJobs, save: save, isSaved: isSaved,
     searchLinks: searchLinks, sources: sources, endpoint: endpoint, keep: keep, finish: finish, normalize: normalizeJob, score: score
   };
 })();

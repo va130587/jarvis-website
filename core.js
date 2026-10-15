@@ -285,11 +285,14 @@
   function blank() {
     return {
       v: 3,
-      profile: { name: 'Roshan', field: '', degree: '', university: '', skills: [], languages: [], cities: [], titles: [], jobTypes: [], goal: '', goalSample: false, sampleFields: [] },
+      profile: { name: 'Roshan', field: '', degree: '', university: '', skills: [], languages: [], cities: [], titles: [], jobTypes: [], goal: '', goalSample: false, sampleFields: [],
+        // used to match jobs ("which jobs can hire me")
+        gradDate: '', gpa: '', tools: [], skillLevels: {}, yearsExp: '0', experience: '', nationality: '', visa: 'resident', remote: 'open', salaryFloor: '', notice: '', avoidIndustries: [] },
       people: [], tasks: [], notes: [], skills: [], wins: [], apps: [],
       sources: null, // null means "use the starter list"
       seenJobs: [], cal: null, extEvents: [],
-      settings: { voice: true, voiceURI: '', rate: 1, wake: false, sounds: false, notify: false, weeklyGoal: 5 }
+      rules: [], alertsSeen: [], alertsReady: false, reports: { week: '', latest: null }, digestOn: '',
+      settings: { voice: true, voiceURI: '', rate: 1, wake: false, sounds: false, notify: false, weeklyGoal: 5, jobAlerts: true, alertMin: 75, smart: false }
     };
   }
   function sample() {
@@ -303,7 +306,10 @@
     p.jobTypes = ['Internship', 'Graduate programme', 'Full-time'];
     p.goal = 'Land a graduate software or data role in the UAE within 6 months.';
     p.goalSample = true;
-    p.sampleFields = ['field', 'degree', 'university', 'skills', 'languages', 'cities', 'titles', 'jobTypes'];
+    p.skillLevels = { Python: 'strong', SQL: 'working', JavaScript: 'working', Excel: 'working', 'Data analysis': 'working', Communication: 'working' };
+    p.nationality = 'Indian'; p.visa = 'resident'; p.yearsExp = '0'; p.gradDate = String(+t.slice(0, 4)); p.tools = ['Git', 'VS Code'];
+    p.experience = 'Final-year data dashboard project; 3-month internship at a local company.';
+    p.sampleFields = ['field', 'degree', 'university', 'skills', 'languages', 'cities', 'titles', 'jobTypes', 'skillLevels', 'nationality', 'visa', 'yearsExp', 'gradDate', 'tools', 'experience'];
     d.people = [
       { id: uid(), name: 'Dr. Ahmed', role: 'Project supervisor', sample: S },
       { id: uid(), name: 'Sara', role: 'Mentor', sample: S }
@@ -346,11 +352,16 @@
       sources: Array.isArray(x.sources) ? x.sources : null,
       seenJobs: Array.isArray(x.seenJobs) ? x.seenJobs.slice(-800) : [],
       // Calendar connections (settings only, never tokens) and events synced from Google, Outlook or .ics files.
+      rules: Array.isArray(x.rules) ? x.rules.filter(function (r) { return r && r.id; }) : [],
+      alertsSeen: Array.isArray(x.alertsSeen) ? x.alertsSeen.slice(-600) : [], alertsReady: !!x.alertsReady,
+      reports: x.reports && typeof x.reports === 'object' ? Object.assign({ week: '', latest: null }, x.reports) : { week: '', latest: null }, digestOn: x.digestOn || '',
       cal: x.cal && typeof x.cal === 'object' ? x.cal : null,
       extEvents: Array.isArray(x.extEvents) ? x.extEvents.filter(function (e) { return e && typeof e === 'object' && e.key; }) : []
     };
     ['people', 'tasks', 'notes', 'skills', 'wins', 'apps'].forEach(function (k) { out[k] = Array.isArray(x[k]) ? x[k].filter(function (i) { return i && typeof i === 'object'; }) : []; });
-    ['skills', 'languages', 'cities', 'titles', 'jobTypes', 'sampleFields'].forEach(function (k) { out.profile[k] = list(out.profile[k]); });
+    ['skills', 'languages', 'cities', 'titles', 'jobTypes', 'sampleFields', 'tools', 'avoidIndustries'].forEach(function (k) { out.profile[k] = list(out.profile[k]); });
+    if (!out.profile.skillLevels || typeof out.profile.skillLevels !== 'object' || Array.isArray(out.profile.skillLevels)) out.profile.skillLevels = {};
+    out.profile.yearsExp = String(out.profile.yearsExp == null ? '0' : out.profile.yearsExp);
     if (!out.profile.name) out.profile.name = 'Roshan';
     out.tasks.forEach(function (t) { t.status = t.status || 'todo'; t.priority = t.priority || 'medium'; t.title = t.title || 'Untitled task'; });
     out.apps.forEach(function (a) { a.stage = a.stage || 'saved'; a.checklist = a.checklist || {}; });
@@ -394,7 +405,7 @@
     snapshot();
     var d = J.data, p = d.profile;
     if (p.goalSample) { p.goal = ''; p.goalSample = false; }
-    p.sampleFields.forEach(function (f) { p[f] = typeof p[f] === 'string' ? '' : []; });
+    p.sampleFields.forEach(function (f) { p[f] = Array.isArray(p[f]) ? [] : (p[f] && typeof p[f] === 'object' ? {} : (f === 'yearsExp' ? '0' : f === 'visa' ? 'resident' : '')); });
     p.sampleFields = [];
     ['people', 'tasks', 'notes', 'skills', 'wins', 'apps'].forEach(function (k) { d[k] = d[k].filter(function (x) { return !isSample(x); }); });
     d.tasks = d.tasks.filter(function (t) { return !t.appId || byId(d.apps, t.appId); });
@@ -481,6 +492,7 @@
     if (!t) return null;
     t.status = done ? 'done' : 'todo';
     t.doneOn = done ? today() : '';
+    if (t.kind === 'followup' && t.appId) { var fa = byId(J.data.apps, t.appId); if (fa) fa.followedUp = !!done; }
     commit();
     return t;
   }
@@ -502,8 +514,11 @@
   // Application deadlines and interviews become reminders (linked tasks).
   function syncAppTasks(a) {
     var d = J.data;
-    d.tasks = d.tasks.filter(function (t) { return !(t.appId === a.id && t.status !== 'done' && (t.kind === 'deadline' || t.kind === 'interview')); });
+    d.tasks = d.tasks.filter(function (t) { return !(t.appId === a.id && t.status !== 'done' && (t.kind === 'deadline' || t.kind === 'interview' || t.kind === 'followup')); });
     if (a.stage === 'rejected' || a.stage === 'offer') return;
+    // Follow-up reminder 7 days after saving (or after applying).
+    var base = a.stage === 'applied' ? a.appliedOn : a.stage === 'saved' ? a.created : '';
+    if (base && !(a.followedUp)) d.tasks.push({ id: uid(), title: 'Follow up: ' + a.title + ' at ' + a.company, person: a.company, due: addDays(base, 7), time: '09:00', priority: 'medium', status: 'todo', created: today(), kind: 'followup', appId: a.id, sample: a.sample });
     if (a.deadline && a.stage === 'saved') d.tasks.push({ id: uid(), title: 'Apply: ' + a.title + ' at ' + a.company, person: '', due: a.deadline, time: '09:00', priority: 'high', status: 'todo', created: today(), kind: 'deadline', appId: a.id, sample: a.sample });
     if (a.interview) d.tasks.push({ id: uid(), title: 'Interview: ' + a.title + ' at ' + a.company, person: a.company, due: a.interview.slice(0, 10), time: a.interview.slice(11, 16) || '09:00', priority: 'high', status: 'todo', created: today(), kind: 'interview', appId: a.id, sample: a.sample });
   }

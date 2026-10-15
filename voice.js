@@ -457,7 +457,7 @@
   J.say = respond;
 
   /* ================= commands ================= */
-  var EXAMPLES = ['brief me', 'what\'s due today', 'add task submit report to Dr. Ahmed by Sunday', 'remind me to call HR tomorrow at 10am', 'find internships in Dubai', 'how many applications do I have', 'what\'s on my calendar this week', 'add note bring printed CVs', 'log a win finished the SQL course', 'what\'s my next step'];
+  var EXAMPLES = ['brief me', 'what\'s due today', 'add task submit report to Dr. Ahmed by Sunday', 'remind me to call HR tomorrow at 10am', 'find internships in Dubai', 'how many applications do I have', 'what\'s on my calendar this week', 'add note bring printed CVs', 'log a win finished the SQL course', 'what\'s my next step', 'what jobs can hire me', 'what should I learn to get more jobs', 'which job should I apply to first'];
   function three() { var a = EXAMPLES.slice().sort(function () { return Math.random() - 0.5; }); return a.slice(0, 3); }
   var SCREENS = [
     [/^(today|home|dashboard|main|start|command)$/, 'today'], [/^(tasks?|to ?dos?|reminders?)$/, 'tasks'], [/^(calendar|schedule|week|week view)$/, 'calendar'],
@@ -473,7 +473,7 @@
   }
   function list3(arr, fn) { var shown = arr.slice(0, 3).map(fn), more = arr.length - shown.length; return J.joinList(shown) + (more > 0 ? ', and ' + more + ' more' : ''); }
   var pending = null;
-  var ctx = { jobs: [], job: null };
+  var ctx = J.ctx = { jobs: [], job: null };
   var YES = /^(yes|yeah|yep|yup|sure|confirm|confirmed|do it|ok|okay|correct|please do|go ahead|affirmative|delete it)\b/;
   var NO = /^(no|nope|nah|cancel|don'?t|do not|stop|never mind|keep it|negative)\b/;
   var ORD = { first: 0, '1st': 0, one: 0, second: 1, '2nd': 1, two: 1, third: 2, '3rd': 2, three: 2, fourth: 3, four: 3, fifth: 4, five: 4 };
@@ -543,6 +543,12 @@
     /* ---- time and date ---- */
     if (/\b(what time|the time|time is it|current time|time now)\b/.test(t)) return 'It\'s ' + J.timeNow() + ' in Dubai.';
     if (/\b(what's the date|today's date|what day is it|what's today|the date|which day is it|date today)\b/.test(t)) return 'Today is ' + J.longDate(J.today()) + '.';
+
+    /* ---- job matching (matches.js) ---- */
+    if (J.matchVoice && !/^(open|go to|goto|take me to|switch to|display|view|bring up|launch)\s/.test(t)) {
+      var mr = J.matchVoice(t, orig);
+      if (mr) return wrapCal(mr);
+    }
 
     /* ---- calendar (calendar.js): sync, next meeting, free time, add / move / cancel ---- */
     if (J.calVoice && !/^(open|go to|goto|take me to|switch to|display|view|bring up|launch)\s/.test(t)) {
@@ -694,6 +700,9 @@
     if (/\b(who are you|your name|what are you)\b/.test(t)) return 'I\'m Jarvis, your personal assistant. Everything I know stays in this browser.';
     if (/^(yes|no|yeah|nope|ok|okay)$/.test(t)) return 'Okay.';
 
+    if (J.smart && J.smart.ready() && J.smart.interpret) {
+      return J.smart.interpret(orig).then(function (r) { return r ? wrapCal(r) : { text: 'Sorry, I didn\'t catch that. You could try one of these.', chips: three() }; });
+    }
     return { text: 'Sorry, I didn\'t catch that. You could try one of these.', chips: three() };
   }
   // Calendar replies may be text, a promise, a yes/no question or a follow-up question.

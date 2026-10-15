@@ -623,3 +623,30 @@ dialog h2 { margin-bottom: 16px; font-size: 22px; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   #boot, .fx-scan { display: none; }
 }
+
+/* ---- Jobs for you (matches.js), Smart mode, digest ---- */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.tab { min-height: 36px; padding: 6px 14px; border: 1px solid var(--line); background: var(--fill-2); color: var(--muted); cursor: pointer; font-size: 13.5px; font-weight: 500; }
+.tab:hover { color: var(--text); border-color: var(--edge-hi); }
+.tab[aria-pressed="true"] { background: rgba(79, 216, 255, .16); color: var(--text); box-shadow: inset 0 -2px 0 var(--cyan); }
+.tab .n { margin-left: 6px; font: 500 11px/1 var(--mono); color: var(--cyan-2); }
+.match-card .job-top .score { font: 600 22px/1 var(--mono); color: var(--cyan-2); }
+.stats-panel { margin-bottom: 16px; }
+.gap-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.gap-list .links a { margin-right: 10px; }
+.why { display: grid; gap: 6px; }
+.why h3 { margin: 14px 0 4px; font: 500 12px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.why .verdict { margin: 0; padding: 10px 12px; border: 1px solid var(--edge-hi); background: var(--cyan-soft); }
+.why .verdict.gold { border-color: rgba(245, 196, 106, .5); background: var(--gold-soft); }
+.why .verdict.red { border-color: rgba(255, 100, 100, .5); background: var(--red-soft); }
+.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.parts li { display: grid; grid-template-columns: 110px 1fr 48px; align-items: center; gap: 10px; font-size: 13.5px; }
+.why-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.why-list li { padding: 6px 10px; border-left: 3px solid var(--line); font-size: 14px; }
+.why-list li.yes { border-left-color: var(--cyan); }
+.why-list li.no { border-left-color: var(--gold); }
+.tip-box { padding: 10px 12px; border: 1px solid rgba(245, 196, 106, .4); background: var(--gold-soft); font-size: 13.5px; }
+.tip-box.red { border-color: rgba(255, 100, 100, .5); background: var(--red-soft); }
+.template { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; padding: 12px; border: 1px solid var(--line); background: var(--fill-2); font: 400 13px/1.55 var(--mono); max-height: 260px; overflow: auto; }
+progress { width: 100%; height: 8px; margin-top: 10px; accent-color: var(--cyan); }
+@media (max-width: 520px) { .parts li { grid-template-columns: 90px 1fr 44px; } }

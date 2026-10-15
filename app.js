@@ -142,7 +142,7 @@
   };
 
   /* ================= render + router ================= */
-  var TITLES = { today: 'Today', tasks: 'Tasks', calendar: 'Calendar', notes: 'Notes', jobs: 'Job finder', applications: 'Applications', growth: 'Growth', review: 'Weekly review', profile: 'Profile', settings: 'Settings', help: 'Voice commands' };
+  var TITLES = { today: 'Today', tasks: 'Tasks', calendar: 'Calendar', notes: 'Notes', matches: 'Jobs for you', jobs: 'Job finder', applications: 'Applications', growth: 'Growth', review: 'Weekly review', profile: 'Profile', settings: 'Settings', help: 'Voice commands' };
   J.titles = TITLES;
   function render(animate) {
     var scr = J.screens[current];
@@ -186,7 +186,7 @@
     if (!initial) { window.scrollTo(0, 0); main.focus({ preventScroll: true }); }
   }
   function badges() {
-    var counts = { overdue: J.overdue().length, newjobs: J.jobs ? J.jobs.newJobs().length : 0 };
+    var counts = { overdue: J.overdue().length, newjobs: J.jobs ? J.jobs.newJobs().length : 0, newmatches: J.matches ? J.matches.newCount() : 0 };
     $$('[data-badge]').forEach(function (el) {
       var k = el.getAttribute('data-badge'), n = counts[k];
       el.hidden = !n; el.textContent = n || '';
@@ -283,7 +283,7 @@
               return '<li><span class="when">' + esc(j.score) + '% match</span><span class="what">' + esc(j.title) + '<small>' + esc(j.company + ' · ' + j.city) + '</small></span></li>';
             }).join('') + '</ul>' : J.empty(hasCache ? 'No new roles since you last checked.' : 'Open the <b>Job finder</b> to load live roles from company job boards.')) +
           '</article>' +
-        '</div>';
+        '</div>' + (J.matches ? J.matches.digestHTML() : '');
     }
   };
 
@@ -292,7 +292,7 @@
   var STATUS = [['todo', 'To do'], ['doing', 'In progress'], ['done', 'Done']];
   function taskRow(x) {
     var t = J.today(), late = x.status !== 'done' && x.due && x.due < t;
-    var kind = x.kind === 'deadline' ? J.tag('Deadline', 'gold') : x.kind === 'interview' ? J.tag('Interview', 'gold') : '';
+    var kind = x.kind === 'deadline' ? J.tag('Deadline', 'gold') : x.kind === 'interview' ? J.tag('Interview', 'gold') : x.kind === 'followup' ? J.tag('Follow-up', 'dim') : '';
     return '<li class="item' + (late ? ' late' : '') + (x.status === 'done' ? ' done' : '') + (x.priority === 'high' ? ' p-high' : '') + '">' +
       '<button type="button" class="check" role="checkbox" aria-checked="' + (x.status === 'done') + '" data-act="toggleTask" data-id="' + x.id + '" aria-label="' + esc((x.status === 'done' ? 'Mark not done: ' : 'Mark done: ') + x.title) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg></button>' +
       '<div class="item-main"><p class="item-title">' + highlight(x.title, ui.taskQuery) + '</p><p class="item-meta">' +
@@ -525,6 +525,7 @@
           '<article class="panel"><h2 class="label">Skills progress</h2>' + (J.data.skills.length ? '<div class="btn-row">' + J.data.skills.map(function (s) { return '<span style="display:inline-flex;align-items:center;gap:10px;min-width:170px">' + J.ring(s.progress, { size: 54, segs: 20, label: s.name + ' ' + s.progress + ' percent' }) + '<span>' + esc(s.name) + '</span></span>'; }).join('') + '</div>' : J.empty('No skills added yet.')) + '</article>' +
           '<article class="panel"><h2 class="label">Applications this week</h2>' + list(r.applied, function (a) { return '<li>' + esc(a.title) + ' <span class="muted">at ' + esc(a.company) + '</span> ' + J.tag(J.stageName(a.stage)) + '</li>'; }, 'No applications sent this week yet.') + '</article>' +
         '</div>' +
+        (J.reviewExtra ? J.reviewExtra() : '') +
         '<article class="panel' + (r.next.tone === 'red' ? ' red' : ' gold') + '"><h2 class="label">One next step</h2><p class="next-text">' + esc(r.next.text) + '</p><a class="btn small" href="#' + r.next.view + '">' + esc(r.next.label) + '</a></article>';
     }
   };
@@ -548,7 +549,7 @@
             '<div class="field"><label for="pDegree">Degree</label><input id="pDegree" type="text" value="' + val('degree') + '" placeholder="BSc Computer Science"></div>' +
             '<div class="field"><label for="pField">Field of study</label><input id="pField" type="text" value="' + val('field') + '" placeholder="Computer Science"></div>' +
             '<div class="field"><label for="pUni">University</label><input id="pUni" type="text" value="' + val('university') + '"></div>' +
-            '<div class="field"><label for="pSkills">Skills</label><input id="pSkills" type="text" value="' + val('skills') + '" placeholder="Python, SQL, Excel"><small>Comma separated. Used for job match scores.</small></div>' +
+            '<div class="field"><label for="pSkills">Skills</label><input id="pSkills" type="text" value="' + esc(J.skillsString ? J.skillsString(p) : p.skills.join(', ')) + '" placeholder="Python (advanced), SQL, Excel"><small>Comma separated. Add a level in brackets if you like: beginner, working, advanced. Used for job match scores.</small></div>' +
             '<div class="field"><label for="pLang">Languages</label><input id="pLang" type="text" value="' + val('languages') + '" placeholder="English, Arabic"></div>' +
             '<div class="field"><label for="pTitles">Desired job titles</label><input id="pTitles" type="text" value="' + val('titles') + '" placeholder="Data Analyst, Software Engineer"><small>Used for one-click job searches.</small></div>' +
             '<div class="field"><label for="pGoal">Career goal</label><input id="pGoal" type="text" value="' + val('goal') + '"></div>' +
@@ -556,6 +557,9 @@
           chips('cities', CITIES, 'Preferred UAE cities') + chips('jobTypes', JOB_TYPES, 'Job types') +
           '<div class="btn-row"><button type="submit" class="btn primary">Save profile</button></div>' +
         '</form>' +
+        '<article class="panel"><div class="panel-head"><h2 class="label">Job matching details</h2><button type="button" class="btn small primary" data-act="jobProfile">Edit job profile</button></div>' +
+          '<p class="small-text muted" style="margin:0 0 10px">Graduation, GPA, skill levels, tools, experience, nationality and visa, salary floor, notice period and industries to avoid. They stay in this browser and are never uploaded.</p>' +
+          '<ul class="plain small-text"><li>Skills: ' + esc(J.skillsString ? J.skillsString(p) : p.skills.join(', ')) + '</li><li>Experience: ' + esc(p.yearsExp) + ' years · Nationality: ' + esc(p.nationality || 'not set') + ' · Visa: ' + esc(p.visa) + ' · Remote: ' + esc(p.remote) + '</li><li>Graduation: ' + esc(p.gradDate || 'not set') + ' · GPA: ' + esc(p.gpa || 'not set') + ' · Salary floor: ' + (+p.salaryFloor ? 'AED ' + esc(p.salaryFloor) : 'not set') + '</li></ul></article>' +
         '<article class="panel"><div class="panel-head"><h2 class="label">Important people</h2><button type="button" class="btn small" data-act="addPerson">Add person</button></div>' +
           '<p class="small-text muted" style="margin:-6px 0 12px">Jarvis recognises these names when you add tasks, for example <q>email Sara by Friday</q>.</p>' +
           (J.data.people.length ? '<ul class="items">' + J.data.people.map(function (x) {
@@ -570,9 +574,12 @@
     if (!name) { J.toast('Please enter your name.'); $('#pName').focus(); return; }
     var map = {
       name: name, degree: $('#pDegree').value.trim(), field: $('#pField').value.trim(), university: $('#pUni').value.trim(),
-      skills: J.list($('#pSkills').value), languages: J.list($('#pLang').value), titles: J.list($('#pTitles').value), goal: $('#pGoal').value.trim(),
+      languages: J.list($('#pLang').value), titles: J.list($('#pTitles').value), goal: $('#pGoal').value.trim(),
       cities: $$('input[name="cities"]:checked', form).map(function (c) { return c.value; }), jobTypes: $$('input[name="jobTypes"]:checked', form).map(function (c) { return c.value; })
     };
+    var sk = $('#pSkills').value;
+    if (J.saveSkills && sk !== (J.skillsString ? J.skillsString(p) : '')) { J.saveSkills(p, sk); p.sampleFields = p.sampleFields.filter(function (f) { return f !== 'skills'; }); }
+    else if (!J.saveSkills) p.skills = J.list(sk);
     Object.keys(map).forEach(function (k) {
       if (JSON.stringify(map[k]) !== JSON.stringify(p[k])) { p.sampleFields = p.sampleFields.filter(function (f) { return f !== k; }); if (k === 'goal') p.goalSample = false; }
       p[k] = map[k];
@@ -617,7 +624,7 @@
             '<p class="small-text muted" id="voiceSupport" style="margin:12px 0 0"></p>' +
           '</article>' +
         '</div>' +
-        (J.calSettingsHTML ? J.calSettingsHTML() : '') +
+        (J.calSettingsHTML ? J.calSettingsHTML() : '') + (J.jobSettingsHTML ? J.jobSettingsHTML() : '') + (J.smartSettingsHTML ? J.smartSettingsHTML() : '') +
         '<article class="panel"><h2 class="label">Your data</h2>' +
           '<p class="small-text muted" style="margin:0 0 12px">Everything is saved only in this browser, on this device. Export a backup regularly; import it to restore or move to another device.</p>' +
           '<div class="btn-row"><button type="button" class="btn" data-act="export">Export backup (JSON)</button><button type="button" class="btn" data-act="import">Import backup</button>' +
@@ -638,6 +645,7 @@
     ['Tasks and reminders', [['Add task submit report to Dr. Ahmed by Sunday', 'Adds a task with person and date'], ['Remind me to call HR tomorrow at 10am', 'Timed reminder: spoken + notification'], ['Mark submit report as done', 'Completes a task'], ['Delete task call HR', 'Asks you to confirm with yes or no']]],
     ['Notes and growth', [['Add note bring printed CVs to the fair', 'Saves a note'], ['Read my notes', 'Reads your latest notes'], ['Log a win finished the SQL course', 'Adds to Growth']]],
     ['Jobs and applications', [['Find internships', 'Live intern roles in the UAE'], ['Find fresher jobs in Dubai', 'Entry-level roles in a city'], ['Show new jobs', 'New since you last looked'], ['Save this job', 'Saves the job Jarvis just mentioned'], ['How many applications do I have?', 'Counts by stage'], ['What deadlines are coming up?', 'Deadlines and interviews']]],
+    ['Job matching', [['What jobs can hire me?', 'Your best matches, with reasons'], ['Why did you match this job?', 'Or: what am I missing for this job?'], ['Show new jobs since yesterday', 'Then: read the top three'], ['Which job should I apply to first?', 'Best score plus nearest deadline'], ['What should I learn to get more jobs?', 'Skills that unlock the most jobs'], ['Set an alert for data analyst jobs in Dubai above 70 percent', 'Asks you to confirm'], ['Turn job alerts on', 'Or off'], ['Run the job search now', 'Reloads the job list'], ['When did you last check?', 'Time and sources'], ['Prepare an application for this job', 'Saves it with a checklist, letter and reminders'], ['Set up my job profile', 'Short questions by voice']]],
     ['Calendar', [['What\'s on my calendar today?', 'Also: tomorrow, this week, on Monday'], ['What\'s my next meeting?', 'Your next event or interview'], ['Am I free at 3 pm tomorrow?', 'Checks your calendar and tasks'], ['When am I free on Monday?', 'Free time inside your working hours'],
       ['Add interview with Careem on Sunday at 11am', 'Asks you to confirm, then adds it'], ['Move my 3 pm meeting to 4 pm', 'Asks you to confirm first'], ['Cancel the call with HR', 'Asks yes or no first'], ['Sync my calendar', 'Refreshes Google and Outlook']]],
     ['Navigation and voice', [['Open calendar', 'Any screen: tasks, notes, jobs, applications…'], ['Go back', 'Previous screen'], ['Voice off', 'Text replies only ("voice on" to undo)'], ['Turn on wake mode', 'Listen for "Hey Jarvis"'], ['Speak slower', 'Or "speak faster"']]]
@@ -780,6 +788,7 @@
         J.data.settings[k] = v;
         J.persist();
         if (k === 'notify' && v) requestNotify(el);
+        if (k === 'smart' && J.smart) J.smart.toggled(v);
         if (J.voice) J.voice.settingsChanged(k);
         if (k === 'weeklyGoal') render(false);
       }
