@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jarvis</title>
-<meta name="description" content="Jarvis: Roshan's free, voice-enabled personal assistant for promises, growth and opportunities. Runs in the browser with no account and no API key.">
-<meta name="theme-color" content="#050a14">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050a14'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%235fd8ff' stroke-width='3' stroke-dasharray='20 8'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%235fd8ff'/%3E%3C/svg%3E">
+<meta name="description" content="Jarvis: Roshan's free personal assistant with a voice interface, tasks, reminders, calendar, notes, growth tracking and a UAE job finder. No account, no API key, no server.">
+<meta name="theme-color" content="#03070f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303070f'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%234fd8ff' stroke-width='3' stroke-dasharray='9 4'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%234fd8ff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="app.css">
 <script>
-  // Show the start-up screen once per visit, and never when reduce motion is on.
+  // The boot sequence plays once per visit, and never with reduce motion.
   (function () {
     var skip = false;
     try { skip = sessionStorage.getItem('jarvis.booted') === '1'; } catch (e) {}
@@ -22,50 +22,60 @@
 </script>
 </head>
 <body data-voice="idle">
-<canvas id="bgfx" aria-hidden="true"></canvas>
+<div class="fx-grid" aria-hidden="true"></div>
+<div class="fx-scan" aria-hidden="true"></div>
 
 <div id="boot" aria-hidden="true">
-  <div class="boot-core"><i></i><i></i><i></i><b></b></div>
+  <div class="boot-rings"><i></i><i></i><i></i><b></b></div>
   <p class="boot-name">JARVIS</p>
-  <p class="boot-line"><span class="boot-bar"><i></i></span></p>
-  <p class="boot-status mono">Systems online</p>
-  <p class="boot-skip mono">Click to skip</p>
+  <ol class="boot-log mono">
+    <li>Core online…</li>
+    <li>Voice interface ready…</li>
+    <li class="ok">All systems online</li>
+  </ol>
+  <span class="boot-bar"><i></i></span>
+  <p class="boot-skip mono">Click or press any key to skip</p>
 </div>
 
 <a class="skip-link" href="#main" id="skipLink">Skip to content</a>
 
 <div class="app">
   <aside class="side" aria-label="Sidebar">
-    <a class="brand" href="#today" aria-label="Jarvis home">
-      <span class="brand-mark" aria-hidden="true"><i></i></span>
-      <span class="brand-text"><b>JARVIS</b><small>Personal assistant</small></span>
+    <a class="brand" href="#today" aria-label="Jarvis, go to Today">
+      <span class="brand-mark" aria-hidden="true"><i></i><b></b></span>
+      <span class="brand-text"><b>JARVIS</b><small class="mono">Personal AI · v3</small></span>
     </a>
     <nav class="nav" aria-label="Main">
-      <a href="#today" data-view="today"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8" stroke-dasharray="4 3"/></svg><span>Today</span></a>
-      <a href="#commitments" data-view="commitments"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span>Commitments</span><em class="count" data-badge="overdue" hidden></em></a>
+      <p class="nav-group mono">Command</p>
+      <a href="#today" data-view="today"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.4"/></svg><span>Today</span></a>
+      <a href="#tasks" data-view="tasks"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span>Tasks</span><em class="count red" data-badge="overdue" hidden></em></a>
+      <a href="#calendar" data-view="calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Calendar</span></a>
+      <a href="#notes" data-view="notes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg><span>Notes</span></a>
+      <p class="nav-group mono">Career</p>
+      <a href="#jobs" data-view="jobs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><span>Job finder</span><em class="count" data-badge="newjobs" hidden></em></a>
+      <a href="#applications" data-view="applications"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7" width="17" height="12" rx="2"/><path d="M9 7V5h6v2M3.5 12h17"/></svg><span>Applications</span></a>
       <a href="#growth" data-view="growth"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="m5 15 4.5-4.5 3.5 3L19 7"/><path d="M15 7h4v4"/></svg><span>Growth</span></a>
-      <a href="#opportunities" data-view="opportunities"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/></svg><span>Opportunities</span></a>
-      <a href="#review" data-view="review"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Weekly review</span></a>
-      <a href="#approvals" data-view="approvals"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M5.5 5h13l1.5 8v6H4v-6z"/></svg><span>Approvals</span><em class="count" data-badge="drafts" hidden></em></a>
-      <a href="#profile" data-view="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>My profile</span></a>
-      <a href="blueprint/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h10l6 6v10H4z"/><path d="M14 4v6h6M8 14h8M8 17h5"/></svg><span>Blueprint</span></a>
+      <a href="#review" data-view="review"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 15v-3M12 15V9M16 15v-5"/></svg><span>Weekly review</span></a>
+      <p class="nav-group mono">You</p>
+      <a href="#profile" data-view="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>Profile</span></a>
+      <a href="#settings" data-view="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Settings</span></a>
+      <a href="#help" data-view="help"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><span>Voice commands</span></a>
+      <a href="blueprint/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h10l6 6v10H4z"/><path d="M14 4v6h6"/></svg><span>Blueprint</span></a>
     </nav>
-    <div class="side-tools">
-      <button type="button" class="btn ghost small" data-act="export">Export backup</button>
-      <button type="button" class="btn ghost small" data-act="import">Import backup</button>
-    </div>
+    <div class="side-foot mono" aria-hidden="true"><span class="pulse-dot"></span>Local · private · offline-ready</div>
   </aside>
 
   <div class="content">
     <header class="topbar">
-      <div class="crumb"><span class="pulse-dot" aria-hidden="true"></span><span class="mono">JARVIS</span><span class="sep" aria-hidden="true">/</span><span id="crumbView">Today</span></div>
-      <div class="topbar-right">
-        <span class="voice-chip mono" id="voiceChip">Voice ready</span>
-        <time class="clock mono" id="clock" aria-label="Time in Dubai">--:--:--</time>
+      <div class="crumb"><span class="pulse-dot" aria-hidden="true"></span><span class="mono crumb-sys">JARVIS</span><span class="sep" aria-hidden="true">//</span><span id="crumbView">Today</span></div>
+      <div class="readouts mono">
+        <span class="chip" id="voiceChip" aria-live="polite">Voice ready</span>
+        <span class="readout"><small>DXB</small><time id="clockDate">--- -- ---</time></span>
+        <span class="readout"><small>GST</small><time id="clockTime">--:--:--</time></span>
       </div>
     </header>
     <div class="sample-banner" id="sampleBanner" hidden>
-      <span><b>Sample data.</b> These example items show how Jarvis works.</span>
+      <span><b>Sample data</b> is showing so you can see how Jarvis works. Items marked <span class="tag sample">Sample</span> are examples.</span>
       <button type="button" class="btn small" data-act="clearSample">Clear sample data</button>
     </div>
     <main id="main" tabindex="-1"></main>
@@ -73,41 +83,42 @@
 </div>
 
 <nav class="bottom-nav" aria-label="Main">
-  <a href="#today" data-view="today"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8" stroke-dasharray="4 3"/></svg><span>Today</span></a>
-  <a href="#commitments" data-view="commitments"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span>Promises</span></a>
-  <a href="#growth" data-view="growth"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="m5 15 4.5-4.5 3.5 3L19 7"/><path d="M15 7h4v4"/></svg><span>Growth</span></a>
-  <a href="#opportunities" data-view="opportunities"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/></svg><span>Chances</span></a>
+  <a href="#today" data-view="today"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.4"/></svg><span>Today</span></a>
+  <a href="#tasks" data-view="tasks"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span>Tasks</span></a>
+  <a href="#jobs" data-view="jobs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><span>Jobs</span></a>
+  <a href="#calendar" data-view="calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Calendar</span></a>
   <button type="button" id="moreBtn" aria-expanded="false" aria-controls="moreSheet"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></button>
 </nav>
-
 <div class="more-sheet" id="moreSheet" hidden>
+  <a href="#notes" data-view="notes">Notes</a>
+  <a href="#applications" data-view="applications">Applications</a>
+  <a href="#growth" data-view="growth">Growth</a>
   <a href="#review" data-view="review">Weekly review</a>
-  <a href="#approvals" data-view="approvals">Approvals <em class="count" data-badge="drafts" hidden></em></a>
-  <a href="#profile" data-view="profile">My profile</a>
+  <a href="#profile" data-view="profile">Profile</a>
+  <a href="#settings" data-view="settings">Settings</a>
+  <a href="#help" data-view="help">Voice commands</a>
   <a href="blueprint/">Blueprint</a>
-  <button type="button" data-act="export">Export backup</button>
-  <button type="button" data-act="import">Import backup</button>
 </div>
 
-<button type="button" class="mini-orb" id="miniOrb" aria-label="Open chat with Jarvis" aria-expanded="false" aria-controls="chat">
-  <span class="mini-core" aria-hidden="true"><i></i><i></i><b></b></span>
+<button type="button" class="mini-core" id="miniCore" aria-label="Open chat with Jarvis" aria-expanded="false" aria-controls="chat">
+  <canvas id="miniOrb" aria-hidden="true"></canvas>
 </button>
 
 <section class="chat" id="chat" aria-label="Chat with Jarvis" hidden>
   <header class="chat-head">
-    <div class="chat-title"><span class="mini-core small" aria-hidden="true"><i></i><i></i><b></b></span><div><b>Jarvis</b><small class="mono" id="chatState">Ready</small></div></div>
+    <div class="chat-title"><span class="pulse-dot" aria-hidden="true"></span><div><b>JARVIS</b><small class="mono" id="chatState">Ready</small></div></div>
     <div class="chat-tools">
-      <label class="switch" title="Keep listening for &quot;Hey Jarvis&quot; while this page is open"><input type="checkbox" data-hey><span aria-hidden="true"></span>Hey Jarvis</label>
-      <label class="switch" title="Speak replies out loud"><input type="checkbox" data-speak checked><span aria-hidden="true"></span>Voice</label>
+      <button type="button" class="icon-btn" data-act="talk" aria-label="Talk to Jarvis"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
+      <a class="icon-btn" href="#help" aria-label="Voice commands help"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/></svg></a>
       <button type="button" class="icon-btn" id="chatClose" aria-label="Close chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
   </header>
+  <p class="live-line mono" id="chatLive" aria-hidden="true"></p>
   <ol class="chat-log" id="chatLog" role="log" aria-live="polite" aria-label="Conversation"></ol>
   <form class="chat-form" id="chatForm" autocomplete="off">
-    <label class="sr-only" for="chatInput">Type a message to Jarvis</label>
+    <label class="sr-only" for="chatInput">Type a command for Jarvis</label>
     <input id="chatInput" type="text" placeholder="Type a command, e.g. brief me" enterkeyhint="send">
-    <button type="button" class="icon-btn mic" data-act="talk" aria-label="Talk to Jarvis"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
-    <button type="submit" class="icon-btn send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+    <button type="submit" class="btn primary icon" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
   </form>
 </section>
 
@@ -123,10 +134,23 @@
   </form>
 </dialog>
 
+<dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmText">
+  <form method="dialog">
+    <h2 id="confirmTitle">Are you sure?</h2>
+    <p id="confirmText"></p>
+    <div class="dialog-actions">
+      <button type="submit" class="btn ghost" value="no" id="confirmNo">Cancel</button>
+      <button type="submit" class="btn danger-solid" value="yes" id="confirmYes">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="core.js"></script>
 <script src="app.js"></script>
+<script src="jobs.js"></script>
 <script src="voice.js"></script>
 </body>
 </html>
