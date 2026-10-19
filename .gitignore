@@ -1,2 +1,6 @@
 node_modules/
 tests/screenshots/
+.nova/
+.env
+.env.*
+!.env.example

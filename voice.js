@@ -290,7 +290,7 @@
   }
 
   /* ================= wake mode ("Hey Jarvis") ================= */
-  var WAKE_RX = /(?:\b(?:hey|hi|ok|okay|hello|yo)\s+)?\b(jarvis|jervis|javis|jarvas|jarves)\b[\s,.:!?]*(.*)$/i;
+  var WAKE_RX = /(?:\b(?:hey|hi|ok|okay|hello|yo)\s+)?\b(jarvis|jervis|javis|jarvas|jarves|nova)\b[\s,.:!?]*(.*)$/i;
   var STOP_RX = /\b(stop|cancel|quiet|enough|shut up|pause|be quiet)\b/i;
   var wake = { on: false, rec: null, paused: false, awaiting: false, timer: null, ignoreUntil: 0, armed: false, failures: 0 };
   function setWake(on, quiet) {
@@ -700,6 +700,7 @@
     if (/\b(who are you|your name|what are you)\b/.test(t)) return 'I\'m Jarvis, your personal assistant. Everything I know stays in this browser.';
     if (/^(yes|no|yeah|nope|ok|okay)$/.test(t)) return 'Okay.';
 
+    if (J.novaAsk) { var na = J.novaAsk(orig); if (na) return na; }
     if (J.smart && J.smart.ready() && J.smart.interpret) {
       return J.smart.interpret(orig).then(function (r) { return r ? wrapCal(r) : { text: 'Sorry, I didn\'t catch that. You could try one of these.', chips: three() }; });
     }

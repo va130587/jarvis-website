@@ -1,4 +1,33 @@
-# Jarvis
+# NOVA
+
+**NOVA: From Request to Verified Result.** A personal AI assistant by Roshan. This repository holds two things that work together:
+
+1. **NOVA server mode (new, Phase 1):** sign-in, a private database, a Memory Vault, a chat that explains what it did, an activity history, usage tracking and security controls. Free to run on your own computer.
+2. **The Jarvis tools (original):** tasks, notes, calendar connections, a UAE job assistant and a voice system. They keep working exactly as before, with data stored in your browser.
+
+See `NOVA_AUDIT.md` (what was found), `NOVA_IMPLEMENTATION_PLAN.md` (the phases), `NOVA_FEATURE_STATUS.md` (what works, honestly), `ARCHITECTURE.md` and `NOVA_TEST_REPORT.md`.
+
+## Run NOVA on your computer (free, nothing to install)
+
+You need **Node.js 22.13 or newer**. There are no packages to install to run it.
+
+```
+OWNER_EMAILS=you@gmail.com AUTH_MODE=dev node server/index.js
+```
+
+Open http://127.0.0.1:8787, type the same e-mail, and you are in. `AUTH_MODE=dev` is the local development sign-in: it only works on this computer (the server refuses to start in dev mode on any other address). Your data is stored in `.nova/nova.db` (ignored by git).
+
+**Real Google sign-in (free):** in Google Cloud Console create an OAuth client of type *Web application* with the redirect address `http://127.0.0.1:8787/auth/google/callback`, then start the server with `AUTH_MODE=google GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... OWNER_EMAILS=you@gmail.com`. See `.env.example` for every setting. Never put these values in a file that is committed.
+
+**AI answers are optional and paid.** By default NOVA uses free built-in rules (who am I, remember, list memories, time, help) and tells you honestly when a question needs an AI model. To connect Claude later, set `NOVA_AI_PROVIDER=claude`, `ANTHROPIC_API_KEY` and a spending cap `NOVA_MONTHLY_LIMIT_USD`, and run `npm install @anthropic-ai/sdk`. The Claude Code subscription you use to build NOVA and the Claude API key a running NOVA uses are billed separately.
+
+**What works today:** sign-in and sessions, the Memory Vault (you approve every memory; secrets are refused; sensitive details need confirmation), chat with plain-English "what NOVA did" steps, the NOVA orb, activity and usage pages, data export and deletion, voice requests that reach NOVA. **Upcoming and clearly labelled in the app:** Smart Email, ProofLoop, Automation Centre, Knowledge Base.
+
+**Static mode:** if you open the same pages from GitHub Pages (no server), NOVA's server features are simply absent and the Jarvis tools work as before.
+
+---
+
+# Jarvis tools (original README)
 
 Jarvis is Roshan's free personal assistant website. It looks like a futuristic command center, and you can talk to it like Siri.
 

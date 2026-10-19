@@ -154,7 +154,7 @@
     if (animate && !J.calm()) { void main.offsetWidth; main.classList.add('enter'); }
     $$('[data-view]').forEach(function (a) { if (a.getAttribute('data-view') === current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     $('#crumbView').textContent = TITLES[current];
-    document.title = current === 'today' ? 'Jarvis' : TITLES[current] + ' · Jarvis';
+    document.title = current === 'today' ? 'NOVA' : TITLES[current] + ' · NOVA';
     if (scr.after) scr.after();
     countUps(animate);
     if (animate) decode();

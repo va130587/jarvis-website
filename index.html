@@ -3,23 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Jarvis</title>
-<meta name="description" content="Jarvis: Roshan's free personal assistant with a voice interface, tasks, reminders, calendar, notes, growth tracking and a UAE job finder. No account, no API key, no server.">
+<title>NOVA</title>
+<meta name="description" content="NOVA: a personal AI assistant that takes you from request to verified result. Memories you approve, a chat that says what it did, and private data you control.">
 <meta name="theme-color" content="#03070f">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303070f'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%234fd8ff' stroke-width='3' stroke-dasharray='9 4'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%234fd8ff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="app.css">
-<script>
-  // The boot sequence plays once per visit, and never with reduce motion.
-  (function () {
-    var skip = false;
-    try { skip = sessionStorage.getItem('jarvis.booted') === '1'; } catch (e) {}
-    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) skip = true;
-    if (skip) document.documentElement.classList.add('no-boot');
-  })();
-</script>
+<link rel="stylesheet" href="nova.css">
+<script src="boot.js"></script>
 </head>
 <body data-voice="idle">
 <div class="fx-grid" aria-hidden="true"></div>
@@ -27,7 +20,7 @@
 
 <div id="boot" aria-hidden="true">
   <div class="boot-rings"><i></i><i></i><i></i><b></b></div>
-  <p class="boot-name">JARVIS</p>
+  <p class="boot-name">NOVA</p>
   <ol class="boot-log mono">
     <li>Core online…</li>
     <li>Voice interface ready…</li>
@@ -43,7 +36,7 @@
   <aside class="side" aria-label="Sidebar">
     <a class="brand" href="#today">
       <span class="brand-mark" aria-hidden="true"><i></i><b></b></span>
-      <span class="brand-text"><b>JARVIS</b><small class="mono">Personal AI · v3</small></span>
+      <span class="brand-text"><b>NOVA</b><small class="mono">Personal AI · v4</small></span>
     </a>
     <nav class="nav" aria-label="Main">
       <p class="nav-group mono">Command</p>
@@ -68,7 +61,7 @@
 
   <div class="content">
     <header class="topbar">
-      <div class="crumb"><span class="pulse-dot" aria-hidden="true"></span><span class="mono crumb-sys">JARVIS</span><span class="sep" aria-hidden="true">//</span><span id="crumbView">Today</span></div>
+      <div class="crumb"><span class="pulse-dot" aria-hidden="true"></span><span class="mono crumb-sys">NOVA</span><span class="sep" aria-hidden="true">//</span><span id="crumbView">Today</span></div>
       <div class="readouts mono">
         <button type="button" class="chip" id="calChip" hidden></button>
         <span class="chip" id="voiceChip" aria-live="polite">Voice ready</span>
@@ -109,7 +102,7 @@
 
 <section class="chat" id="chat" aria-label="Chat with Jarvis" hidden>
   <header class="chat-head">
-    <div class="chat-title"><span class="pulse-dot" aria-hidden="true"></span><div><b>JARVIS</b><small class="mono" id="chatState">Ready</small></div></div>
+    <div class="chat-title"><span class="pulse-dot" aria-hidden="true"></span><div><b>NOVA</b><small class="mono" id="chatState">Ready</small></div></div>
     <div class="chat-tools">
       <button type="button" class="icon-btn" data-act="talk" aria-label="Talk to Jarvis"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
       <a class="icon-btn" href="#help" aria-label="Voice commands help"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/></svg></a>
@@ -160,5 +153,6 @@
 <script src="matches.js"></script>
 <script src="smart.js"></script>
 <script src="voice.js"></script>
+<script src="nova.js"></script>
 </body>
 </html>

@@ -172,7 +172,7 @@ async function openApp(browser, opts) {
   const errors = [];
   const google = opts.google || {}, graph = opts.graph || {};
   google.calls = google.calls || []; graph.calls = graph.calls || [];
-  await ctx.addInitScript(([speech, gis, init]) => {
+  await ctx.addInitScript(init => {
     try { sessionStorage.setItem('jarvis.booted', '1'); } catch (e) {}
     if (init.data && !sessionStorage.getItem('test.seeded')) { localStorage.setItem('jarvis.v3', JSON.stringify(init.data)); sessionStorage.setItem('test.seeded', '1'); }
     if (init.now) {
@@ -181,10 +181,11 @@ async function openApp(browser, opts) {
       // eslint-disable-next-line no-global-assign
       Date = class extends RealDate { constructor(...a) { if (a.length) super(...a); else super(RealDate.now() + offset); } static now() { return RealDate.now() + offset; } };
     }
-    (0, eval)(speech);
-    if (init.extra) (0, eval)(init.extra);
-    if (init.fakeGis) (0, eval)(gis);
-  }, [FAKE_SPEECH, FAKE_GIS, { data: opts.data || null, now: opts.now || null, fakeGis: opts.realGis ? false : true, extra: opts.init || '' }]);
+  }, { data: opts.data || null, now: opts.now || null });
+  // The mocks are plain scripts (not eval), so they also work on pages that send a strict Content-Security-Policy.
+  await ctx.addInitScript({ content: FAKE_SPEECH });
+  if (!opts.realGis) await ctx.addInitScript({ content: FAKE_GIS });
+  if (opts.init) await ctx.addInitScript({ content: opts.init });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   if (!opts.realGis) await ctx.route('https://accounts.google.com/gsi/client', r => r.fulfill({ status: 200, contentType: 'text/javascript', body: '/* fake GIS already installed */' }));
   await ctx.route(/https:\/\/www\.googleapis\.com\/calendar\/v3\//, googleApi(google));
@@ -196,7 +197,7 @@ async function openApp(browser, opts) {
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !/Failed to load resource|net::ERR/.test(m.text())) errors.push(m.type() + ': ' + m.text()); });
-  await page.goto(BASE() + '/' + (opts.hash ? '#' + opts.hash : ''));
+  await page.goto((opts.base || BASE()) + '/' + (opts.hash ? '#' + opts.hash : ''));
   await page.waitForFunction(() => window.J && J.cal && J.voice);
   return { page, ctx, errors, google, graph };
 }
