@@ -1,1 +1,31 @@
-{"checkedAt":null,"ok":0,"broken":[]}
+{
+ "checkedAt": "2026-10-15T18:49:10.200Z",
+ "ok": 36,
+ "broken": [
+  {
+   "url": "https://linuxjourney.com/",
+   "http": 403,
+   "error": ""
+  },
+  {
+   "url": "https://www.tableau.com/learn/training",
+   "http": 403,
+   "error": ""
+  },
+  {
+   "url": "https://www.scrum.org/resources/what-is-scrum",
+   "http": 403,
+   "error": ""
+  },
+  {
+   "url": "https://www.autodesk.com/learn",
+   "http": 403,
+   "error": ""
+  },
+  {
+   "url": "https://www.edx.org/learn/compliance",
+   "http": 404,
+   "error": ""
+  }
+ ]
+}
