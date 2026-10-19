@@ -11,6 +11,8 @@ const { createAuth } = require('./auth');
 const { createMemory } = require('./memory');
 const { createChat } = require('./chat');
 const { createClaude } = require('./ai/claude');
+const { createRegistry } = require('./agent/tools');
+const { createAgent } = require('./agent/agent');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -26,21 +28,27 @@ function createApp(over, deps) {
   const auth = createAuth(cfg, db);
   const memory = createMemory(db, now);
   const provider = deps.provider || (cfg.ai.provider === 'claude' ? createClaude(cfg, deps) : { name: 'none', model: null, available: () => false });
-  const chat = createChat(cfg, db, memory, provider);
+  const registry = deps.registry || createRegistry({ db, memory });
+  const agent = createAgent(cfg, db, registry, provider);
+  const chat = createChat(cfg, db, memory, provider, agent);
   const router = new Router();
   const hdr = securityHeaders(cfg);
 
-  auth.register(router); memory.register(router); chat.register(router);
+  auth.register(router); memory.register(router); chat.register(router); agent.register(router);
 
   router.get('/api/profile', ctx => ({ status: 200, body: { user: auth.publicUser(ctx.auth.user) } }));
   router.patch('/api/profile', ctx => {
     const name = str(ctx.body.displayName, 'displayName', { max: 60, optional: true });
     if (name !== undefined) db.prepare('UPDATE users SET display_name = ? WHERE id = ?').run(name, ctx.auth.user.id);
+    if (ctx.body.autoLowRisk !== undefined) {
+      if (typeof ctx.body.autoLowRisk !== 'boolean') throw new HttpError(400, 'autoLowRisk must be true or false.', 'invalid');
+      db.prepare('UPDATE users SET auto_low_risk = ? WHERE id = ?').run(ctx.body.autoLowRisk ? 1 : 0, ctx.auth.user.id);
+    }
     if (ctx.body.personalization !== undefined) {
       if (typeof ctx.body.personalization !== 'boolean') throw new HttpError(400, 'personalization must be true or false.', 'invalid');
       db.prepare('UPDATE users SET personalization = ? WHERE id = ?').run(ctx.body.personalization ? 1 : 0, ctx.auth.user.id);
     }
-    audit(db, now, ctx.auth.user.id, 'profile_updated', Object.keys(ctx.body).filter(k => ['displayName', 'personalization'].includes(k)).join(','), ctx.req.socket.remoteAddress);
+    audit(db, now, ctx.auth.user.id, 'profile_updated', Object.keys(ctx.body).filter(k => ['displayName', 'personalization', 'autoLowRisk'].includes(k)).join(','), ctx.req.socket.remoteAddress);
     return { status: 200, body: { user: auth.publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.auth.user.id)) } };
   });
   router.get('/api/audit', ctx => ({ status: 200, body: { entries: db.prepare('SELECT ts, action, detail FROM audit_log WHERE user_id = ? ORDER BY id DESC LIMIT 50').all(ctx.auth.user.id).map(r => ({ at: r.ts, action: r.action, detail: r.detail })) } }));
@@ -58,7 +66,7 @@ function createApp(over, deps) {
     try {
       db.prepare('DELETE FROM memories WHERE user_id = ?').run(id);
       if (scope === 'all') {
-        for (const t of ['messages', 'conversations', 'activity', 'usage_ledger', 'sessions']) db.prepare('DELETE FROM ' + t + ' WHERE user_id = ?').run(id);
+        for (const t of ['tool_executions', 'approvals', 'run_steps', 'runs', 'tasks', 'notes', 'messages', 'conversations', 'activity', 'usage_ledger', 'sessions']) db.prepare('DELETE FROM ' + t + ' WHERE user_id = ?').run(id);
         db.prepare('DELETE FROM users WHERE id = ?').run(id);
       }
       db.exec('COMMIT');
@@ -109,7 +117,7 @@ function createApp(over, deps) {
   const server = http.createServer((req, res) => { onRequest(req, res); });
   const sweeper = setInterval(() => { limiter.sweep(); db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(now()); }, 10 * 60e3); sweeper.unref();
   return {
-    cfg, db, server, memory, provider,
+    cfg, db, server, memory, provider, registry, agent,
     listen() { return new Promise(r => server.listen(cfg.port, cfg.host, () => r(server.address().port))); },
     close() { clearInterval(sweeper); return new Promise(r => server.close(() => { try { db.close(); } catch (e) { /* closed */ } r(); })); }
   };

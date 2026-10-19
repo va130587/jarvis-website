@@ -36,8 +36,6 @@ const RULES = [
       return { operation: 'propose_memory', reply: 'I can remember: "' + text + '". It is not saved yet. Approve it below' + (c.sensitive ? ' (it looks sensitive, so I will ask you to confirm)' : '') + '.',
         steps: ['Prepared a memory for you to approve. Nothing is saved until you approve it.'], proposal: { text, kind: guessKind(text), sensitive: c.sensitive }, status: 'awaiting_approval' };
     } },
-  { id: 'forget', rx: /^(?:nova[, ]*)?(?:please )?forget(?: that)?[:,]?\s+(.{3,})$/i,
-    run() { return { operation: 'forget', reply: 'Deleting a memory is something only you can confirm. Open the Memory Vault and press Delete next to it. I will not delete anything from chat.', steps: ['Deletion needs your confirmation in the Memory Vault.'] }; } },
   { id: 'time', rx: /^(?:nova[, ]*)?(?:what(?:'s| is) the (?:time|date)|what time is it|what(?:'s| is) today(?:'s date)?|what day is it)\??$/i,
     run(ctx) { const d = dubaiNow(ctx.now); return { operation: 'time', reply: 'It is ' + d.time + ' on ' + d.date + ' in Dubai.', steps: ['Read the server clock in the Asia/Dubai time zone.'] }; } },
   { id: 'help', rx: /^(?:nova[, ]*)?(?:help|what can you do|what do you do)\??$/i,

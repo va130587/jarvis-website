@@ -24,6 +24,20 @@ function createClaude(cfg, deps) {
   return {
     name: 'claude', model: cfg.ai.modelChat,
     available() { return !!(deps.client || key); },
+    // One planning turn with tools. At most ONE tool call per turn (disable_parallel_tool_use) so every call can be checked and approved on its own.
+    // Returns { kind:'final', text, raw, usage, model } or { kind:'call', name, input, toolUseId, raw, usage, model }. The model never executes anything.
+    async plan({ system, messages, tools, signal }) {
+      const resp = await getClient().messages.create({
+        model: cfg.ai.modelChat, max_tokens: cfg.ai.maxTokens, output_config: { effort: 'low' },
+        system: [{ type: 'text', text: system.stable, cache_control: { type: 'ephemeral' } }, { type: 'text', text: system.perUser }],
+        messages, tools, tool_choice: { type: 'auto', disable_parallel_tool_use: true }
+      }, { signal, timeout: 30000, maxRetries: 1 });
+      const usage = usageOf(resp), model = resp.model || cfg.ai.modelChat;
+      if (resp.stop_reason === 'refusal') return { kind: 'final', text: 'I cannot help with that request.', raw: null, usage, model };
+      const use = (resp.content || []).find(b => b.type === 'tool_use');
+      if (use) return { kind: 'call', name: use.name, input: use.input, toolUseId: use.id, raw: resp.content, usage, model };
+      return { kind: 'final', text: (resp.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim(), raw: resp.content, usage, model };
+    },
     // system: { stable, perUser }  messages: [{role, content}]. Returns { text, usage, model }.
     async complete({ system, messages, maxTokens, signal }) {
       const resp = await getClient().messages.create({

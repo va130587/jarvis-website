@@ -1,6 +1,6 @@
 # NOVA Architecture
 
-Status after **Phase 1 (core foundation)**. Sections marked *(planned)* describe later phases and are **not built yet**.
+Status after **Phase 2 (agent layer)**. Sections marked *(planned)* describe later phases and are **not built yet**.
 
 ## 1. System diagram
 
@@ -19,6 +19,8 @@ Status after **Phase 1 (core foundation)**. Sections marked *(planned)* describe
  │  auth.js      Google OIDC (code+PKCE), dev login, sessions   │
  │  memory.js    Memory Vault, secret/sensitive checks, retrieval│
  │  chat.js      request pipeline, activity + usage records     │
+ │  agent/       planner, tool registry, approvals, execution,  │
+ │               verification, undo, run timeline               │
  │  ai/rules.js  free deterministic handlers                    │
  │  ai/claude.js model adapter (optional, paid, text only)      │
  │  db.js        SQLite (node:sqlite), versioned migrations     │
@@ -26,31 +28,33 @@ Status after **Phase 1 (core foundation)**. Sections marked *(planned)* describe
                  │
           .nova/nova.db  (SQLite file, git-ignored)
 ```
-*(planned)* tool registry and approval layer (Phase 2), ProofLoop engine (Phase 3), Gmail/Graph connectors (Phases 4 and 6), scheduler/worker (Phase 5).
+*(planned)* ProofLoop engine (Phase 3), Gmail/Graph connectors (Phases 4 and 6), scheduler/worker (Phase 5).
 
 Two ways to run the same front end:
 - **NOVA server mode** (`node server/index.js`): sign-in, database, API. The front end detects `/api/session` and switches on the NOVA pages.
 - **Static mode** (GitHub Pages or any file server): `nova.js` finds no server and does nothing; the classic Jarvis tools run exactly as before, with data in the browser.
 
-## 2. Agent execution flow (Phase 1, implemented)
+## 2. Agent execution flow (implemented, Phases 1 and 2)
 
 ```
 POST /api/chat
- 1. rate limit (per user)            security.js
- 2. session cookie -> user           auth.js        (identity is never taken from the request body)
- 3. CSRF token + Origin check        index.js
- 4. validate input (type, length)    http.js
- 5. rule match?  ──yes──► deterministic handler (identify_user, list/propose memory, time, help...) – no AI, no cost
-        │no
- 6. retrieve relevant memories       memory.js      (only if personalisation is on; max 5; keyword relevance)
- 7. model configured?  ──no──► honest message: "I can answer that only when an AI model is connected"
-        │yes
- 8. spending limit check             chat.js        (estimated monthly cost from the usage ledger)
- 9. model call (text only, no tools) ai/claude.js   stable system prompt cached, memories passed as DATA
-10. store messages, activity row (operation, handler, approval, evidence, status), usage row (tokens, duration, est. cost)
-11. reply + plain-English "what NOVA did" steps
+ 1. rate limit, session -> user, CSRF + Origin, input validation
+ 2. fixed rules (who am I, remember -> proposal, time, help)          no AI, no cost
+ 3. otherwise agent.start():
+      planner = built-in intent patterns (intents.js)  or  a model (if configured)  or  none -> honest message
+      loop (max steps, run timeout):
+        decide        planner proposes ONE tool call, or a final answer
+        validate      tool must be in the registry; input must match its JSON schema
+        permission    read -> run;  write -> ask unless "auto-approve low risk" is on;  destructive / external -> always ask
+        approval      stored with a Future Preview (action, reason, target, what changes, consequences, undoable)
+                      run pauses (status awaiting_approval); the person approves, rejects, edits or cancels
+        execute       tool timeout; reads retried (max 3), changes never retried; one tool_executions row
+        verify        the tool re-reads the state ("Read back from the database: ...");
+                      a result that cannot be verified is reported as failed, never as done
+        answer        summary + evidence; Undo offered only for reversible actions
+ 4. every step is stored in run_steps; activity and usage rows are written; audit entries for approvals, rejections, undo, cancel
 ```
-The model can only write text in this phase. A "remember that…" request creates a **proposed** memory; it becomes active only when the person approves it (`POST /api/memories/:id/approve`). The model never executes anything. *(planned, Phase 2)* tool calling will add: schema validation, permission check, stored approval, execution, result inspection, verification.
+`POST /api/approvals/:id/approve` re-checks everything on the server: the approval belongs to the signed-in user, is still pending and not expired, the run is still waiting, edited input validates, and it is claimed atomically so it can never run twice. The model never executes anything: it can only propose, and tool results are returned to it as marked untrusted data.
 
 ## 3. Identity and permissions
 
@@ -70,10 +74,14 @@ The model can only write text in this phase. A "remember that…" request create
 | `memories` | user_id, kind, text, **source**, status (`active`/`proposed`), sensitive flag, created/updated/last_used |
 | `conversations`, `messages` | chat history per user |
 | `activity` | per request: request, operation, handler (`rules`/`claude`/`none`/`blocked`), tool, approval, evidence, status, result, failure |
+| `tasks`, `notes` | data the agent's tools really create, change and (soft) delete, per user |
+| `runs`, `run_steps` | one row per request that used the agent; ordered timeline of plain-English steps |
+| `approvals` | pending / approved / rejected / expired / cancelled, input, preview, expiry, link to the execution |
+| `tool_executions` | tool, input, status (succeeded / failed / unverified), evidence, undoable, attempts |
 | `usage_ledger` | per request: handler, model, input/output/cache-read tokens, duration, ok, estimated cost |
 | `audit_log` | security events (login, logout, memory changes, data deletion...) with secrets redacted |
 
-All foreign keys cascade on user deletion. *(planned)* `commitments`, `tool_executions`, `approvals`, `evidence`, `connectors`, `jobs`, `skills`.
+All foreign keys cascade on user deletion. *(planned)* `commitments`, `evidence`, `connectors`, `jobs`, `skills`.
 
 ## 5. ProofLoop state machine *(planned, Phase 3)*
 

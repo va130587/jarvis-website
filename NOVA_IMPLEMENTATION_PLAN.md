@@ -1,6 +1,6 @@
 # NOVA Implementation Plan
 
-Status: **Phase 1 done. Decisions taken (Roshan): nothing paid.** Backend = Node 22 + built-in SQLite run locally ($0); AI model = free built-in rules by default, Claude adapter optional (paid, not activated); voice = browser engine; Google sign-in free (needs Client ID). Written from the real code (see `NOVA_AUDIT.md`). One phase per session; no phase starts until Roshan says "continue".
+Status: **Phases 1 and 2 done. Decisions taken (Roshan): nothing paid.** Backend = Node 22 + built-in SQLite run locally ($0); AI model = free built-in rules by default, Claude adapter optional (paid, not activated); voice = browser engine; Google sign-in free (needs Client ID). Written from the real code (see `NOVA_AUDIT.md`). One phase per session; no phase starts until Roshan says "continue".
 
 ## 1. Target architecture (summary)
 

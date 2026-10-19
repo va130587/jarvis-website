@@ -30,6 +30,7 @@ function load(env, over) {
       maxTokens: +env.NOVA_MAX_TOKENS || 800,
       monthlyLimitUsd: env.NOVA_MONTHLY_LIMIT_USD === undefined || env.NOVA_MONTHLY_LIMIT_USD === '' ? null : +env.NOVA_MONTHLY_LIMIT_USD
     },
+    agent: { maxSteps: +env.NOVA_AGENT_MAX_STEPS || 5, toolTimeoutMs: +env.NOVA_TOOL_TIMEOUT_MS || 5000, runTimeoutMs: +env.NOVA_RUN_TIMEOUT_MS || 30000, approvalTtlMs: (+env.NOVA_APPROVAL_TTL_HOURS || 24) * 3600e3 },
     limits: { auth: { max: +env.NOVA_RATE_AUTH_MAX || 20, perMs: 60e3 }, api: { max: +env.NOVA_RATE_API_MAX || 240, perMs: 60e3 }, chat: { max: +env.NOVA_RATE_CHAT_MAX || 30, perMs: 60e3 } },
     now: () => Date.now()
   };

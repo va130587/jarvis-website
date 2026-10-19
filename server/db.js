@@ -48,7 +48,31 @@ const MIGRATIONS = [
      cache_read_tokens INTEGER NOT NULL DEFAULT 0, duration_ms INTEGER NOT NULL DEFAULT 0, ok INTEGER NOT NULL DEFAULT 1, est_cost_usd REAL);
    CREATE INDEX usage_user ON usage_ledger(user_id, ts);
    CREATE TABLE audit_log (
-     id INTEGER PRIMARY KEY, user_id INTEGER, ts INTEGER NOT NULL, action TEXT NOT NULL, detail TEXT, ip TEXT);`
+     id INTEGER PRIMARY KEY, user_id INTEGER, ts INTEGER NOT NULL, action TEXT NOT NULL, detail TEXT, ip TEXT);`,
+  // 2: agent layer (tasks and notes that tools can really change, runs with a step timeline, approvals, execution records)
+  `ALTER TABLE users ADD COLUMN auto_low_risk INTEGER NOT NULL DEFAULT 0;
+   CREATE TABLE tasks (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL, due TEXT,
+     status TEXT NOT NULL DEFAULT 'open', source TEXT, run_id INTEGER, created_at INTEGER NOT NULL, completed_at INTEGER, deleted_at INTEGER);
+   CREATE INDEX tasks_user ON tasks(user_id, status);
+   CREATE TABLE notes (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, text TEXT NOT NULL, run_id INTEGER, created_at INTEGER NOT NULL, deleted_at INTEGER);
+   CREATE TABLE runs (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, conversation_id INTEGER, request TEXT NOT NULL,
+     status TEXT NOT NULL, planner TEXT NOT NULL, steps_used INTEGER NOT NULL DEFAULT 0, state TEXT, result TEXT, failure TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+   CREATE INDEX runs_user ON runs(user_id, id);
+   CREATE TABLE run_steps (
+     id INTEGER PRIMARY KEY, run_id INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     seq INTEGER NOT NULL, kind TEXT NOT NULL, summary TEXT NOT NULL, detail TEXT, ts INTEGER NOT NULL);
+   CREATE TABLE approvals (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, run_id INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+     tool TEXT NOT NULL, input TEXT NOT NULL, preview TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', edited INTEGER NOT NULL DEFAULT 0,
+     created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, decided_at INTEGER, execution_id INTEGER);
+   CREATE INDEX approvals_user ON approvals(user_id, status);
+   CREATE TABLE tool_executions (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, run_id INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE, approval_id INTEGER,
+     tool TEXT NOT NULL, input TEXT NOT NULL, status TEXT NOT NULL, output TEXT, error TEXT, evidence TEXT, undoable INTEGER NOT NULL DEFAULT 0, undo_data TEXT, undone_at INTEGER,
+     attempts INTEGER NOT NULL DEFAULT 1, started_at INTEGER NOT NULL, finished_at INTEGER);`
 ];
 
 function migrate(db) {

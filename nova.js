@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   var J = window.J, esc = J.esc, $ = J.$, $$ = J.$$;
-  var N = window.NOVA = { mode: 'unknown', user: null, csrf: '', session: null, state: 'idle', chat: { cid: null, msgs: [], busy: false, convs: [], draft: '', proposals: {} }, cache: {} };
+  var N = window.NOVA = { runs: {}, mode: 'unknown', user: null, csrf: '', session: null, state: 'idle', chat: { cid: null, msgs: [], busy: false, convs: [], draft: '', proposals: {} }, cache: {} };
 
   /* ================= orb: ten states, each set by a real event ================= */
   var STATES = {
@@ -116,39 +116,61 @@
   Object.assign(J.titles, { dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings' });
   S.dashboard = {
     render: function () {
-      var m = N.cache.memories, u = N.cache.usage, a = N.cache.activity, convs = N.cache.conversations;
-      var active = m ? m.memories.filter(function (x) { return x.status === 'active'; }).length : '…', proposed = m ? m.memories.filter(function (x) { return x.status === 'proposed'; }).length : 0;
+      var m = N.cache.memories, u = N.cache.usage, a = N.cache.activity, convs = N.cache.conversations, ap = N.cache.approvals ? N.cache.approvals.approvals : null;
+      var active = m ? m.memories.filter(function (x) { return x.status === 'active'; }).length : '…', proposed = (m ? m.memories.filter(function (x) { return x.status === 'proposed'; }).length : 0) + (ap ? ap.length : 0);
       var rules = 0, model = 0; if (u) u.byHandler.forEach(function (h) { if (h.handler === 'rules') rules += h.calls; else if (h.handler === 'claude') model += h.calls; });
       return '<section class="hero nova-hero"><div class="core-stage">' + orb('big') + '</div><div>' +
         '<p class="eyebrow">' + esc(J.longDate ? J.longDate(J.today()) : '') + ' · Dubai</p><h1 class="greet">Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening') + ', ' + esc(name()) + '</h1>' +
         '<p class="lead">From Request to Verified Result.</p><p class="live" id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p>' +
         '<div class="btn-row"><a class="btn primary" href="#chat">Talk to NOVA</a><a class="btn" href="#memory">Memory Vault</a></div></div></section>' +
-        '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'in the Memory Vault' : 'nothing pending', proposed ? 'gold' : '') +
+        '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'memories and actions' : 'nothing pending', proposed ? 'gold' : '') +
         tile('Replies without AI', rules, 'free rule-based, this month') + tile('Replies from a model', N.session && N.session.aiProvider === 'claude' ? model : 'off', N.session && N.session.aiProvider === 'claude' ? 'this month' : 'no AI model configured') + '</div>' +
+        (ap && ap.length ? '<article class="panel gold" id="approvalsPanel"><h2 class="label">Waiting for your approval <span class="n">' + ap.length + '</span></h2>' + ap.map(function (x) { return previewCard({ id: x.runId, pendingApproval: x }); }).join('') + '</article>' : '') +
         '<div class="grid-2"><article class="panel upcoming"><p class="tag gold">Upcoming: Phase 3</p><h2 class="label">ProofLoop</h2><p class="muted">ProofLoop will track every commitment from request to verified result and never treat a draft or a "sent" response as proof. It is not built yet, so there are no commitments to show.</p>' +
           '<ol class="loop-states">' + ['Request Detected', 'Request Understood', 'Task Prepared', 'Awaiting Approval', 'Executing', 'Submitted', 'Awaiting Confirmation', 'Verified', 'Completed'].map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></article>' +
         '<article class="panel"><div class="panel-head"><h2 class="label">Recent activity (real)</h2><a class="btn small ghost" href="#chat">Chat</a></div>' +
           (a && a.activity.length ? '<ul class="mini-list">' + a.activity.slice(0, 5).map(function (x) { return '<li><span class="when">' + esc(ago(x.at)) + '</span><span class="what">' + esc(x.request) + '<small>' + esc(x.operation.replace(/_/g, ' ')) + ' · ' + esc(x.handler === 'rules' ? 'built-in rule' : x.handler) + ' · ' + esc(x.status.replace(/_/g, ' ')) + '</small></span></li>'; }).join('') + '</ul>' : J.empty(a ? 'No activity yet. Ask NOVA something in Chat.' : 'Loading…')) + '</article></div>' +
-        '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> sign-in, memories you approve, chat with built-in rules, activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Upcoming:</b> email, ProofLoop, automations, voice conversations with NOVA, knowledge base.</li></ul></article>' +
+        '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> sign-in, memories you approve, chat with built-in rules, tasks and notes that NOVA can create after you approve (with Undo where possible), activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Upcoming:</b> email, ProofLoop, automations, voice conversations with NOVA, knowledge base.</li></ul></article>' +
         (convs ? '' : '');
     },
-    after: function () { stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity']]); }
+    after: function () { stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals']]); }
   };
 
   /* ---- chat ---- */
+  var EDITABLE = { 'tasks.create': [['title', 'Task title', 'text'], ['due', 'Due date (YYYY-MM-DD, optional)', 'text']], 'notes.create': [['text', 'Note', 'text']], 'memory.add': [['text', 'Memory', 'text']] };
+  function previewCard(run) {
+    var a = run.pendingApproval; if (!a) return '';
+    var p = a.preview;
+    return '<section class="preview" role="group" aria-label="Review before NOVA acts"><p class="tag gold">Review before NOVA acts</p><dl class="kv">' +
+      '<dt>Proposed action</dt><dd>' + esc(p.action) + '</dd><dt>Why</dt><dd>' + esc(p.reason) + '</dd><dt>Where</dt><dd>' + esc(p.target) + '</dd>' +
+      '<dt>What will change</dt><dd>' + (p.changes.length ? '<ul class="plain">' + p.changes.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' : 'Nothing') + '</dd>' +
+      '<dt>Possible consequences</dt><dd>' + esc(p.consequences) + '</dd><dt>Can it be undone?</dt><dd>' + (p.undoable ? 'Yes. ' : '<b>No.</b> ') + esc(p.undoNote || '') + '</dd></dl>' +
+      '<div class="btn-row"><button type="button" class="btn small primary" data-act="novaApproveRun" data-id="' + a.id + '">Approve</button><button type="button" class="btn small" data-act="novaRejectRun" data-id="' + a.id + '">Reject</button>' +
+      (EDITABLE[a.tool] ? '<button type="button" class="btn small ghost" data-act="novaEditRun" data-id="' + a.id + '">Edit</button>' : '') +
+      '<button type="button" class="btn small ghost" data-act="novaCancelRun" data-id="' + run.id + '">Cancel request</button></div></section>';
+  }
+  function runBlock(m) {
+    var run = N.runs[m.runId] || m.run; if (!run) return '';
+    var undo = run.executions.filter(function (x) { return x.undoable; }).map(function (x) { return '<button type="button" class="btn small ghost" data-act="novaUndo" data-id="' + x.id + '" data-run="' + run.id + '">Undo this</button>'; }).join(' ');
+    var notUndo = run.executions.filter(function (x) { return x.status === 'succeeded' && !x.undoable && !x.undone; }).length ? '<span class="small-text muted">This change cannot be undone.</span>' : '';
+    return '<details class="steps"' + (run.pendingApproval ? ' open' : '') + '><summary>What NOVA did (' + esc(run.status.replace(/_/g, ' ')) + ')</summary><ol>' + run.steps.map(function (x) { return '<li class="k-' + esc(x.kind) + '">' + esc(x.summary) + '</li>'; }).join('') + '</ol>' +
+      '<p class="small-text muted">Handled by: ' + esc(run.planner === 'rules' ? 'a built-in rule (no AI)' : 'the AI model') + '. Tools can only run after validation' + (run.pendingApproval ? '' : ' and, for changes, your approval') + '.</p></details>' + previewCard(run) + (undo || notUndo ? '<div class="btn-row">' + undo + notUndo + '</div>' : '');
+  }
   function chatHTML() {
     var c = N.chat;
-    return c.msgs.map(function (m, i) {
-      var steps = m.steps && m.steps.length ? '<details class="steps"><summary>What NOVA did</summary><ol>' + m.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol><p class="small-text muted">Handled by: ' + esc(m.handler === 'rules' ? 'a built-in rule (no AI)' : m.handler === 'claude' ? 'the AI model ' + (m.model || '') : m.handler === 'none' ? 'no AI model (none configured)' : m.handler) + (m.usage && (m.usage.input || m.usage.output) ? ' · ' + m.usage.input + ' in / ' + m.usage.output + ' out tokens' : '') + '</p></details>' : '';
+    return c.msgs.map(function (m) {
+      if (m.role === 'user') return '<div class="msg me"><p class="who mono">' + esc(name()) + '</p><p class="text">' + esc(m.text) + '</p></div>';
+      var run = N.runs[m.runId] || m.run, text = run && run.result && run.status !== 'awaiting_approval' ? run.result : m.text;
+      var steps = run ? runBlock(m) : (m.steps && m.steps.length ? '<details class="steps"><summary>What NOVA did</summary><ol>' + m.steps.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol><p class="small-text muted">Handled by: ' + esc(m.handler === 'rules' ? 'a built-in rule (no AI)' : m.handler === 'claude' ? 'the AI model ' + (m.model || '') : m.handler === 'none' ? 'no AI model (none configured)' : m.handler) + (m.usage && (m.usage.input || m.usage.output) ? ' · ' + m.usage.input + ' in / ' + m.usage.output + ' out tokens' : '') + '</p></details>' : '');
       var prop = m.proposal && m.proposal.status === 'proposed' ? '<div class="proposal" role="group" aria-label="Memory waiting for your approval"><p><b>Waiting for your approval:</b> “' + esc(m.proposal.text) + '” <span class="tag dim">' + esc(m.proposal.kind) + '</span>' + (m.proposal.sensitive ? ' <span class="tag red">looks sensitive</span>' : '') + '</p><div class="btn-row"><button type="button" class="btn small primary" data-act="novaApprove" data-id="' + m.proposal.id + '">Save this memory</button><button type="button" class="btn small" data-act="novaReject" data-id="' + m.proposal.id + '">Don\'t save</button></div></div>'
         : m.proposal && m.proposal.status === 'active' ? '<p class="small-text muted">Saved to your Memory Vault.</p>' : m.proposal && m.proposal.status === 'rejected' ? '<p class="small-text muted">Not saved.</p>' : '';
-      return '<div class="msg ' + (m.role === 'user' ? 'me' : 'bot') + '"><p class="who mono">' + (m.role === 'user' ? esc(name()) : 'NOVA') + '</p><p class="text">' + esc(m.text) + '</p>' + (m.role === 'assistant' ? steps + prop : '') + '</div>';
+      return '<div class="msg bot"><p class="who mono">NOVA</p><p class="text">' + esc(text) + '</p>' + steps + prop + '</div>';
     }).join('');
   }
   S.chat = {
     render: function () {
       var c = N.chat;
-      return J.head('Conversation', 'NOVA Chat', 'Ask in plain English. NOVA tells you what it did, and it only saves a memory after you approve it.', '<button type="button" class="btn" data-act="novaNewChat">New chat</button>') +
+      return J.head('Conversation', 'NOVA Chat', 'Ask in plain English. NOVA shows what it plans to do, asks before it changes anything, and then checks the result.', '<button type="button" class="btn" data-act="novaNewChat">New chat</button>') +
         '<div class="chat-grid"><aside class="panel chat-list"><h2 class="label">History</h2>' + (c.convs.length ? '<ul class="items">' + c.convs.map(function (x) { return '<li class="item"><button type="button" class="link-btn' + (x.id === c.cid ? ' on' : '') + '" data-act="novaOpenChat" data-id="' + x.id + '">' + esc(x.title) + '</button></li>'; }).join('') + '</ul>' : J.empty('No conversations yet.')) + '</aside>' +
         '<section class="panel chat-main" aria-label="Conversation">' + '<div class="chat-head">' + orb('mini') + '<span id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</span></div>' +
           '<div class="chat-log" id="novaLog" tabindex="0" aria-live="polite">' + (c.msgs.length ? chatHTML() : J.empty('Try: <q>who am I?</q> · <q>remember that I prefer short replies</q> · <q>what do you remember about me?</q> · <q>what time is it?</q>')) + (c.busy ? '<p class="typing">NOVA is working…</p>' : '') + '</div>' +
@@ -168,12 +190,13 @@
   N.send = function (text) {
     text = String(text || '').trim(); var c = N.chat;
     if (!text || c.busy) return Promise.resolve();
-    c.msgs.push({ role: 'user', text: text }); c.draft = ''; c.busy = true; N.setState('understanding'); J.render(false);
+    c.msgs.push({ role: 'user', text: text }); c.draft = ''; c.busy = true; N.setState(N.session && N.session.aiProvider === 'claude' ? 'planning' : 'understanding'); J.render(false);
     return api('POST', '/api/chat', { message: text, conversationId: c.cid }).then(function (r) {
       c.cid = r.conversationId; c.busy = false;
-      c.msgs.push({ role: 'assistant', text: r.reply, steps: r.steps, handler: r.handler, model: r.model, usage: r.usage, proposal: r.proposal });
+      if (r.run) N.runs[r.run.id] = r.run;
+      c.msgs.push({ role: 'assistant', text: r.reply, steps: r.steps, handler: r.handler, model: r.model, usage: r.usage, proposal: r.proposal, runId: r.run ? r.run.id : null });
       N.setState(r.status === 'failed' ? 'error' : r.status === 'awaiting_approval' ? 'waiting_approval' : 'completed');
-      N.cache.activity = null; N.cache.memories = null; N.cache.usage = null;
+      N.cache.activity = null; N.cache.memories = null; N.cache.usage = null; N.cache.approvals = null; N.cache.tasks = null;
       J.render(false);
       var ta = $('#novaMsg'); if (ta) ta.focus();            // keep the keyboard where the person was typing
       return r;
@@ -188,6 +211,28 @@
       done(false).catch(function (e) { if (e.code === 'needs_sensitive_confirmation') J.confirm('This looks sensitive. Do you want NOVA to remember it?', 'Yes, remember it', 'Sensitive information').then(function (ok) { if (ok) done(true).catch(fail); }); else fail(e); });
     },
     novaReject: function (id) { api('DELETE', '/api/memories/' + id).then(function () { setProposal(+id, 'rejected'); N.setState('idle'); J.render(false); }).catch(fail); }
+  });
+
+  function afterRun(run, ok) {
+    N.runs[run.id] = run; N.cache.approvals = null; N.cache.tasks = null; N.cache.activity = null; N.cache.usage = null;
+    N.setState(run.status === 'failed' ? 'error' : run.status === 'awaiting_approval' ? 'waiting_approval' : run.status === 'cancelled' ? 'idle' : 'completed');
+    J.render(false);
+  }
+  function approveRun(id, edited) {
+    N.setState('executing');
+    return api('POST', '/api/approvals/' + id + '/approve', edited ? { editedInput: edited } : {}).then(afterRun).catch(function (e) { N.setState('error'); fail(e); });
+  }
+  function approvalById(id) { var list = []; Object.keys(N.runs).forEach(function (k) { if (N.runs[k].pendingApproval) list.push(N.runs[k].pendingApproval); }); ((N.cache.approvals || {}).approvals || []).forEach(function (a) { list.push(a); }); return list.filter(function (a) { return a.id === +id; })[0]; }
+  Object.assign(J.actions, {
+    novaApproveRun: function (id) { approveRun(id); },
+    novaRejectRun: function (id) { api('POST', '/api/approvals/' + id + '/reject', {}).then(afterRun).catch(fail); },
+    novaCancelRun: function (id) { api('POST', '/api/runs/' + id + '/cancel', {}).then(afterRun).catch(fail); },
+    novaUndo: function (id, el) { api('POST', '/api/executions/' + id + '/undo', {}).then(function (r) { J.toast(r.message); var rid = el && el.getAttribute('data-run'); return rid ? api('GET', '/api/runs/' + rid) : null; }).then(function (run) { if (run) afterRun(run); }).catch(fail); },
+    novaEditRun: function (id) {
+      var a = approvalById(id); if (!a || !EDITABLE[a.tool]) return;
+      J.openForm({ title: 'Edit before approving', submit: 'Approve with changes', fields: EDITABLE[a.tool].map(function (f) { return { name: f[0], label: f[1], value: a.input[f[0]] == null ? '' : a.input[f[0]], required: f[0] !== 'due' }; }),
+        onSave: function (v) { var out = {}; Object.keys(v).forEach(function (k) { if (v[k] !== '') out[k] = v[k]; }); approveRun(id, out); } });
+    }
   });
 
   /* ---- voice ---- */
@@ -209,12 +254,16 @@
   /* ---- tasks and calendar hub ---- */
   S.hub = {
     render: function () {
-      var t = J.today(), over = J.overdue().length, due = J.dueToday().length, week = J.dueWeek().length;
-      return J.head('Planner', 'Tasks and Calendar', 'These use the Jarvis tools and are stored in this browser, not yet in the NOVA database.', '') +
-        '<div class="stats">' + tile('Overdue', over, 'tasks', over ? 'red' : '') + tile('Due today', due, J.fmt ? J.fmt(t) : t) + tile('This week', week, 'after today') + tile('Storage', 'Browser', 'moves to the server in a later phase') + '</div>' +
-        '<div class="btn-row"><a class="btn primary" href="#tasks">Open Tasks</a><a class="btn" href="#calendar">Open Calendar</a><a class="btn" href="#notes">Notes</a></div>' +
+      var t = J.today(), over = J.overdue().length, due = J.dueToday().length, week = J.dueWeek().length, nt = N.cache.tasks ? N.cache.tasks.tasks : null;
+      return J.head('Planner', 'Tasks and Calendar', 'NOVA tasks live in the server database. The Jarvis tools below still keep their own tasks in this browser.', '<a class="btn primary" href="#chat">Ask NOVA to add a task</a>') +
+        '<article class="panel"><h2 class="label">NOVA tasks (server) ' + (nt ? '<span class="n">' + nt.length + '</span>' : '') + '</h2>' +
+          (!nt ? J.empty('Loading…') : nt.length ? '<ul class="items">' + nt.map(function (x) { return '<li class="item' + (x.status === 'done' ? ' done' : '') + '"><div class="item-main"><p class="item-title">' + esc(x.title) + '</p><p class="item-meta"><span>' + (x.status === 'done' ? 'Done' : 'Open') + '</span><span>' + (x.due ? 'due ' + esc(x.due) : 'no due date') + '</span><span>' + esc(x.source || '') + '</span></p></div></li>'; }).join('') + '</ul>' : J.empty('No NOVA tasks yet. In Chat, say <q>add a task to call HR by Friday</q>. You approve it first.')) +
+          '<p class="small-text muted">To complete or delete one, ask NOVA in Chat (for example <q>mark call HR as done</q>). Each change shows a preview and can usually be undone.</p></article>' +
+        '<h2 class="section-title">Jarvis tools (this browser)</h2><div class="stats">' + tile('Overdue', over, 'tasks', over ? 'red' : '') + tile('Due today', due, J.fmt ? J.fmt(t) : t) + tile('This week', week, 'after today') + tile('Storage', 'Browser', 'moves to the server later') + '</div>' +
+        '<div class="btn-row"><a class="btn" href="#tasks">Open Tasks</a><a class="btn" href="#calendar">Open Calendar</a><a class="btn" href="#notes">Notes</a></div>' +
         '<p class="small-text muted">Google and Outlook calendars connect from the browser (Tool settings). Gmail and server-side calendars are upcoming.</p>';
-    }
+    },
+    after: function () { stale('hub', [['tasks', '/api/tasks']]); }
   };
 
   /* ---- identity ---- */
@@ -226,12 +275,13 @@
           '<p class="small-text muted">Typing a name in chat does not change who you are. Identity comes from the signed-in account.</p></article>' +
         '<form class="panel" id="novaProfileForm" autocomplete="off"><h2 class="label">Edit profile</h2><div class="field"><label for="novaName">Preferred display name</label><input id="novaName" type="text" maxlength="60" value="' + esc(u.displayName) + '" required></div>' +
           '<label class="switch"><span class="txt"><b>Use my saved memories</b><small>When off, NOVA does not use or look up any memory. Your memories are kept.</small></span><input type="checkbox" id="novaPers"' + (u.personalization ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label>' +
+          '<label class="switch"><span class="txt"><b>Auto-approve low-risk changes</b><small>When on, NOVA may create tasks and notes without asking each time (you can still undo them). Deleting, forgetting and anything that affects another system always asks.</small></span><input type="checkbox" id="novaAuto"' + (u.autoLowRisk ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label>' +
           '<div class="btn-row" style="margin-top:14px"><button type="submit" class="btn primary">Save</button></div></form>';
     },
     after: function () {
       stale('identity', [['memories', '/api/memories']]);
       var f = $('#novaProfileForm'); if (!f) return;
-      f.addEventListener('submit', function (e) { e.preventDefault(); api('PATCH', '/api/profile', { displayName: $('#novaName').value, personalization: $('#novaPers').checked }).then(function (d) { N.user = d.user; J.toast('Profile saved.'); J.render(false); }).catch(fail); });
+      f.addEventListener('submit', function (e) { e.preventDefault(); api('PATCH', '/api/profile', { displayName: $('#novaName').value, personalization: $('#novaPers').checked, autoLowRisk: $('#novaAuto').checked }).then(function (d) { N.user = d.user; J.toast('Profile saved.'); J.render(false); }).catch(fail); });
     }
   };
 
@@ -303,12 +353,13 @@
         '<article class="panel"><div class="panel-head"><h2 class="label">Signed-in sessions</h2><button type="button" class="btn small" data-act="novaRevoke">Sign out other devices</button></div>' +
           (ses ? '<ul class="sources">' + ses.sessions.map(function (s) { return '<li><span class="grow"><b>' + (s.current ? 'This session' : 'Another session') + '</b><br><span class="small-text muted">started ' + esc(when(s.createdAt)) + ' · last active ' + esc(ago(s.lastSeenAt)) + ' · expires ' + esc(when(s.expiresAt)) + '</span></span></li>'; }).join('') + '</ul>' : J.empty('Loading…')) +
           '<p class="small-text muted">Sessions end after inactivity and after a maximum time. The cookie is HttpOnly and SameSite, so page scripts cannot read it.</p></article>' +
+        '<article class="panel"><h2 class="label">What NOVA is allowed to do</h2>' + (N.cache.tools ? '<div class="table-wrap"><table class="cmds"><thead><tr><th scope="col">Tool</th><th scope="col">Kind</th><th scope="col">Asks you first?</th><th scope="col">Undo?</th></tr></thead><tbody>' + N.cache.tools.tools.map(function (t) { return '<tr><th scope="row">' + esc(t.name) + '<br><small class="muted">' + esc(t.description) + '</small></th><td>' + esc({ read: 'Reads only', write: 'Changes your NOVA data', destructive: 'Deletes', external: 'Affects another system' }[t.risk]) + '</td><td>' + (t.needsApproval ? 'Yes' : 'No') + '</td><td>' + (t.undoable ? 'Yes' : 'No') + '</td></tr>'; }).join('') + '</tbody></table></div>' : J.empty('Loading…')) + '<p class="small-text muted">NOVA can only use tools on this list. The server checks every request, runs nothing that fails validation, and re-reads the result to verify it.</p></article>' +
         '<article class="panel"><h2 class="label">Your data</h2><div class="btn-row"><button type="button" class="btn" data-act="novaExport">Download everything (JSON)</button><button type="button" class="btn danger" data-act="novaDeleteMem">Delete all my memories</button><button type="button" class="btn danger" data-act="novaDeleteAll">Delete my account and all data</button></div>' +
           '<p class="small-text muted">NOVA keeps your data until you delete it. An automatic retention schedule is not built yet.</p></article>' +
         '<article class="panel"><h2 class="label">Audit log (your last 50 events)</h2>' + (au ? (au.entries.length ? '<ul class="mini-list">' + au.entries.map(function (e) { return '<li><span class="when">' + esc(ago(e.at)) + '</span><span class="what">' + esc(e.action.replace(/_/g, ' ')) + '<small>' + esc(e.detail || '') + '</small></span></li>'; }).join('') + '</ul>' : J.empty('Nothing yet.')) : J.empty('Loading…')) +
           '<p class="small-text muted">Tokens, keys and passwords are removed before anything is logged.</p></article>';
     },
-    after: function () { stale('security', [['sessions', '/api/sessions'], ['audit', '/api/audit']]); }
+    after: function () { stale('security', [['sessions', '/api/sessions'], ['audit', '/api/audit'], ['tools', '/api/tools']]); }
   };
   function typed(title, phrase, run) { J.openForm({ title: title, submit: 'Delete', fields: [{ type: 'html', html: '<p>This cannot be undone. Type <b>DELETE MY DATA</b> to confirm.</p>' }, { name: 'confirm', label: 'Confirmation', required: true }], onSave: function (v) { run(v.confirm); } }); }
   Object.assign(J.actions, {
@@ -323,6 +374,8 @@
 
   /* ================= voice -> NOVA ================= */
   // Anything the built-in Jarvis commands do not understand goes to NOVA's server chat (real request, real answer).
+  // In server mode, phrases NOVA's built-in actions understand (tasks, notes, forget, memory search) go to the server, where changes need approval.
+  J.novaIntent = function (text) { return N.mode === 'server' && !!N.user && !!window.NovaIntents && NovaIntents.matches(text); };
   J.novaAsk = function (text) {
     if (N.mode !== 'server' || !N.user) return null;
     N.setState('understanding');

@@ -1,6 +1,6 @@
 # NOVA Feature Status
 
-Honest status after **Phase 1**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
+Honest status after **Phase 2**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
 
 | Feature | Status | Notes |
 |---|---|---|
@@ -24,9 +24,17 @@ Honest status after **Phase 1**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT U
 | Security page: sessions, audit log, export, delete memories, delete account | WORKING AND TESTED | Typed confirmation required. |
 | CSP, security headers, rate limiting, input validation, audit redaction, static allow-list | WORKING AND TESTED | Browser tests run under the strict CSP with zero violations. |
 | Automatic data-retention schedule, backup automation | NOT IMPLEMENTED | Manual export and deletion exist; backup guidance is in ARCHITECTURE.md. |
-| Voice requests reach NOVA (typed path) | WORKING AND TESTED | Unknown phrases go to the server chat. |
+| Voice requests reach NOVA (typed path) | WORKING AND TESTED | Task, note, forget and memory-search phrases, and anything the Jarvis tools do not know, go to the server; changes show an approval request. In server mode these phrases no longer edit the browser-only Jarvis tasks. |
 | Voice: real microphone speech recognition | IMPLEMENTED BUT UNVERIFIED | Browser Web Speech engine; no real-microphone test; accuracy unmeasured. Editing transcript and language choice: NOT IMPLEMENTED (Phase 5). |
-| Tool registry, structured tool calls, human approvals, Future Preview, undo | NOT IMPLEMENTED | Phase 2 |
+| Tool registry with JSON-schema validation (10 tools: tasks, notes, memory, time) | WORKING AND TESTED | Unknown tools and invalid input are refused; the model sees only these tools. |
+| Permissions and risk levels (read / write / destructive / external) | WORKING AND TESTED | Writes ask first unless you turn on auto-approve; destructive and external tools always ask (tested with a stand-in external tool). |
+| Human approvals with Future Preview (action, reason, target, what changes, consequences, undoable?) and Approve / Reject / Edit / Cancel | WORKING AND TESTED | Backend verifies owner, state, expiry and edits; double approval never runs twice. |
+| Execution, result inspection and verification | WORKING AND TESTED | Each change is re-read from the database; a result that cannot be verified is reported as failed, never as done. |
+| Undo | WORKING AND TESTED | Only for reversible actions (create, complete, delete task; create note; add memory). Deleting a memory says plainly it cannot be undone. |
+| Limits, timeouts, safe retries, cancellation | WORKING AND TESTED | Step limit, run and tool timeouts, reads retried up to 3 times, changes never auto-retried, in-flight model call aborted on cancel. |
+| Run timeline and activity history in plain English | WORKING AND TESTED | Persisted steps per run; shown under each reply. |
+| Free rule planner for task, note and memory requests | WORKING AND TESTED | Same intent list is shared by server and browser. |
+| Model planner (Claude tool calling) | REQUIRES CONFIGURATION | Tested end to end with a stand-in client: one tool call at a time, results returned as untrusted data, no forced tool choice, usage and estimated cost per call, injection attempt cannot skip approval. Never run against the real API (paid).
 | ProofLoop (state machine, evidence, commitments) | NOT IMPLEMENTED | Phase 3. The Dashboard shows an Upcoming panel only. |
 | Gmail, email classification, deadlines, drafts | NOT IMPLEMENTED | Phase 4 |
 | Outlook / Microsoft Graph on the server | NOT IMPLEMENTED | Phase 6. Browser-side Outlook calendar from Jarvis still exists (IMPLEMENTED BUT UNVERIFIED). |

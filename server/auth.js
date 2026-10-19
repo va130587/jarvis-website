@@ -13,7 +13,7 @@ const rand = n => crypto.randomBytes(n || 32).toString('base64url');
 function createAuth(cfg, db) {
   const now = cfg.now;
 
-  function publicUser(u) { return u && { id: u.id, email: u.email, displayName: u.display_name, personalization: !!u.personalization, createdAt: u.created_at }; }
+  function publicUser(u) { return u && { id: u.id, email: u.email, displayName: u.display_name, personalization: !!u.personalization, autoLowRisk: !!u.auto_low_risk, createdAt: u.created_at }; }
   function origin(req) { return cfg.baseUrl || ('http://' + (req.headers.host || (cfg.host + ':' + cfg.port))); }
 
   function upsertUser(email, name, sub) {

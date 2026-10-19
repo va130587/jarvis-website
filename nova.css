@@ -59,3 +59,9 @@ body.nova-locked > *:not(#novaLogin):not(script) { visibility: hidden; }
 @media (max-width: 860px) { .chat-grid { grid-template-columns: 1fr; } .chat-list { order: 2; } .nova-orb.big { width: 160px; height: 160px; } }
 @media (max-width: 420px) { .readout small { display: none; } .crumb { flex: 1 1 0; min-width: 0; } .readouts { flex: none; } }
 body.nova-server[data-group="nova"] #sampleBanner { display: none; }   /* the sample-data notice is about the Jarvis tools only */
+
+/* ---- Future Preview (approval card) ---- */
+.preview { margin-top: 10px; padding: 12px 14px; border: 1px solid rgba(245, 196, 106, .55); background: var(--gold-soft); display: grid; gap: 8px; }
+.preview .kv { margin: 0; } .preview .kv dd ul { margin: 0; padding-left: 18px; }
+.steps li.k-error { color: #ffb3b3; } .steps li.k-verified { color: var(--ok); } .steps li.k-approval_requested { color: var(--gold); }
+.item.done .item-title { text-decoration: line-through; opacity: .7; }

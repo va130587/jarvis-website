@@ -525,6 +525,9 @@
       if (pd.type === 'askWin') { var w = J.addWin(orig); return 'Logged: ' + w.win.text + '. Well done.'; }
     }
 
+    /* ---- NOVA server actions (tasks, notes, forget, memory search) ---- */
+    if (J.novaIntent && J.novaIntent(orig)) return J.novaAsk(orig);
+
     /* ---- repeat, help, test ---- */
     if (/^(repeat( that| it)?|say (that|it) again|come again|pardon|what did you say|again)$/.test(t)) return lastReply ? { text: lastReply } : 'I haven\'t said anything yet.';
     if (/what can you do|^help( me)?$|^commands$|what do you do|what should i say|how do i use (this|you)/.test(t)) {
