@@ -31,7 +31,7 @@ Each accent also has an `-ink` variant for text on a tinted background (`--dange
 
 **Contrast.** All text tokens meet WCAG AA (4.5:1) on both the background and the glass panels in their theme; this is checked on every page at four widths by axe-core in `tests/smoke-walk-e2e.test.js` (both themes).
 
-**Charts.** `--chart` lists the categorical order: cyan, violet, green, gold, pink, blue. In Daylight the darker set is used. Never encode meaning with colour alone: bars have values in a tooltip and a "Show as a table" alternative.
+**Charts.** NOVA's charts are single-series (tasks per day, focus per day, spending by category with names beside the bars), so they use one hue: `--cyan`. Values and labels use text colours, never the series colour. For a future chart with several series, `--chart` holds a categorical order that passed a colour-blind check (OKLCH lightness band, chroma floor, CVD separation between neighbours, normal-vision floor, 3:1 contrast): Deep Space `#1E9FCF #D95926 #9085E9 #199E70 #C98500 #D55181`, Daylight `#0B7FB0 #EB6834 #6250D6 #1BAF7A #EDA100 #E87BA4` (in Daylight three slots are under 3:1 on white, so such a chart must show direct labels or its table view). Never encode meaning with colour alone: bars have values in a tooltip and a "Show as a table" alternative.
 
 ## Type
 
@@ -48,6 +48,16 @@ Scale (ratio 1.25): `--fs-12` · `--fs-14` · `--fs-16` · `--fs-20` · `--fs-25
 ## Motion
 
 `--t-fast` 150 ms (hover, press) · `--t-med` 250 ms (page change, panels) · `--t-slow` 400 ms (large reveals). Easing `--ease`. With **prefers-reduced-motion** all three are 0 ms, ambient effects stop and the orb holds still; state is still shown by colour and text.
+
+## Signature details
+
+- **Orb**: 11 states (idle, listening, transcribing, understanding, planning, executing, waiting for approval, speaking, completed, error, focusing), each with its own colours, motion and words; colours glide between states (`@property --c1/--c2`, `--t-slow`).
+- **Ambient background**: a faint grid and two slow light fields (`.fx-aurora`, 40 s). It pauses when the tab is hidden and does not move with reduced motion.
+- **Page change**: content fades up in 180 ms with at most 60 ms stagger (under 250 ms in total).
+- **Count-ups**: whole-number stat tiles count up in 400 ms when a page opens and always end on the real number.
+- **Loading**: skeleton lines with the words "Loading…" kept for screen readers (`role="status"`).
+- **Navigation**: sidebar groups Today · Work · Life · Knowledge · System; on phones a bottom bar with Home, Today, Chat, Tasks and More.
+- **Icons**: one set, 24 px grid, 1.6 px round strokes, `currentColor`.
 
 ## Components (all in app.css / nova.css)
 

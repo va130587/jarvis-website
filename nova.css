@@ -102,7 +102,7 @@ ol[aria-label="Setup checklist"] { margin: var(--s1) 0 0; padding-left: var(--s5
 .dayload svg { position: absolute; inset: 0; transform: rotate(-90deg); } .dayload circle { fill: none; stroke-width: 3; } .dayload .trk { stroke: rgb(var(--ink-rgb) / .1); }
 .dayload .val { stroke: var(--cyan); stroke-linecap: round; transition: stroke-dasharray var(--t-slow) var(--ease); }
 .dayload.ok .val { stroke: var(--ok); } .dayload.gold .val { stroke: var(--gold); } .dayload.red .val { stroke: var(--red); }
-.dayload span { display: grid; text-align: center; line-height: 1.1; } .dayload b { font: 600 var(--fs-16) var(--head); } .dayload small { color: var(--muted); font-size: var(--fs-12); text-transform: uppercase; letter-spacing: .1em; }
+.dayload span { display: grid; text-align: center; line-height: 1.1; } .dayload b { font: 600 var(--fs-16) var(--head); } .dayload small { color: var(--muted); font-size: var(--fs-12); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
 .focus { display: grid; gap: var(--s1); padding: var(--s4) var(--s4); border: 1px solid rgb(var(--violet-rgb) / .55); background: rgb(var(--violet-rgb) / .12); color: var(--text); text-decoration: none; margin: 0; }
 .focus:hover { border-color: var(--violet); } .focus b { font-size: var(--fs-20); overflow-wrap: anywhere; } .focus small { color: var(--muted); } .focus.calm { border-color: rgb(var(--ok-rgb) / .45); background: rgb(var(--ok-rgb) / .08); }
 .brief-chips { display: flex; flex-wrap: wrap; gap: var(--s1); }
@@ -152,7 +152,7 @@ ol[aria-label="Setup checklist"] { margin: var(--s1) 0 0; padding-left: var(--s5
 .sched-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: var(--s3); } .sched-row .field { margin: 0; } .sched-row input, .sched-row select { width: 100%; min-width: 0; }
 .sched .kv { grid-template-columns: max-content 1fr; } .sched .btn { justify-self: start; }
 .tag.ok { border-color: rgb(var(--ok-rgb) / .5); color: var(--ok); background: rgb(var(--ok-rgb) / .1); }
-@media (max-width: 420px) { .brief-top { flex-direction: column-reverse; align-items: stretch; } .dayload { align-self: flex-end; width: 76px; height: 76px; } .sched-row { grid-template-columns: 1fr; } .brief-hero { padding: var(--s4); } }
+@media (max-width: 420px) { .brief-top { flex-direction: column-reverse; align-items: stretch; } .dayload { align-self: flex-end; width: 84px; height: 84px; } .sched-row { grid-template-columns: 1fr; } .brief-hero { padding: var(--s4); } }
 @media (prefers-reduced-motion: reduce) { .sky .sun, .chip.bell.has svg { animation: none; } }
 
 /* ---- knowledge base ---- */
@@ -267,7 +267,7 @@ kbd { font: 500 var(--fs-12)/1.4 var(--mono); padding: 0 var(--s1); border: 1px 
 .cat-bars { list-style: none; margin: 0 0 var(--s3); padding: 0; display: grid; gap: var(--s1); }
 .cat-bars li { display: grid; grid-template-columns: 90px 1fr auto; gap: var(--s3); align-items: center; font-size: var(--fs-14); }
 .cb-bar { height: 8px; background: rgb(var(--muted-rgb) / .1); border-radius: 4px; overflow: hidden; } .cb-bar i { display: block; height: 100%; background: var(--cyan); border-radius: 4px; }
-.cb-val { font-size: var(--fs-14); color: var(--cyan-2); }
+.cb-val { font-size: var(--fs-14); color: var(--text); font-variant-numeric: tabular-nums; }
 .exp-list { list-style: none; margin: var(--s1) 0; padding: 0; display: grid; gap: var(--s1); } .exp-list li { display: grid; grid-template-columns: auto 1fr auto auto; gap: var(--s3); align-items: center; }
 .budget-set { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; margin-top: var(--s3); } .budget-set input { width: 110px; }
 @media (max-width: 520px) { .life-grid { grid-template-columns: 1fr; } .rem-form, .exp-form { grid-template-columns: 1fr; } .rem-list li { grid-template-columns: 1fr auto; } .rem-time { grid-column: 1 / -1; } .exp-list li { grid-template-columns: 1fr auto; } .exp-list li > span:first-child { grid-column: 1 / -1; } .cat-bars li { grid-template-columns: 76px 1fr auto; } }
@@ -296,3 +296,31 @@ body.nova-server #main { padding-bottom: 112px; }
 .theme-opt small { color: var(--text-2); font-size: var(--fs-12); }
 .theme-opt:hover { border-color: var(--edge-hi); }
 .theme-opt[aria-checked="true"] { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset; }
+
+/* =================== Phase 3: signature look =================== */
+/* ---- orb: colours glide between the 11 states instead of jumping ---- */
+@property --c1 { syntax: '<color>'; inherits: true; initial-value: #4fd8ff; }
+@property --c2 { syntax: '<color>'; inherits: true; initial-value: #9b7bff; }
+.nova-orb { transition: --c1 var(--t-slow) var(--ease), --c2 var(--t-slow) var(--ease); }
+.nova-orb .o-glow, .nova-orb .o-ring { transition: border-color var(--t-slow) var(--ease), opacity var(--t-slow) var(--ease); }
+
+/* ---- ambient background: two slow light fields; paused when the tab is hidden (html.paused) and with reduced motion ---- */
+.fx-aurora { position: fixed; inset: -20vmax; z-index: 0; pointer-events: none; opacity: calc(.9 * var(--fx-opacity));
+  background: radial-gradient(40vmax 30vmax at 30% 30%, rgb(var(--cyan-rgb) / .07), transparent 70%), radial-gradient(36vmax 28vmax at 70% 65%, rgb(var(--violet-rgb) / .07), transparent 70%);
+  animation: aurora 40s ease-in-out infinite alternate; will-change: transform; }
+@keyframes aurora { from { transform: translate3d(-4vmax, -2vmax, 0) rotate(0deg); } to { transform: translate3d(4vmax, 3vmax, 0) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { .fx-aurora { animation: none; } }
+
+/* ---- page change: under 250 ms in total ---- */
+main.enter > * { animation: slide-in 180ms var(--ease-out) both; }
+main.enter > *:nth-child(2) { animation-delay: 20ms; }
+main.enter > *:nth-child(3) { animation-delay: 40ms; }
+main.enter > *:nth-child(4) { animation-delay: 60ms; }
+main.enter > *:nth-child(n+5) { animation-delay: 60ms; }
+@keyframes slide-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---- loading skeletons (the text stays for screen readers and tests) ---- */
+.empty.loading { position: relative; display: grid; gap: var(--s2); justify-items: start; text-align: left; border-style: solid; color: var(--text-3); }
+.empty.loading .sk { display: block; height: 10px; width: 100%; border-radius: var(--r-full); background: linear-gradient(90deg, rgb(var(--ink-rgb) / .06) 25%, rgb(var(--ink-rgb) / .13) 50%, rgb(var(--ink-rgb) / .06) 75%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+.empty.loading .sk:nth-child(2) { width: 82%; } .empty.loading .sk:nth-child(3) { width: 64%; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }

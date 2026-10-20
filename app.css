@@ -51,8 +51,6 @@ kbd { font-family: var(--mono); font-size: var(--fs-12); padding: 1px var(--s1);
   -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 85%);
   mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 85%);
 }
-.fx-scan { position: fixed; left: 0; right: 0; top: 0; height: 120px; z-index: 0; pointer-events: none; background: linear-gradient(180deg, transparent, rgb(var(--cyan-rgb) / .045) 85%, rgb(var(--cyan-rgb) / .12) 99%, transparent); animation: scan 9s linear infinite; }
-@keyframes scan { from { transform: translateY(-120px); } to { transform: translateY(100vh); } }
 html.paused *, html.paused *::before, html.paused *::after { animation-play-state: paused !important; }
 
 /* ---------- boot sequence ---------- */
@@ -608,7 +606,7 @@ dialog h2 { margin-bottom: var(--s4); font-size: var(--fs-20); }
 /* ---------- reduce motion: no animation ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-  #boot, .fx-scan { display: none; }
+  #boot { display: none; }
 }
 
 /* ---- Jobs for you (matches.js), Smart mode, digest ---- */

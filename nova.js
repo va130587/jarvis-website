@@ -101,17 +101,21 @@
   };
   var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['briefing', 'Daily Briefing', 'sun'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail'], ['hub', 'Tasks and Calendar', 'cal'], ['focus', 'Focus and Planner', 'clock'], ['life', 'Life Tracker', 'heart'], ['proofloop', 'ProofLoop', 'loop'], ['insights', 'Weekly Insights', 'cost'],
     ['automation', 'Automation Centre', 'auto'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock']];
+  // The sidebar in five groups, by when you need them.
+  var NAV_GROUPS = [['Today', ['dashboard', 'briefing', 'chat', 'voice']], ['Work', ['email', 'hub', 'focus', 'proofloop', 'automation']], ['Life', ['life', 'insights', 'identity']],
+    ['Knowledge', ['knowledge', 'memory']], ['System', ['usage', 'connections', 'security']]];
   var TOOLS_NAV = [['today', 'Today', 'tool'], ['tasks', 'Tasks', 'tool'], ['calendar', 'Calendar', 'cal'], ['notes', 'Notes', 'book'], ['matches', 'Jobs for you', 'tool'], ['jobs', 'Job finder', 'tool'], ['applications', 'Applications', 'tool'], ['growth', 'Growth', 'cost'], ['review', 'Weekly review', 'cost'], ['profile', 'Job profile', 'id'], ['settings', 'Tool settings', 'tool'], ['help', 'Voice commands', 'mic']];
   function link(v, label, ic, badge) { return '<a href="#' + v + '" data-view="' + v + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (IC[ic] || IC.tool) + '</svg><span>' + esc(label) + '</span>' + (badge ? '<em class="count soon" aria-hidden="true">Soon</em><span class="sr-only"> (upcoming, not built yet)</span>' : '') + '</a>'; }
   function buildNav() {
     var nav = $('.nav'); if (!nav) return;
-    nav.innerHTML = '<p class="nav-group mono">NOVA</p>' + NOVA_NAV.map(function (n) { return link(n[0], n[1], n[2], n[3]); }).join('') +
+    var byId = {}; NOVA_NAV.forEach(function (n) { byId[n[0]] = n; });
+    nav.innerHTML = NAV_GROUPS.map(function (g) { return '<p class="nav-group mono">' + g[0] + '</p>' + g[1].map(function (v) { var n = byId[v]; return link(n[0], n[1], n[2], n[3]); }).join(''); }).join('') +
       '<p class="nav-group mono">Classic tools (stored in this browser)</p>' + TOOLS_NAV.map(function (n) { return link(n[0], n[1], n[2]); }).join('') + '<a href="blueprint/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/></svg><span>Blueprint</span></a>';
     var bn = $('.bottom-nav');
     if (bn) { var more = $('#moreBtn'); $$('a', bn).forEach(function (a) { a.remove(); });
-      [['dashboard', 'Home', 'dash'], ['chat', 'Chat', 'chat'], ['memory', 'Memory', 'mem'], ['voice', 'Voice', 'mic']].forEach(function (n) { more.insertAdjacentHTML('beforebegin', link(n[0], n[1], n[2])); }); }
+      [['dashboard', 'Home', 'dash'], ['briefing', 'Today', 'sun'], ['chat', 'Chat', 'chat'], ['hub', 'Tasks', 'cal']].forEach(function (n) { more.insertAdjacentHTML('beforebegin', link(n[0], n[1], n[2])); }); }
     var sheet = $('#moreSheet');
-    if (sheet) sheet.innerHTML = NOVA_NAV.concat(TOOLS_NAV).filter(function (n) { return ['dashboard', 'chat', 'memory', 'voice'].indexOf(n[0]) < 0; }).map(function (n) { return '<a href="#' + n[0] + '" data-view="' + n[0] + '">' + esc(n[1]) + (n[3] ? ' (upcoming)' : '') + '</a>'; }).join('') + '<a href="blueprint/">Blueprint</a>';
+    if (sheet) sheet.innerHTML = NOVA_NAV.concat(TOOLS_NAV).filter(function (n) { return ['dashboard', 'briefing', 'chat', 'hub'].indexOf(n[0]) < 0; }).map(function (n) { return '<a href="#' + n[0] + '" data-view="' + n[0] + '">' + esc(n[1]) + (n[3] ? ' (upcoming)' : '') + '</a>'; }).join('') + '<a href="blueprint/">Blueprint</a>';
   }
 
   /* ================= small shared pieces ================= */
@@ -162,7 +166,7 @@
       '<button type="button" class="btn small" data-act="novaRetry">Try again</button></div>';
   }
   window.addEventListener('online', function () { if (N.user) { J.toast('Back online.'); J.render(false); } });
-  function tile(label, value, note, tone) { return '<div class="panel stat' + (tone ? ' ' + tone : '') + '"><span><span class="label">' + esc(label) + '</span><b class="num">' + esc(value) + '</b><small>' + esc(note) + '</small></span></div>'; }
+  function tile(label, value, note, tone) { return '<div class="panel stat' + (tone ? ' ' + tone : '') + '"><span><span class="label">' + esc(label) + '</span><b class="num"' + (/^\d+$/.test(String(value)) ? ' data-count="' + value + '"' : '') + '>' + esc(value) + '</b><small>' + esc(note) + '</small></span></div>'; }
   function name() { return N.user ? N.user.displayName : 'there'; }
   J.actions.novaRetry = function () { J.render(false); };
   N.h = { orb: orb, when: when, ago: ago, stale: stale, tile: tile, load: load, fail: fail, soon: soon, name: name, STATES: STATES };
@@ -177,8 +181,8 @@
       var rules = 0, model = 0; if (u) u.byHandler.forEach(function (h) { if (h.handler === 'rules') rules += h.calls; else if (h.handler === 'claude' || h.handler === 'local-model') model += h.calls; });
       return '<section class="hero nova-hero"><div class="core-stage">' + orb('big') + '</div><div>' +
         '<p class="eyebrow">' + esc(J.longDate ? J.longDate(J.today()) : '') + ' · Dubai</p><h1 class="greet">Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening') + ', ' + esc(name()) + '</h1>' +
-        '<p class="lead">From Request to Verified Result.</p><p class="live" id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p>' +
-        '<div class="btn-row"><a class="btn primary" href="#chat">Talk to NOVA</a><a class="btn" href="#memory">Memory Vault</a></div></div></section>' +
+        '<p class="lead">' + esc((N.daily && N.daily.headline()) || 'From Request to Verified Result.') + '</p><p class="live" id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p>' +
+        '<div class="btn-row"><a class="btn primary" href="#chat">Talk to NOVA</a><a class="btn" href="#briefing">Daily Briefing</a><a class="btn ghost" href="#memory">Memory Vault</a></div></div></section>' +
         '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'memories and actions' : 'nothing pending', proposed ? 'gold' : '') +
         tile('Replies without AI', rules, 'free rule-based, this month') + tile('Replies from a model', N.session && N.session.aiProvider !== 'local' ? model : 'off', N.session && N.session.aiProvider !== 'local' ? (N.session.aiProvider === 'ollama' ? 'local model, free' : 'this month') : 'no AI model configured') + '</div>' +
         (ap && ap.length ? '<article class="panel gold" id="approvalsPanel"><h2 class="label">Waiting for your approval <span class="n">' + ap.length + '</span></h2>' + ap.map(function (x) { return previewCard({ id: x.runId, pendingApproval: x }); }).join('') + '</article>' : '') +

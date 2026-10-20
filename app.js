@@ -64,7 +64,10 @@
   J.head = function (eyebrow, title, sub, actions) {
     return '<header class="view-head"><div><p class="eyebrow">' + esc(eyebrow) + '</p><h1 data-decode>' + esc(title) + '</h1>' + (sub ? '<p class="sub">' + sub + '</p>' : '') + '</div>' + (actions ? '<div class="head-actions">' + actions + '</div>' : '') + '</header>';
   };
-  J.empty = function (html) { return '<p class="empty">' + html + '</p>'; };
+  J.empty = function (html) {   // "Loading…" and "Planning…" placeholders become skeleton lines; the words stay for screen readers
+    if (/^(Loading|Planning)…/.test(html)) return '<p class="empty loading" role="status"><span class="sk" aria-hidden="true"></span><span class="sk" aria-hidden="true"></span><span class="sk" aria-hidden="true"></span><span>' + html + '</span></p>';
+    return '<p class="empty">' + html + '</p>';
+  };
   J.seg = function (group, val, cur, label) {
     return '<button type="button" class="seg" data-act="seg" data-group="' + group + '" data-id="' + esc(val) + '" aria-pressed="' + (String(cur) === String(val)) + '">' + esc(label) + '</button>';
   };
@@ -213,7 +216,7 @@
       var t0 = null;
       function step(ts) {
         if (t0 === null) t0 = ts;
-        var p = Math.min(1, (ts - t0) / 900);
+        var p = Math.min(1, (ts - t0) / 400);
         el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
         if (p < 1) requestAnimationFrame(step);
       }

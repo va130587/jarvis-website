@@ -77,8 +77,9 @@
     var level = load === 0 ? ['Clear', 'ok', 8] : load < 5 ? ['Light', 'ok', 30] : load < 10 ? ['Moderate', 'gold', 60] : ['Heavy', 'red', 90];
     return '<section class="brief-hero theme-dark sky-' + phase() + '" aria-labelledby="briefTitle">' +
       '<div class="sky" aria-hidden="true"><i class="sun"></i><i class="ray"></i></div>' +
-      '<div class="brief-top"><div><p class="eyebrow">' + esc(b.weekday + ' · ' + b.day) + ' · Dubai' + (b.demo ? ' · <span class="tag gold">includes demo data</span>' : '') + '</p>' +
-      '<h2 id="briefTitle" class="brief-greet">' + esc(b.greeting) + '</h2><p class="brief-head">' + esc(b.headline) + '</p></div>' +
+      '<div class="brief-top"><div>' + (opts.compact ? '<h2 id="briefTitle" class="label">Today at a glance' + (b.demo ? ' <span class="tag gold">includes demo data</span>' : '') + '</h2>' :   // on the dashboard the hero already greets you
+        '<p class="eyebrow">' + esc(b.weekday + ' · ' + b.day) + ' · Dubai' + (b.demo ? ' · <span class="tag gold">includes demo data</span>' : '') + '</p>' +
+        '<h2 id="briefTitle" class="brief-greet">' + esc(b.greeting) + '</h2><p class="brief-head">' + esc(b.headline) + '</p>') + '</div>' +
       '<div class="dayload ' + level[1] + '" role="img" aria-label="Day load: ' + level[0] + '"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15.5" class="trk"/><circle cx="18" cy="18" r="15.5" pathLength="100" class="val" style="stroke-dasharray:' + level[2] + ' 100"/></svg><span><b>' + level[0] + '</b><small>day load</small></span></div></div>' +
       (b.focus ? '<a class="focus" href="' + esc(b.focus.link) + '"><span class="label">The one thing</span><b>' + esc(b.focus.text) + '</b><small>' + esc(b.focus.why) + '</small></a>' : '<p class="focus calm"><span class="label">The one thing</span><b>Nothing urgent.</b><small>A good day to get ahead on something you care about.</small></p>') +
       '<div class="brief-chips">' + [['Overdue', c.overdue, 'red'], ['Due today', c.today, ''], ['Follow-ups', c.followUps, 'gold'], ['Approvals', c.approvals, 'gold'], ['Important e-mail', c.importantEmail, ''], ['Done yesterday', c.doneYesterday, 'ok']].map(function (x) {
@@ -91,9 +92,10 @@
         (s.items.length ? '<ul class="brief-list">' + s.items.map(function (i) { return '<li class="' + esc(i.tone) + '"><a href="' + esc(i.link || '#') + '"><b>' + esc(i.text) + '</b>' + (i.sub ? '<small>' + esc(i.sub) + '</small>' : '') + '</a></li>'; }).join('') + '</ul>' : '<p class="empty">' + esc(s.empty || 'Nothing here.') + '</p>') + '</article>';
     }).join('') + '</div>';
   }
+  D.headline = function () { var r = N.cache.briefing; return r && r.preview ? r.preview.headline : ''; };
   D.dashboardStrip = function () {
     var r = N.cache.briefing; if (!r) return '';
-    return '<div class="dash-brief">' + briefingCard(r.preview) + '</div>';
+    return '<div class="dash-brief">' + briefingCard(r.preview, { compact: true }) + '</div>';
   };
   function speakBrief() {
     var r = N.cache.briefing, b = r && (r.briefing && r.briefing.day === r.preview.day ? r.preview : r.preview);

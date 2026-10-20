@@ -125,7 +125,7 @@ test('two-way: switching asks for write permission; tasks are sent only after co
   await page.evaluate(() => location.hash = 'tasks'); await page.waitForTimeout(200);
   await page.fill('#capIn', 'Call HR tomorrow at 4pm');
   await page.press('#capIn', 'Enter');
-  assert.equal(await page.textContent('#calChip'), '1 change to send');
+  await page.waitForFunction(() => document.getElementById('calChip').textContent === '1 change to send', null, { timeout: 5000 });
   assert.ok(!google.calls.some(c => c.startsWith('POST')), 'nothing is sent without confirmation');
   // Say no first
   await page.click('#calChip');

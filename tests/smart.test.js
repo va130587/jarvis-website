@@ -70,6 +70,16 @@ test('turning it on asks for consent first; saying no keeps it off and downloads
   await ctx.close();
 });
 
+test('switching it on in the first moments after the page opens still waits for consent (no download behind the question)', async () => {
+  const { page, ctx, errors } = await open(CHROME_AI);
+  await page.click('label.switch:has(#smartToggle)');                       // before the 600 ms "resume an earlier choice" timer fires
+  await page.waitForSelector('#confirmDialog[open]'); await page.waitForTimeout(1000);
+  assert.equal(await page.evaluate(() => window.__ai.created), 0, 'nothing is created while the question is open');
+  await page.click('#confirmNo'); await page.waitForTimeout(800);
+  assert.equal(await page.evaluate(() => window.__ai.created), 0);
+  assert.deepEqual(errors, []); await ctx.close();
+});
+
 test('consented download shows progress, then Smart mode is ready; it only suggests and asks before acting', async () => {
   const { page, ctx, errors } = await open(CHROME_AI);
   await page.click('label.switch:has(#smartToggle)');

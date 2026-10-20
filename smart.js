@@ -125,5 +125,6 @@
   J.smartSettingsHTML = settingsHTML;
   Object.assign(J.actions, { smartCover: function (id) { J.closeForm(); improveCover(id); } });
   // A model that was already approved earlier starts again quietly on the next visit (no new download prompt).
-  document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { if (J.data.settings.smart) enable(); }, 600); });
+  // Only a choice saved before this page loaded counts: switching it on now must still go through the consent question first.
+  document.addEventListener('DOMContentLoaded', function () { var before = !!J.data.settings.smart; setTimeout(function () { if (before && J.data.settings.smart && S.state === 'off') enable(); }, 600); });
 })();

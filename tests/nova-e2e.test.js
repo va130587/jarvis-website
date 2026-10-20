@@ -87,7 +87,9 @@ test('NOVA orb: ten states, each with its own text, set by real events (chat req
   assert.match(await page.innerText('#novaStatusText'), /Waiting for your approval/);
   assert.equal(await page.getAttribute('.chat-head .nova-orb', 'aria-label'), 'NOVA status: Waiting for your approval');
   // all ten states exist and are described in words (colour is never the only signal)
-  const all = await page.evaluate(() => { const out = {}; ['idle', 'listening', 'transcribing', 'understanding', 'planning', 'executing', 'waiting_approval', 'speaking', 'completed', 'error'].forEach(s => { NOVA.setState(s, true); out[s] = [document.querySelector('.nova-orb').getAttribute('aria-label'), getComputedStyle(document.querySelector('.nova-orb .o-core')).animationName, getComputedStyle(document.querySelector('.nova-orb')).getPropertyValue('--c1')]; }); return out; });
+  assert.match(await page.evaluate(() => getComputedStyle(document.querySelector('.nova-orb')).transitionProperty), /--c1/, 'colours glide from one state to the next');
+  // read each state's own colour, not a moment of the glide between two states
+  const all = await page.evaluate(() => { const out = {}; document.querySelectorAll('.nova-orb').forEach(o => { o.style.transition = 'none'; }); ['idle', 'listening', 'transcribing', 'understanding', 'planning', 'executing', 'waiting_approval', 'speaking', 'completed', 'error'].forEach(s => { NOVA.setState(s, true); out[s] = [document.querySelector('.nova-orb').getAttribute('aria-label'), getComputedStyle(document.querySelector('.nova-orb .o-core')).animationName, getComputedStyle(document.querySelector('.nova-orb')).getPropertyValue('--c1')]; }); document.querySelectorAll('.nova-orb').forEach(o => { o.style.transition = ''; }); return out; });
   assert.equal(Object.keys(all).length, 10);
   assert.equal(new Set(Object.values(all).map(v => v[0])).size, 10);
   assert.equal(new Set(Object.values(all).map(v => v[2].trim())).size >= 6, true);
