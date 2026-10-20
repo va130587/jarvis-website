@@ -85,7 +85,7 @@ test('am I free at 3 pm tomorrow / when am I free', async () => {
 
 test('add interview with Careem on Sunday at 11am (confirm first, then sent to Google)', async () => {
   const before = google.events['roshan@gmail.com'].length;
-  assert.equal(await ask('Add interview with Careem on Sunday at 11am'), 'Add "Interview with Careem" Sunday at 11 am to Jarvis and Google Calendar? Say yes or no.');
+  assert.equal(await ask('Add interview with Careem on Sunday at 11am'), 'Add "Interview with Careem" Sunday at 11 am to NOVA and Google Calendar? Say yes or no.');
   assert.equal(google.events['roshan@gmail.com'].length, before, 'nothing created before yes');
   assert.equal(await ask('maybe'), 'Please say yes or no.');
   assert.equal(await ask('yes'), 'Done. Interview with Careem is on your calendar Sunday at 11 am. Google Calendar updated too.');
@@ -93,15 +93,15 @@ test('add interview with Careem on Sunday at 11am (confirm first, then sent to G
   assert.deepEqual([task.kind, task.due, task.time, task.priority], ['interview', '2026-10-18', '11:00', 'high']);
   const ev = google.events['roshan@gmail.com'].find(e => e.summary === 'Interview with Careem');
   assert.deepEqual(ev.start, { dateTime: '2026-10-18T11:00:00', timeZone: 'Asia/Dubai' });
-  // Missing details: Jarvis asks
+  // Missing details: NOVA asks
   assert.equal(await ask('schedule a meeting with Sara tomorrow'), 'What time is the meeting?');
-  assert.equal(await ask('at 3pm'), 'Add "Meeting with Sara" tomorrow at 3 pm to Jarvis and Google Calendar? Say yes or no.');
+  assert.equal(await ask('at 3pm'), 'Add "Meeting with Sara" tomorrow at 3 pm to NOVA and Google Calendar? Say yes or no.');
   assert.equal(await ask('no'), 'Okay, I left it as it is.');
   assert.ok(!(await page.evaluate(() => J.data.tasks.some(t => t.title === 'Meeting with Sara'))), '"no" adds nothing');
   assert.equal(await ask('book a call'), 'When is the call?');
   assert.equal(await ask('cancel'), '', 'cancel stops the question');
   // Clash warning
-  assert.equal(await ask('add meeting with Omar today at 10:30am'), 'Add "Meeting with Omar" today at 10:30 am to Jarvis and Google Calendar? Heads up: you already have "Team sync" at 10 am. Say yes or no.');
+  assert.equal(await ask('add meeting with Omar today at 10:30am'), 'Add "Meeting with Omar" today at 10:30 am to NOVA and Google Calendar? Heads up: you already have "Team sync" at 10 am. Say yes or no.');
   assert.equal(await ask('no'), 'Okay, I left it as it is.');
 });
 
@@ -111,12 +111,12 @@ test('move my 3 pm meeting to 4 pm (confirm first)', async () => {
   assert.equal(await ask('yes'), 'Moved "Project meeting" to today at 4 pm in Google Calendar.');
   const e6 = google.events['roshan@gmail.com'].find(e => e.id === 'e6');
   assert.deepEqual([e6.start.dateTime, e6.end.dateTime], ['2026-10-15T16:00:00', '2026-10-15T17:00:00'], 'keeps the one-hour length');
-  // A Jarvis task, moved by name to another day
+  // A NOVA task, moved by name to another day
   assert.equal(await ask('move the interview with Careem to Monday at 10am'), 'Move "Interview with Careem" from Sunday at 11 am to Monday at 10 am? Say yes or no.');
   assert.equal(await ask('yes'), 'Moved "Interview with Careem" to Monday at 10 am. Google Calendar updated too.');
   assert.equal(google.events['roshan@gmail.com'].find(e => e.summary === 'Interview with Careem').start.dateTime, '2026-10-19T10:00:00');
   // Read-only and unknown
-  assert.match(await ask('move the Data Structures lecture to 2pm'), /^"Data Structures lecture" is read-only for Jarvis\./);
+  assert.match(await ask('move the Data Structures lecture to 2pm'), /^"Data Structures lecture" is read-only for NOVA\./);
   assert.equal(await ask('move my dentist appointment to Friday'), 'I couldn\'t find "dentist appointment" on your calendar in the next two weeks.');
 });
 
@@ -127,7 +127,7 @@ test('cancel the call with HR (yes / no)', async () => {
   await ask('cancel the call with HR');
   assert.equal(await ask('yes'), 'Cancelled "Call with HR". It is removed from Google Calendar.');
   assert.ok(!google.events['roshan@gmail.com'].some(e => e.id === 'e7'));
-  assert.match(await ask('cancel the Data Structures lecture'), /read-only for Jarvis, so I can't cancel it/);
+  assert.match(await ask('cancel the Data Structures lecture'), /read-only for NOVA, so I can't cancel it/);
   assert.equal(await ask('cancel my dentist appointment'), 'I couldn\'t find an upcoming event matching "dentist appointment".');
   // Task commands still go to tasks, not the calendar
   assert.match(await ask('delete task submit report'), /^Delete the task "Submit report"\? Say yes or no\.$/);
@@ -136,11 +136,11 @@ test('cancel the call with HR (yes / no)', async () => {
 
 test('expired sign-in and offline are explained by voice', async () => {
   google.fail = 401;
-  assert.equal(await ask('sync my calendar'), 'Your Google Calendar sign-in has expired. Click Reconnect. Your Jarvis data is safe.');
+  assert.equal(await ask('sync my calendar'), 'Your Google Calendar sign-in has expired. Click Reconnect. Your NOVA data is safe.');
   google.fail = null;
   await page.evaluate(() => J.cal.sync('google', { interactive: true }));
   await ctx.setOffline(true);
-  assert.equal(await ask('sync my calendar'), 'You are offline. Jarvis will sync Google Calendar when you are back online. Your data is safe.');
+  assert.equal(await ask('sync my calendar'), 'You are offline. NOVA will sync Google Calendar when you are back online. Your data is safe.');
   await ctx.setOffline(false);
 });
 

@@ -75,7 +75,7 @@ test('Export: valid structure, Dubai time zone, all-day, escaping, line folding,
     { uid: 't2@jarvis', title: 'Application deadline: Data Intern', allDay: true, date: '2026-10-20', endDate: '2026-10-21' },
     { uid: 't3@jarvis', title: 'Late call ' + 'x'.repeat(120) + ' ✓', start: ICS.dubaiTs('2026-10-24', '23:30'), end: ICS.dubaiTs('2026-10-25', '00:30') }
   ];
-  const out = ICS.build(items, { name: 'Jarvis', now: Date.UTC(2026, 9, 15) });
+  const out = ICS.build(items, { name: 'NOVA', now: Date.UTC(2026, 9, 15) });
   assert.match(out, /^BEGIN:VCALENDAR\r\nVERSION:2\.0\r\n/);
   assert.match(out, /END:VCALENDAR\r\n$/);
   assert.match(out, /BEGIN:VTIMEZONE\r\nTZID:Asia\/Dubai/);

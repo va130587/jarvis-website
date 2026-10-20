@@ -1,11 +1,11 @@
-/* Jarvis "Jobs for you": which jobs can hire me, and why.
+/* NOVA "Jobs for you": which jobs can hire me, and why.
    The dashboard, the "Why this job?" panel, the skills-gap summary, saved rules and alerts, the daily digest,
    the one-click application pack, the weekly report, profile onboarding (typing or voice) and the job voice commands.
    Scores come from match.js (rule-based, explainable). Scores are estimates, not a promise of being hired. */
 (function () {
   'use strict';
 
-  var J = window.J, M = window.JarvisMatch;
+  var J = window.J, M = window.NovaMatch;
   var esc = J.esc, $ = J.$, $$ = J.$$, ui = J.ui;
   ui.mTab = 'best'; ui.mq = ''; ui.mcity = 'all'; ui.mtype = 'all'; ui.mlevel = 'all'; ui.mmin = '0'; ui.mremote = 'all';
 
@@ -82,7 +82,7 @@
     if (!c) return '<article class="panel"><p class="empty" style="margin:0">' + (J.jobs.loading() ? 'Loading jobs…' : 'No jobs loaded yet. <b>Turn on the GitHub Action</b> (see the README) so jobs are collected automatically, or press <b>Refresh</b> to load them with your browser.') + '</p></article>';
     var st = c.stats || {}, hid = st.hidden || {}, hidden = Object.keys(hid).filter(function (k) { return hid[k]; }).map(function (k) { return hid[k] + ' ' + HIDE_NAMES[k]; });
     var failed = c.failed || [], total = (c.ok || []).length + failed.length;
-    return '<article class="panel flat stats-panel"><div class="panel-head"><h2 class="label">What Jarvis checked</h2><div class="btn-row"><button type="button" class="btn small ghost" data-act="matchRules">Alerts &amp; rules</button><button type="button" class="btn small" data-act="refreshJobs"' + (J.jobs.loading() ? ' disabled' : '') + '>Refresh</button></div></div>' +
+    return '<article class="panel flat stats-panel"><div class="panel-head"><h2 class="label">What NOVA checked</h2><div class="btn-row"><button type="button" class="btn small ghost" data-act="matchRules">Alerts &amp; rules</button><button type="button" class="btn small" data-act="refreshJobs"' + (J.jobs.loading() ? ' disabled' : '') + '>Refresh</button></div></div>' +
       '<p class="small-text" style="margin:0 0 6px"><b class="gold-text">' + (c.collector ? 'Collected automatically' : 'Loaded by your browser') + '</b> · updated ' + esc(J.ago(c.at)) + ' · <b>' + (c.ok || []).length + '</b> of ' + total + ' sources worked.</p>' +
       '<p class="small-text muted" style="margin:0 0 6px">Scanned <b>' + (c.scanned || 0) + '</b> listings. Kept <b>' + c.jobs.length + '</b> that are in the UAE (or remote-friendly) and fresher friendly' + (hidden.length ? '. Hidden: ' + esc(hidden.join(', ')) : '') + '.</p>' +
       '<p class="small-text muted" style="margin:0">Match scores are <b>estimates</b>, not a promise of being hired. Always check the company is real before you share personal details.</p>' +
@@ -98,7 +98,7 @@
   function profileNudge() {
     var miss = profileGaps();
     if (!miss.length) return '';
-    return '<article class="panel gold"><div class="panel-head"><h2 class="label">Make the matches better</h2><button type="button" class="btn small primary" data-act="jobProfile">Set up my job profile</button></div><p style="margin:0">Your profile is missing: <b>' + esc(miss.join(', ')) + '</b>. The more Jarvis knows, the better it can tell which jobs can hire you. You can also say <q>set up my job profile</q>.</p></article>';
+    return '<article class="panel gold"><div class="panel-head"><h2 class="label">Make the matches better</h2><button type="button" class="btn small primary" data-act="jobProfile">Set up my job profile</button></div><p style="margin:0">Your profile is missing: <b>' + esc(miss.join(', ')) + '</b>. The more NOVA knows, the better it can tell which jobs can hire you. You can also say <q>set up my job profile</q>.</p></article>';
   }
   function options(list, cur) { return list.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (String(cur) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join(''); }
   J.screens.matches = {
@@ -108,8 +108,8 @@
       var types = []; sec.all.forEach(function (j) { var t = j.type || (j.level === 'intern' ? 'Internship' : ''); if (t && types.indexOf(t) < 0) types.push(t); });
       var tabs = [['best', 'Best matches', sec.best.length], ['stretch', 'Stretch', sec.stretch.length], ['fresh', 'New today', sec.fresh.length], ['closing', 'Closing soon', sec.closing.length], ['no', 'Not eligible', sec.no.length]];
       var appDeadlines = J.data.apps.filter(function (a) { return a.deadline && a.stage === 'saved' && a.deadline >= J.today() && a.deadline <= J.addDays(J.today(), 7); });
-      var empties = { best: 'No strong matches yet. Check the <b>Stretch</b> tab, add skills to your profile, or press Refresh.', stretch: 'No stretch jobs right now.', fresh: 'No new jobs today. Jarvis checks every 6 hours.', closing: 'No jobs with a closing date in the next 14 days.', no: 'Nothing here. Jobs you are probably not eligible for would be listed with the reason.' };
-      return J.head('Career', 'Jobs for you', 'Jobs that can realistically hire you, with a plain-English reason for each. Jarvis never applies for you: you press apply.', '<button type="button" class="btn" data-act="jobProfile">Job profile</button><button type="button" class="btn" data-act="smartExplain">Explain with Smart mode</button>') +
+      var empties = { best: 'No strong matches yet. Check the <b>Stretch</b> tab, add skills to your profile, or press Refresh.', stretch: 'No stretch jobs right now.', fresh: 'No new jobs today. NOVA checks every 6 hours.', closing: 'No jobs with a closing date in the next 14 days.', no: 'Nothing here. Jobs you are probably not eligible for would be listed with the reason.' };
+      return J.head('Career', 'Jobs for you', 'Jobs that can realistically hire you, with a plain-English reason for each. NOVA never applies for you: you press apply.', '<button type="button" class="btn" data-act="jobProfile">Job profile</button><button type="button" class="btn" data-act="smartExplain">Explain with Smart mode</button>') +
         statsPanel(c) + profileNudge() + gapPanel(sec) +
         '<div class="tabs" role="group" aria-label="Job lists">' + tabs.map(function (t) { return '<button type="button" class="tab" id="mtab-' + t[0] + '" data-act="seg" data-group="mTab" data-id="' + t[0] + '" aria-pressed="' + (tab === t[0]) + '">' + t[1] + ' <span class="n">' + t[2] + '</span></button>'; }).join('') + '</div>' +
         '<div class="toolbar"><label class="sr-only" for="mq">Search jobs</label><input class="search" id="mq" type="search" placeholder="Search roles or companies" value="' + esc(ui.mq) + '" data-ui="mq">' +
@@ -141,8 +141,8 @@
       '<h3>Why it fits</h3>' + (e.reasons.length ? '<ul class="why-list">' + e.reasons.map(function (r) { return '<li class="yes">' + esc(r.text) + '</li>'; }).join('') + '</ul>' : '<p class="muted small-text">Nothing stands out yet. Add your skills and target roles to your profile.</p>') +
       '<h3>What may hold you back</h3>' + (holds.length ? '<ul class="why-list">' + holds.join('') + '</ul>' : '<p class="muted small-text">Nothing found in the listing.</p>') +
       (learn ? '<h3>Skills to learn to qualify (free)</h3><ul class="plain">' + learn + '</ul>' : '') +
-      '<h3>About this listing</h3><ul class="plain small-text"><li>Source: <b>' + esc(j.sourceName || 'job board') + '</b>' + (j.live ? ' (loaded by your browser)' : '') + '</li><li>Posted: ' + esc(j.date ? J.longDate(j.date) : 'not stated') + '</li><li>First seen by Jarvis: ' + esc(j.firstSeen ? J.longDate(j.firstSeen) : 'today') + ' · last seen: ' + esc(j.lastSeen ? J.longDate(j.lastSeen) : 'today') + '</li>' +
-        '<li>Salary: ' + (j.salary ? esc(j.salary) + ' (as written in the listing)' : 'not stated in the listing. Jarvis does not guess pay.') + '</li>' + (cl ? '<li>Closing date: ' + esc(J.longDate(cl)) + '</li>' : '') + '</ul>' +
+      '<h3>About this listing</h3><ul class="plain small-text"><li>Source: <b>' + esc(j.sourceName || 'job board') + '</b>' + (j.live ? ' (loaded by your browser)' : '') + '</li><li>Posted: ' + esc(j.date ? J.longDate(j.date) : 'not stated') + '</li><li>First seen by NOVA: ' + esc(j.firstSeen ? J.longDate(j.firstSeen) : 'today') + ' · last seen: ' + esc(j.lastSeen ? J.longDate(j.lastSeen) : 'today') + '</li>' +
+        '<li>Salary: ' + (j.salary ? esc(j.salary) + ' (as written in the listing)' : 'not stated in the listing. NOVA does not guess pay.') + '</li>' + (cl ? '<li>Closing date: ' + esc(J.longDate(cl)) + '</li>' : '') + '</ul>' +
       '<div class="tip-box ' + (e.scam ? 'red' : '') + '"><b>Verify the company.</b> ' + (e.scam ? 'This listing mentions a fee or deposit. Real UAE employers never ask you to pay. ' : '') + 'Check the company has a real website and a careers page that lists this job, that emails come from its own domain, and that you are never asked for money or for passport copies before a written offer.</div>' +
       '<p class="small-text muted">This score is an estimate from the text of the listing and your profile. It is not a promise of being hired.</p>' +
       '<div class="btn-row"><a class="btn primary" href="' + esc(j.url) + '" target="_blank" rel="noopener noreferrer">View &amp; apply ↗</a>' + (saved ? '<button type="button" class="btn" data-act="openJobApp" data-id="' + esc(j.key) + '">Open application</button>' : '<button type="button" class="btn" data-act="prepareJob" data-id="' + esc(j.key) + '">Save &amp; prepare application</button>') + '</div></div>';
@@ -197,7 +197,7 @@
   function ruleLine(r) { return (r.keywords || 'Any job') + (r.city && r.city !== 'any' ? ' in ' + r.city : '') + (r.level && r.level !== 'any' ? ', ' + (LEVEL_NAMES[r.level] || r.level).toLowerCase() : '') + ', ' + (+r.min || 0) + '% or more' + (r.notify ? ', notify me' : ''); }
   function rulesDialog() {
     var rules = J.data.rules, all = jobs().filter(function (j) { return j.eval.verdict !== 'no'; });
-    var html = '<p class="small-text muted" style="margin:0 0 10px">A rule is a saved search. Rules that notify you speak and show a message when a new matching job appears while Jarvis is open. For alerts on your phone when Jarvis is closed, see "Phone alerts" in the README.</p>' +
+    var html = '<p class="small-text muted" style="margin:0 0 10px">A rule is a saved search. Rules that notify you speak and show a message when a new matching job appears while NOVA is open. For alerts on your phone when NOVA is closed, see "Phone alerts" in the README.</p>' +
       (rules.length ? '<ul class="sources">' + rules.map(function (r) { return '<li><span class="grow"><b>' + esc(r.name || r.keywords || 'Rule') + '</b><br><span class="small-text muted">' + esc(ruleLine(r)) + ' · ' + J.plural(all.filter(function (j) { return ruleMatches(r, j); }).length, 'match', 'matches') + ' now</span></span>' +
         J.iconBtn('editRule', r.id, 'Edit rule ' + (r.name || r.keywords), 'edit') + J.iconBtn('delRule', r.id, 'Delete rule ' + (r.name || r.keywords), 'del', 'del') + '</li>'; }).join('') + '</ul>' : '<p class="empty">No saved searches yet. Add one, for example <b>Data analyst, Dubai, 70%</b>.</p>') +
       '<div class="btn-row" style="margin-top:12px"><button type="button" class="btn primary" data-act="addRule">Add a rule</button></div>';
@@ -228,7 +228,7 @@
     J.toast(text);
     if (J.voice) { J.voice.announce(text); if (J.ctx) { J.ctx.jobs = list; J.ctx.job = best; } }
     if (J.data.settings.notify && 'Notification' in window && Notification.permission === 'granted') {
-      try { new Notification('Jarvis: new job matches', { body: best.title + ' at ' + best.company + ' · ' + best.score + '%', tag: 'jarvis-jobs' }); } catch (e) { /* some phones need a service worker */ }
+      try { new Notification('NOVA: new job matches', { body: best.title + ' at ' + best.company + ' · ' + best.score + '%', tag: 'nova-jobs' }); } catch (e) { /* some phones need a service worker */ }
     }
   }
   function checkAlerts() {
@@ -299,7 +299,7 @@
     else action = 'Keep your profile up to date and check Jobs for you every morning.';
     var rep = { week: ws, from: r.from, to: r.to, applied: appliedThisWeek.length, goal: goal, responseRate: rate, interviews: apps.filter(function (a) { return a.stage === 'interview'; }).length, offers: apps.filter(function (a) { return a.stage === 'offer'; }).length,
       newMatches: matches.length, bestMatch: matches[0] ? matches[0].title + ' at ' + matches[0].company + ' (' + matches[0].score + '%)' : '', skillAvg: avg, skillDelta: prevAvg == null ? null : avg - prevAvg, action: action, madeOn: J.today() };
-    rep.text = 'Week of ' + J.fmt(r.from, { weekday: undefined }) + ': you sent ' + J.plural(rep.applied, 'application') + (goal ? ' (goal ' + goal + ')' : '') + ', the response rate is ' + rate + ' percent, and Jarvis found ' + J.plural(rep.newMatches, 'new strong match', 'new strong matches') + (rep.bestMatch ? ', best: ' + rep.bestMatch : '') + '. Skills average ' + avg + ' percent' + (rep.skillDelta ? ' (' + (rep.skillDelta > 0 ? '+' : '') + rep.skillDelta + ')' : '') + '. One action for this week: ' + action;
+    rep.text = 'Week of ' + J.fmt(r.from, { weekday: undefined }) + ': you sent ' + J.plural(rep.applied, 'application') + (goal ? ' (goal ' + goal + ')' : '') + ', the response rate is ' + rate + ' percent, and NOVA found ' + J.plural(rep.newMatches, 'new strong match', 'new strong matches') + (rep.bestMatch ? ', best: ' + rep.bestMatch : '') + '. Skills average ' + avg + ' percent' + (rep.skillDelta ? ' (' + (rep.skillDelta > 0 ? '+' : '') + rep.skillDelta + ')' : '') + '. One action for this week: ' + action;
     return rep;
   }
   function ensureWeeklyReport() {
@@ -477,10 +477,10 @@
       var kw = q.replace(/\b(?:above|over|at least|more than|below|under)\s+\d+\s*(?:%|percent)?/g, ' ').replace(/\d+\s*(?:%|percent)/g, ' ').replace(/\b(?:jobs?|roles?|positions?|internships?|graduate|trainee|junior|entry level|fresher|in|at|for|remote|me|an|the)\b/g, ' ').replace(J.CITIES.length ? new RegExp('\\b(' + J.CITIES.map(function (x) { return x.toLowerCase(); }).join('|') + ')\\b', 'g') : /$^/, ' ').replace(/\s+/g, ' ').trim();
       min = J.clamp(+min || 70, 0, 100);
       return { text: 'Set an alert for ' + (kw ? '"' + kw + '"' : 'any job') + (city !== 'any' ? ' in ' + city : '') + (level !== 'any' ? ', ' + (LEVEL_NAMES[level] || level).toLowerCase() : '') + ', ' + min + ' percent or more, and notify you? Say yes or no.',
-        confirm: function () { var r = { id: J.uid(), name: kw ? kw.replace(/\b[a-z]/g, function (x) { return x.toUpperCase(); }) : 'Any job', keywords: kw.replace(/\b[a-z]/g, function (x) { return x.toUpperCase(); }), city: city, level: level, min: min, notify: true }; J.data.rules.push(r); J.commit(); return 'Done. I will tell you when a new matching job appears while Jarvis is open.'; } };
+        confirm: function () { var r = { id: J.uid(), name: kw ? kw.replace(/\b[a-z]/g, function (x) { return x.toUpperCase(); }) : 'Any job', keywords: kw.replace(/\b[a-z]/g, function (x) { return x.toUpperCase(); }), city: city, level: level, min: min, notify: true }; J.data.rules.push(r); J.commit(); return 'Done. I will tell you when a new matching job appears while NOVA is open.'; } };
     }
     if ((m = t.match(/^(?:turn|switch)\s+(?:the\s+)?(?:job\s+)?alerts?\s+(on|off)$|^(enable|disable)\s+(?:the\s+)?(?:job\s+)?alerts?$/))) {
-      var on = m[1] === 'on' || m[2] === 'enable'; J.data.settings.jobAlerts = on; J.persist(); return on ? 'Job alerts are on. I will speak when a strong new match appears while Jarvis is open.' : 'Job alerts are off.';
+      var on = m[1] === 'on' || m[2] === 'enable'; J.data.settings.jobAlerts = on; J.persist(); return on ? 'Job alerts are on. I will speak when a strong new match appears while NOVA is open.' : 'Job alerts are off.';
     }
     if (/^(?:run|start|do|refresh|update)\s+(?:the\s+|my\s+)?(?:job\s+)?search(?:\s+now)?$|^(?:check|look)\s+for\s+(?:new\s+)?jobs(?:\s+now)?$|^refresh\s+(?:the\s+)?jobs$|^search\s+for\s+jobs\s+now$/.test(t)) {
       return J.jobs.reload().then(function (cc) {
@@ -524,10 +524,10 @@
   J.jobSettingsHTML = function () {
     var S = J.data.settings;
     return '<article class="panel"><h2 class="label">Job alerts and automation</h2>' +
-      '<label class="switch"><span class="txt"><b>Alerts while Jarvis is open</b><small>Speak and show a message when a strong new match appears.</small></span><input type="checkbox" data-setting="jobAlerts"' + (S.jobAlerts ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label>' +
+      '<label class="switch"><span class="txt"><b>Alerts while NOVA is open</b><small>Speak and show a message when a strong new match appears.</small></span><input type="checkbox" data-setting="jobAlerts"' + (S.jobAlerts ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label>' +
       '<div class="field" style="margin-top:12px"><label for="alertMin">Strong match means a score of at least</label><select id="alertMin" data-setting="alertMin">' + [60, 70, 75, 80, 85, 90].map(function (n) { return '<option value="' + n + '"' + (+S.alertMin === n ? ' selected' : '') + '>' + n + '%</option>'; }).join('') + '</select></div>' +
       '<div class="btn-row"><button type="button" class="btn small" data-act="matchRules">Saved searches and rules</button><button type="button" class="btn small" data-act="runSearch">Run job search now</button><button type="button" class="btn small ghost" data-act="jobProfile">Edit job profile</button></div>' +
-      '<p class="small-text muted" style="margin:10px 0 0">Jobs are collected every 6 hours by a free GitHub Action, even when this page is closed. For phone alerts when Jarvis is closed, use ntfy (see the README).</p></article>';
+      '<p class="small-text muted" style="margin:10px 0 0">Jobs are collected every 6 hours by a free GitHub Action, even when this page is closed. For phone alerts when NOVA is closed, use ntfy (see the README).</p></article>';
   };
 
   /* ================= actions ================= */

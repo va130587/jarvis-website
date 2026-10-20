@@ -24,7 +24,7 @@ Honest status after **Phase 2**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT U
 | Security page: sessions, audit log, export, delete memories, delete account | WORKING AND TESTED | Typed confirmation required. |
 | CSP, security headers, rate limiting, input validation, audit redaction, static allow-list | WORKING AND TESTED | Browser tests run under the strict CSP with zero violations. |
 | Automatic data-retention schedule, backup automation | NOT IMPLEMENTED | Manual export and deletion exist; backup guidance is in ARCHITECTURE.md. |
-| Voice requests reach NOVA (typed path) | WORKING AND TESTED | Task, note, forget and memory-search phrases, and anything the Jarvis tools do not know, go to the server; changes show an approval request. In server mode these phrases no longer edit the browser-only Jarvis tasks. |
+| Voice requests reach NOVA (typed path) | WORKING AND TESTED | Task, note, forget and memory-search phrases, and anything the Classic tools do not know, go to the server; changes show an approval request. In server mode these phrases no longer edit the browser-only NOVA tasks. |
 | Voice: real microphone speech recognition | IMPLEMENTED BUT UNVERIFIED | Browser Web Speech engine; no real-microphone test; accuracy unmeasured. Editing transcript and language choice: NOT IMPLEMENTED (Phase 5). |
 | Tool registry with JSON-schema validation (10 tools: tasks, notes, memory, time) | WORKING AND TESTED | Unknown tools and invalid input are refused; the model sees only these tools. |
 | Permissions and risk levels (read / write / destructive / external) | WORKING AND TESTED | Writes ask first unless you turn on auto-approve; destructive and external tools always ask (tested with a stand-in external tool). |
@@ -37,10 +37,10 @@ Honest status after **Phase 2**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT U
 | Model planner (Claude tool calling) | REQUIRES CONFIGURATION | Tested end to end with a stand-in client: one tool call at a time, results returned as untrusted data, no forced tool choice, usage and estimated cost per call, injection attempt cannot skip approval. Never run against the real API (paid).
 | ProofLoop (state machine, evidence, commitments) | NOT IMPLEMENTED | Phase 3. The Dashboard shows an Upcoming panel only. |
 | Gmail, email classification, deadlines, drafts | NOT IMPLEMENTED | Phase 4 |
-| Outlook / Microsoft Graph on the server | NOT IMPLEMENTED | Phase 6. Browser-side Outlook calendar from Jarvis still exists (IMPLEMENTED BUT UNVERIFIED). |
+| Outlook / Microsoft Graph on the server | NOT IMPLEMENTED | Phase 6. Browser-side Outlook calendar from NOVA still exists (IMPLEMENTED BUT UNVERIFIED). |
 | Automation engine, scheduler, daily briefing | NOT IMPLEMENTED | Phase 5 |
 | Mission Autopilot, Skill Studio, Commitment Radar, LifeGraph, Screen Vision | NOT IMPLEMENTED | Phase 6 |
-| Demo mode with NOVA scenarios | NOT IMPLEMENTED | Phase 3 onward. Jarvis sample data remains. |
-| Tasks, notes, calendar (browser), jobs, applications, growth, Jarvis voice commands | WORKING AND TESTED | Unchanged; 144 earlier tests still pass. Data is in the browser, not the NOVA database yet. |
+| Demo mode with NOVA scenarios | NOT IMPLEMENTED | Phase 3 onward. NOVA sample data remains. |
+| Tasks, notes, calendar (browser), jobs, applications, growth, NOVA voice commands | WORKING AND TESTED | Unchanged; 144 earlier tests still pass. Data is in the browser, not the NOVA database yet. |
 | Job collector (GitHub Action), ntfy alerts, Smart mode | REQUIRES CONFIGURATION | As before: fixture-tested, never run against the live internet. |
 | CI running the tests | NOT IMPLEMENTED |  |

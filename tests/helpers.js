@@ -163,7 +163,7 @@ const FAKE_SPEECH = `
   window.Notification.permission = 'granted'; window.Notification.requestPermission = () => Promise.resolve('granted');`;
 
 /**
- * Opens Jarvis in a fresh browser context with mocks. Returns { page, ctx, errors, google, graph }.
+ * Opens NOVA in a fresh browser context with mocks. Returns { page, ctx, errors, google, graph }.
  * opts: { width, height, now (Date ms to freeze "today"), data (localStorage data to start with), google, graph, offlineFonts }
  */
 async function openApp(browser, opts) {
@@ -202,7 +202,7 @@ async function openApp(browser, opts) {
   return { page, ctx, errors, google, graph };
 }
 
-// Ask Jarvis something by typing (same system as voice) and return the reply text.
+// Ask NOVA something by typing (same system as voice) and return the reply text.
 async function ask(page, text) {
   return page.evaluate(async t => {
     const out = await J.voice.command(t);

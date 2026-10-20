@@ -1,11 +1,11 @@
-/* Jarvis matching engine: "which jobs can hire me?"
+/* NOVA matching engine: "which jobs can hire me?"
    A transparent, rule-based engine. No AI model, no network. Every score comes with plain-English reasons.
-   Works in the browser (window.JarvisMatch), in Node (module.exports) for the tests and for the GitHub Action.
+   Works in the browser (window.NovaMatch), in Node (module.exports) for the tests and for the GitHub Action.
    Scores are estimates, not a promise of being hired. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
-  else root.JarvisMatch = api;
+  else root.NovaMatch = api;
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 

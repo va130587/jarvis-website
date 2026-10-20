@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Jarvis job collector. Plain Node (18+), no dependencies. Run by a GitHub Action every 6 hours, or by hand:
+/* NOVA job collector. Plain Node (18+), no dependencies. Run by a GitHub Action every 6 hours, or by hand:
      node scripts/collect-jobs.js
    It reads data/sources.json, fetches OFFICIAL public job-board APIs (Greenhouse, Lever, Ashby) and one free public
    remote-jobs API, keeps UAE and region-friendly remote jobs that are fresher friendly, drops scams, and writes:
@@ -12,7 +12,7 @@ const path = require('path');
 const Match = require('../match.js');
 
 const ROOT = path.join(__dirname, '..');
-const UA = 'jarvis-job-collector (personal job-search project; reads public job boards)';
+const UA = 'nova-job-collector (personal job-search project; reads public job boards)';
 const MAX_AGE_DAYS = 45;       // jobs older than this are archived
 const ARCHIVE_KEEP_DAYS = 90;  // archived jobs are forgotten after this
 const TEXT_LIMIT = 4000;
@@ -168,8 +168,8 @@ function buildNtfy({ topic, jobs, siteUrl, server }) {
   if (jobs.length > top.length) lines.push('…and ' + (jobs.length - top.length) + ' more');
   return {
     url: (server || 'https://ntfy.sh').replace(/\/+$/, '') + '/',
-    body: { topic: String(topic), title: 'Jarvis: ' + jobs.length + ' new job match' + (jobs.length === 1 ? '' : 'es'), message: lines.join('\n'), click: top[0].job.url || siteUrl || undefined, tags: ['briefcase'], priority: 3,
-      actions: siteUrl ? [{ action: 'view', label: 'Open Jarvis', url: siteUrl + '#matches' }] : undefined }
+    body: { topic: String(topic), title: 'NOVA: ' + jobs.length + ' new job match' + (jobs.length === 1 ? '' : 'es'), message: lines.join('\n'), click: top[0].job.url || siteUrl || undefined, tags: ['briefcase'], priority: 3,
+      actions: siteUrl ? [{ action: 'view', label: 'Open NOVA', url: siteUrl + '#matches' }] : undefined }
   };
 }
 function alertsFor(newJobs, env) {

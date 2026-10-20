@@ -52,7 +52,7 @@ const SOURCES = { sources: [
 ] };
 
 function setup(sources) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-collect-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nova-collect-'));
   fs.writeFileSync(path.join(dir, 'sources.json'), JSON.stringify(sources || SOURCES));
   return dir;
 }
@@ -241,11 +241,11 @@ test('phone alert: only new, eligible, strong matches; the message is built corr
   const [url, body] = posts[0];
   assert.equal(url, 'https://ntfy.sh/');
   assert.equal(body.topic, 'secret-topic-9f3a');
-  assert.match(body.title, /^Jarvis: \d+ new job matches?$/);
+  assert.match(body.title, /^NOVA: \d+ new job matches?$/);
   assert.match(body.message, /^• \d+%  Graduate Data Analyst at Careem \(Dubai\)/m);
   assert.ok(!/Graduate Analyst at Binance/.test(body.message), 'a UAE-nationals-only job is not sent to a non-national');
   assert.match(body.click, /^https:\/\//);
-  assert.deepEqual(body.actions, [{ action: 'view', label: 'Open Jarvis', url: 'https://va130587.github.io/jarvis-website/#matches' }]);
+  assert.deepEqual(body.actions, [{ action: 'view', label: 'Open NOVA', url: 'https://va130587.github.io/jarvis-website/#matches' }]);
   assert.ok(r.strongCount >= 2);
   // The topic is never written to any file.
   for (const f of fs.readdirSync(dir)) assert.ok(!fs.readFileSync(path.join(dir, f), 'utf8').includes('secret-topic-9f3a'), f + ' must not contain the topic');
@@ -269,8 +269,8 @@ test('ntfy message: top five, "and N more", no message when empty', () => {
   assert.equal(m.url, 'https://ntfy.example.org/');
   assert.equal(m.body.message.split('\n').length, 6);
   assert.match(m.body.message, /…and 2 more$/);
-  assert.equal(m.body.title, 'Jarvis: 7 new job matches');
-  assert.equal(C.buildNtfy({ topic: 't', jobs: [mk(1)] }).body.title, 'Jarvis: 1 new job match');
+  assert.equal(m.body.title, 'NOVA: 7 new job matches');
+  assert.equal(C.buildNtfy({ topic: 't', jobs: [mk(1)] }).body.title, 'NOVA: 1 new job match');
   assert.equal(C.buildNtfy({ topic: '', jobs: [mk(1)] }), null);
   assert.equal(C.buildNtfy({ topic: 't', jobs: [] }), null);
 });

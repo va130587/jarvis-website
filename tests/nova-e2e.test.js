@@ -66,8 +66,8 @@ test('13 NOVA pages: working ones are real, the rest are clearly labelled Upcomi
   }
   assert.match(await page.innerText('.nav'), /Soon/i);
   assert.equal(await page.evaluate(() => document.getElementById('sampleBanner').offsetParent === null || getComputedStyle(document.getElementById('sampleBanner')).display === 'none'), true);
-  assert.match(await page.innerText('.nav'), /Jarvis tools \(stored in this browser\)/i);
-  // the existing Jarvis tools still open
+  assert.match(await page.innerText('.nav'), /Classic tools \(stored in this browser\)/i);
+  // the existing Classic tools still open
   for (const v of ['tasks', 'calendar', 'notes', 'matches', 'jobs', 'applications', 'growth', 'review', 'profile', 'settings', 'help', 'today']) { await page.evaluate(h => { location.hash = h; }, v); await page.waitForTimeout(150); assert.equal(await page.evaluate(() => J.current()), v); }
   assert.deepEqual(clean(errors), []);
   await ctx.close();
@@ -215,7 +215,7 @@ test('Usage page shows the real ledger; Security page: sessions, audit, export, 
   await ctx.close();
 });
 
-test('voice: a spoken request that Jarvis tools do not know is answered by NOVA on the server', async () => {
+test('voice: a spoken request that Classic tools do not know is answered by NOVA on the server', async () => {
   const { page, ctx, errors } = await open(); await signIn(page, 'roshan@example.com');
   const r = await H.ask(page, 'NOVA, who am I?');
   assert.match(r, /You're Roshan, the owner of this authenticated NOVA account/);

@@ -1,4 +1,4 @@
-/* Jarvis job finder: one-click searches on the big job sites, a live feed from official public
+/* NOVA job finder: one-click searches on the big job sites, a live feed from official public
    company job boards (Greenhouse, Lever, Ashby), and the application tracker. No scraping. */
 (function () {
   'use strict';
@@ -112,7 +112,7 @@
     var sig = profileSig();
     if (sig !== evalSig) { evalSig = sig; evalMemo = {}; }
     var k = job.key + '|' + job.date + '|' + (job.text || '').length;
-    return evalMemo[k] || (evalMemo[k] = window.JarvisMatch.evaluate(job, J.data.profile, { today: J.today() }));
+    return evalMemo[k] || (evalMemo[k] = window.NovaMatch.evaluate(job, J.data.profile, { today: J.today() }));
   }
   function score(job) { return evalJob(job).score; }
   function normalizeJob(src, raw) {
@@ -312,7 +312,7 @@
           '<div class="site-grid">' + links.map(function (l) {
             return '<a class="site-btn" href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer"><b>' + esc(l.name) + ' ↗</b><small>' + esc(l.note) + '</small><span class="sr-only"> (opens in a new tab)</span></a>';
           }).join('') + '</div>' +
-          '<p class="small-text muted" style="margin:12px 0 0">Searching for <b>' + esc(kw + ' · ' + levelWord(ui.sLevel)) + '</b> in <b>' + esc(ui.sCity || 'the UAE') + '</b>. Jarvis never scrapes these sites; it only opens their search pages for you.</p>' +
+          '<p class="small-text muted" style="margin:12px 0 0">Searching for <b>' + esc(kw + ' · ' + levelWord(ui.sLevel)) + '</b> in <b>' + esc(ui.sCity || 'the UAE') + '</b>. NOVA never scrapes these sites; it only opens their search pages for you.</p>' +
         '</article>' +
         '<article class="panel"><div class="panel-head"><h2 class="label">Live feed: company job boards</h2><div class="btn-row"><button type="button" class="btn small ghost" data-act="manageSources">Manage sources</button><button type="button" class="btn small" data-act="refreshJobs"' + (loading ? ' disabled' : '') + '>Refresh</button></div></div>' +
           '<p class="small-text muted" style="margin:-4px 0 12px" aria-live="polite">' + esc(status) + '</p>' + feedHead +

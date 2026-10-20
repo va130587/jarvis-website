@@ -1,4 +1,4 @@
-/* Jarvis voice: the animated core, speech recognition and synthesis (built into the browser, free),
+/* NOVA voice: the animated core, speech recognition and synthesis (built into the browser, free),
    wake mode, the chat panel, interface sounds and the command system. */
 (function () {
   'use strict';
@@ -17,11 +17,11 @@
     vstate = s;
     body.setAttribute('data-voice', s);
     var txt = LABEL[s];
-    if (s === 'idle') txt = !SR ? 'Type to Jarvis' : wake.on ? 'Wake mode on' : 'Voice ready';
+    if (s === 'idle') txt = !SR ? 'Type to NOVA' : wake.on ? 'Wake mode on' : 'Voice ready';
     var chip = $('#voiceChip'); if (chip) chip.textContent = txt;
-    var cs = $('#chatState'); if (cs) cs.textContent = s === 'idle' ? (wake.on ? 'Say "Hey Jarvis"' : 'Ready') : txt;
+    var cs = $('#chatState'); if (cs) cs.textContent = s === 'idle' ? (wake.on ? 'Say "Hey NOVA"' : 'Ready') : txt;
     var cap = $('#coreCaption'); if (cap) cap.textContent = s === 'listening' ? 'Listening' : s === 'thinking' ? 'Processing' : s === 'speaking' ? 'Tap to stop' : 'Tap to talk';
-    var cb = $('#coreBtn'); if (cb) cb.setAttribute('aria-label', s === 'idle' || s === 'thinking' ? 'Talk to Jarvis' : s === 'listening' ? 'Stop listening' : 'Stop Jarvis speaking');
+    var cb = $('#coreBtn'); if (cb) cb.setAttribute('aria-label', s === 'idle' || s === 'thinking' ? 'Talk to NOVA' : s === 'listening' ? 'Stop listening' : 'Stop NOVA speaking');
     orb.dirty = true;
   }
   function setLive(text) {
@@ -289,7 +289,7 @@
     else listen();
   }
 
-  /* ================= wake mode ("Hey Jarvis") ================= */
+  /* ================= wake mode ("Hey NOVA") ================= */
   var WAKE_RX = /(?:\b(?:hey|hi|ok|okay|hello|yo)\s+)?\b(jarvis|jervis|javis|jarvas|jarves|nova)\b[\s,.:!?]*(.*)$/i;
   var STOP_RX = /\b(stop|cancel|quiet|enough|shut up|pause|be quiet)\b/i;
   var wake = { on: false, rec: null, paused: false, awaiting: false, timer: null, ignoreUntil: 0, armed: false, failures: 0 };
@@ -299,7 +299,7 @@
     J.data.settings.wake = wake.on;
     J.persist();
     syncSwitches();
-    if (wake.on) { wake.failures = 0; startWake(); if (!quiet) respond('Wake mode is on. Say "Hey Jarvis" followed by your request.'); }
+    if (wake.on) { wake.failures = 0; startWake(); if (!quiet) respond('Wake mode is on. Say "Hey NOVA" followed by your request.'); }
     else { stopWake(); if (!quiet) respond('Wake mode is off.'); }
     setState(vstate);
   }
@@ -339,7 +339,7 @@
   function resumeWake() { wake.paused = false; startWake(); }
   function clearAwait() { wake.awaiting = false; clearTimeout(wake.timer); }
   function isEcho(t) {
-    // Ignore Jarvis's own voice picked up by the microphone.
+    // Ignore NOVA's own voice picked up by the microphone.
     if (!lastSpoken || t.length < 4) return false;
     var words = t.split(/\s+/), hits = words.filter(function (w) { return lastSpoken.indexOf(w) >= 0; }).length;
     return hits / words.length > 0.75 && !WAKE_RX.test(t);
@@ -349,7 +349,7 @@
     if (!t) return;
     if (vstate === 'speaking') { if (STOP_RX.test(t) && t.split(/\s+/).length <= 4) { stopSpeaking(); setLive('Stopped.'); } return; }
     if (!WAKE_RX.test(t)) {
-      // Just after Jarvis speaks, only a real follow-up (not its own echo) is accepted.
+      // Just after NOVA speaks, only a real follow-up (not its own echo) is accepted.
       if (Date.now() < wake.ignoreUntil && (!wake.awaiting || isEcho(t))) return;
       if (isEcho(t)) return;
     }
@@ -383,7 +383,7 @@
   function addMsg(who, text, chips) {
     var li = document.createElement('li');
     li.className = 'msg ' + who;
-    var w = document.createElement('span'); w.className = 'who'; w.textContent = who === 'you' ? 'You' : 'Jarvis';
+    var w = document.createElement('span'); w.className = 'who'; w.textContent = who === 'you' ? 'You' : 'NOVA';
     var p = document.createElement('p'); p.textContent = text;
     li.appendChild(w); li.appendChild(p);
     if (chips && chips.length) {
@@ -397,13 +397,13 @@
   }
   function openChat(focus) {
     chat.hidden = false;
-    mini.setAttribute('aria-expanded', 'true'); mini.setAttribute('aria-label', 'Close chat with Jarvis');
+    mini.setAttribute('aria-expanded', 'true'); mini.setAttribute('aria-label', 'Close chat with NOVA');
     log.scrollTop = log.scrollHeight;
     if (focus) $('#chatInput').focus();
   }
   function closeChat() {
     chat.hidden = true;
-    mini.setAttribute('aria-expanded', 'false'); mini.setAttribute('aria-label', 'Open chat with Jarvis');
+    mini.setAttribute('aria-expanded', 'false'); mini.setAttribute('aria-label', 'Open chat with NOVA');
   }
   mini.addEventListener('click', function () { if (chat.hidden) openChat(true); else { closeChat(); mini.focus(); } });
   $('#chatClose').addEventListener('click', function () { closeChat(); mini.focus(); });
@@ -484,10 +484,10 @@
   function command(raw) {
     var original = String(raw).trim();
     var t = original.toLowerCase().replace(/[’‘]/g, '\'')
-      .replace(/^(?:hey |ok |okay |hi )?(?:jarvis|jervis|javis)[,:!.]?\s*/, '')
+      .replace(/^(?:hey |ok |okay |hi )?(?:jarvis|jervis|javis|nova)[,:!.]?\s*/, '')
       .replace(/^(?:please|can you|could you|would you|will you)\s+/, '')
       .replace(/[?!.]+$/, '').replace(/\bwhat is\b/g, 'what\'s').replace(/\bwhats\b/g, 'what\'s').replace(/\s+/g, ' ').trim();
-    var orig = original.replace(/^(?:hey |ok |okay |hi )?(?:jarvis|jervis|javis)[,:!.]?\s*/i, '').replace(/^(?:please|can you|could you|would you|will you)\s+/i, '').replace(/[?!.]+$/, '').trim();
+    var orig = original.replace(/^(?:hey |ok |okay |hi )?(?:jarvis|jervis|javis|nova)[,:!.]?\s*/i, '').replace(/^(?:please|can you|could you|would you|will you)\s+/i, '').replace(/[?!.]+$/, '').trim();
     var m, name = J.data.profile.name || 'Roshan';
     if (!t) return 'Yes?';
 
@@ -498,7 +498,7 @@
       return '';
     }
 
-    /* ---- answers to a question Jarvis asked ---- */
+    /* ---- answers to a question NOVA asked ---- */
     if (pending) {
       var pd = pending; pending = null;
       if (pd.type === 'confirmFn') {
@@ -533,12 +533,12 @@
     if (/what can you do|^help( me)?$|^commands$|what do you do|what should i say|how do i use (this|you)/.test(t)) {
       return { text: 'I can brief you, manage tasks and reminders, take notes, log wins, find UAE internships and fresher jobs, track applications and read your calendar. Try one of these.', chips: three() };
     }
-    if (/^test( your)? voice$/.test(t)) return 'This is Jarvis. Voice systems are working normally.';
+    if (/^test( your)? voice$/.test(t)) return 'This is NOVA. Voice systems are working normally.';
 
     /* ---- voice controls ---- */
     if (/^(voice off|mute|turn off (your |the )?voice|stop speaking out loud|text only|be silent|silent mode|disable voice)$/.test(t)) { J.data.settings.voice = false; J.persist(); stopSpeaking(); syncSwitches(); return 'Voice replies are off. I\'ll answer in text. Say "voice on" to hear me again.'; }
     if (/^(voice on|unmute|turn on (your |the )?voice|speak again|enable voice|talk to me)$/.test(t)) { J.data.settings.voice = true; J.persist(); syncSwitches(); return 'Voice replies are on.'; }
-    if (/(turn on|enable|start|switch on|activate) (the )?wake( mode| word)?|^wake mode on$|listen for hey jarvis/.test(t)) { setWake(true, true); return SR ? 'Wake mode is on. Say "Hey Jarvis" followed by your request.' : ERR.unsupported; }
+    if (/(turn on|enable|start|switch on|activate) (the )?wake( mode| word)?|^wake mode on$|listen for hey jarvis/.test(t)) { setWake(true, true); return SR ? 'Wake mode is on. Say "Hey NOVA" followed by your request.' : ERR.unsupported; }
     if (/(turn off|disable|stop|switch off|deactivate) (the )?wake( mode| word)?|^wake mode off$/.test(t)) { setWake(false, true); return 'Wake mode is off.'; }
     if (/(speak|talk) (a bit |a little |more )?(slower|slowly)|slow down/.test(t)) { J.data.settings.rate = Math.max(0.7, Math.round(((+J.data.settings.rate || 1) - 0.15) * 100) / 100); J.persist(); return 'Okay, I\'ll speak more slowly.'; }
     if (/(speak|talk) (a bit |a little |more )?(faster|quicker|quickly)|speed up/.test(t)) { J.data.settings.rate = Math.min(1.4, Math.round(((+J.data.settings.rate || 1) + 0.15) * 100) / 100); J.persist(); return 'Okay, I\'ll speak a little faster.'; }
@@ -700,7 +700,7 @@
     /* ---- small talk ---- */
     if (/^(hi|hello|hey|hiya|yo|good day|salam|salaam|marhaba)( there)?$/.test(t)) return 'Hello ' + name + '. How can I help?';
     if (/\b(thank you|thanks|cheers|great job|well done|nice one)\b/.test(t)) return 'You\'re welcome.';
-    if (/\b(who are you|your name|what are you)\b/.test(t)) return 'I\'m Jarvis, your personal assistant. Everything I know stays in this browser.';
+    if (/\b(who are you|your name|what are you)\b/.test(t)) return 'I\'m NOVA, your personal assistant. Everything I know stays in this browser.';
     if (/^(yes|no|yeah|nope|ok|okay)$/.test(t)) return 'Okay.';
 
     if (J.novaAsk) { var na = J.novaAsk(orig); if (na) return na; }

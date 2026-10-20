@@ -1,3 +1,5 @@
+> Historical record: this audit was written when the project was still called Jarvis; it was renamed to NOVA afterwards.
+
 # NOVA Audit
 
 Session 1 audit of the repository as it stands on `main` (commit `82055fa`). No feature code was written in this session. Every statement below was read from the code or from a test run; anything not verified is marked **(unverified)**.

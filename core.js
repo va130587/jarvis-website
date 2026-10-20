@@ -1,4 +1,4 @@
-/* Jarvis core: storage, Asia/Dubai dates, plain-English parsing, sample data and queries.
+/* NOVA core: storage, Asia/Dubai dates, plain-English parsing, sample data and queries.
    Plain JavaScript, no build step. Everything is kept in this browser (localStorage). */
 (function () {
   'use strict';

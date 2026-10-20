@@ -1,10 +1,10 @@
-/* Jarvis calendar: Google Calendar (Google Identity Services + Calendar API v3), Outlook / Microsoft 365
+/* NOVA calendar: Google Calendar (Google Identity Services + Calendar API v3), Outlook / Microsoft 365
    (MSAL.js + Microsoft Graph), .ics import / export, week and month views, sync, reminders, clashes and free time.
    Everything runs in the browser. Calendar data stays in this browser; access tokens are never saved to disk. */
 (function () {
   'use strict';
 
-  var J = window.J, ICS = window.JarvisICS;
+  var J = window.J, ICS = window.NovaICS;
   var esc = J.esc, $ = J.$, $$ = J.$$, ui = J.ui;
 
   var GIS_SRC = 'https://accounts.google.com/gsi/client';
@@ -44,16 +44,16 @@
 
   /* ================= errors with plain-English fixes ================= */
   function redirectUri() { return location.origin + location.pathname.replace(/[^/]*$/, '') + 'redirect.html'; }
-  function originNote() { return ORIGINS.indexOf(location.origin) >= 0 ? '' : ' You are opening Jarvis from ' + location.origin + ', so add that address too.'; }
+  function originNote() { return ORIGINS.indexOf(location.origin) >= 0 ? '' : ' You are opening NOVA from ' + location.origin + ', so add that address too.'; }
   var MSG = {
     'not-connected': function (p) { return P(p) + ' is not connected. Open Settings → Calendar connections and click Connect.'; },
     'no-client-id': function (p) { return 'Paste your ' + (p === 'google' ? 'Google OAuth Client ID' : 'Microsoft Application (client) ID') + ' in Settings → Calendar connections first. The setup guide there shows how to get one for free.'; },
     'bad-client-id': function (p) { return p === 'google' ? 'That does not look like a Google Client ID. It should end with ".apps.googleusercontent.com".' : 'That does not look like a Microsoft Application (client) ID. It looks like 1a2b3c4d-1234-5678-9abc-1234567890ab.'; },
-    'expired': function (p) { return 'Your ' + P(p) + ' sign-in has expired. Click Reconnect. Your Jarvis data is safe.'; },
-    'permission': function (p) { return P(p) + ' did not give Jarvis permission for that. To let Jarvis add or change events, choose "Two-way" and reconnect, then accept every permission.'; },
-    'denied': function (p) { return 'You declined the ' + P(p) + ' permission request, so Jarvis cannot read your calendar. Click Connect to try again.'; },
+    'expired': function (p) { return 'Your ' + P(p) + ' sign-in has expired. Click Reconnect. Your NOVA data is safe.'; },
+    'permission': function (p) { return P(p) + ' did not give NOVA permission for that. To let NOVA add or change events, choose "Two-way" and reconnect, then accept every permission.'; },
+    'denied': function (p) { return 'You declined the ' + P(p) + ' permission request, so NOVA cannot read your calendar. Click Connect to try again.'; },
     'api-disabled': function () { return 'The Google Calendar API is not turned on in your Google Cloud project. Follow step 2 of the setup guide, then reconnect.'; },
-    'offline': function (p) { return 'You are offline. Jarvis will sync ' + P(p) + ' when you are back online. Your data is safe.'; },
+    'offline': function (p) { return 'You are offline. NOVA will sync ' + P(p) + ' when you are back online. Your data is safe.'; },
     'popup-blocked': function () { return 'Your browser blocked the sign-in window. Allow pop-ups for this site, then try again.'; },
     'popup-closed': function (p) { return p === 'google'
       ? 'The Google sign-in window closed before finishing. If Google showed "origin_mismatch" or "invalid_client", check your Client ID and that ' + location.origin + ' is listed under Authorised JavaScript origins.' + originNote()
@@ -63,7 +63,7 @@
       : 'Microsoft could not find that Application (client) ID. Copy it again from Azure → App registrations → Overview.'; },
     'redirect': function () { return 'Microsoft says the sign-in address is not registered. In Azure → App registrations → Authentication, add this Single-page application redirect URI: ' + redirectUri(); },
     'spa': function () { return 'In Azure, the redirect URI must be under "Single-page application" (not "Web"). Move it there in App registrations → Authentication, then try again.'; },
-    'not-found': function (p) { return 'That event no longer exists in ' + P(p) + '. Jarvis will refresh your calendar.'; },
+    'not-found': function (p) { return 'That event no longer exists in ' + P(p) + '. NOVA will refresh your calendar.'; },
     'read-only': function () { return 'This event is read-only here. Change it in the original calendar app.'; },
     'unknown': function (p, d) { return P(p) + ' error: ' + (d || 'something went wrong') + '. Try again in a moment.'; }
   };
@@ -166,14 +166,14 @@
       }));
     }).then(function (lists) {
       var evs = [].concat.apply([], lists);
-      // Recover links between Jarvis tasks and events Jarvis created earlier (for example after importing a backup).
+      // Recover links between NOVA tasks and events NOVA created earlier (for example after importing a backup).
       evs.forEach(function (e) { if (e.jarvisId && !c.pushed[e.jarvisId] && J.byId(J.data.tasks, e.jarvisId)) c.pushed[e.jarvisId] = { id: e.id, sig: '', title: e.title }; });
       J.data.extEvents = J.data.extEvents.filter(function (e) { return e.src !== 'google'; }).concat(evs);
       return evs.length;
     });
   }
   function gBody(t) {
-    var ev = taskTimes(t), b = { summary: J.taskPhrase(t), description: 'Added by Jarvis' + (t.person ? ' · ' + t.person : ''), extendedProperties: { private: { jarvisId: t.id } } };
+    var ev = taskTimes(t), b = { summary: J.taskPhrase(t), description: 'Added by NOVA' + (t.person ? ' · ' + t.person : ''), extendedProperties: { private: { jarvisId: t.id } } };
     if (ev.allDay) { b.start = { date: ev.date }; b.end = { date: ev.endDate }; }
     else { b.start = { dateTime: local(ev.start), timeZone: J.TZ }; b.end = { dateTime: local(ev.end), timeZone: J.TZ }; }
     return b;
@@ -285,7 +285,7 @@
   }
   var MS_TZ = 'Arabian Standard Time'; // Windows name for Asia/Dubai, used by Microsoft Graph
   function msBody(t) {
-    var ev = taskTimes(t), b = { subject: J.taskPhrase(t), body: { contentType: 'text', content: 'Added by Jarvis' + (t.person ? ' · ' + t.person : '') } };
+    var ev = taskTimes(t), b = { subject: J.taskPhrase(t), body: { contentType: 'text', content: 'Added by NOVA' + (t.person ? ' · ' + t.person : '') } };
     if (ev.allDay) { b.isAllDay = true; b.start = { dateTime: ev.date + 'T00:00:00', timeZone: MS_TZ }; b.end = { dateTime: ev.endDate + 'T00:00:00', timeZone: MS_TZ }; }
     else { b.isAllDay = false; b.start = { dateTime: local(ev.start), timeZone: MS_TZ }; b.end = { dateTime: local(ev.end), timeZone: MS_TZ }; }
     return b;
@@ -467,11 +467,11 @@
       if (!x.due || !out[x.due]) return;
       var kind = x.kind || 'task', s = x.time ? ICS.dubaiTs(x.due, x.time) : null;
       add(x.due, { key: 'task:' + x.id, kind: kind, title: J.taskPhrase(x), date: x.due, time: x.time || '', allDay: !x.time, startTs: s, endTs: s ? s + (DUR[kind] || DUR.task) * 60e3 : null,
-        source: 'Jarvis', ref: { type: 'task', id: x.id }, late: x.status !== 'done' && x.due < t, done: x.status === 'done' });
+        source: 'NOVA', ref: { type: 'task', id: x.id }, late: x.status !== 'done' && x.due < t, done: x.status === 'done' });
     });
     J.data.apps.forEach(function (a) {
       if (a.deadline && out[a.deadline] && !J.data.tasks.some(function (x) { return x.appId === a.id && x.kind === 'deadline' && x.due === a.deadline; }))
-        add(a.deadline, { key: 'app:' + a.id, kind: 'deadline', title: 'Deadline: ' + a.title + ' at ' + a.company, date: a.deadline, time: '', allDay: true, source: 'Jarvis', ref: { type: 'app', id: a.id } });
+        add(a.deadline, { key: 'app:' + a.id, kind: 'deadline', title: 'Deadline: ' + a.title + ' at ' + a.company, date: a.deadline, time: '', allDay: true, source: 'NOVA', ref: { type: 'app', id: a.id } });
     });
     visibleExt().forEach(function (e) {
       var ci = calInfo(e) || {}, base = { kind: 'event', title: e.title, color: ci.color, source: ci.name || P(e.src), ref: { type: 'ext', key: e.key }, location: e.location };
@@ -493,7 +493,7 @@
     if (it.cont) return 'Until ' + J.fmtTime(it.endTime);
     return J.fmtTime(it.time) + (it.endTime && it.endTime !== it.time ? ' – ' + (it.endTime === '24:00' ? 'midnight' : J.fmtTime(it.endTime)) : '');
   }
-  // Busy periods: timed events and timed Jarvis tasks that are not done.
+  // Busy periods: timed events and timed NOVA tasks that are not done.
   function busy(date, excludeTaskId) {
     var list = itemsByDay(date, date)[date] || [];
     return list.filter(function (it) { return !it.allDay && !it.done && it.startTs != null && !(it.ref.type === 'task' && it.ref.id === excludeTaskId); });
@@ -539,7 +539,7 @@
         J.toast(text);
         if (J.voice) J.voice.announce(text);
         if (J.data.settings.notify && 'Notification' in window && Notification.permission === 'granted') {
-          try { new Notification('Jarvis: ' + e.title, { body: J.fmtTime(hm(e.start)) + ' · ' + ((calInfo(e) || {}).name || P(e.src)), tag: 'jarvis-ev-' + e.key }); } catch (err) { /* needs a service worker on some phones */ }
+          try { new Notification('NOVA: ' + e.title, { body: J.fmtTime(hm(e.start)) + ' · ' + ((calInfo(e) || {}).name || P(e.src)), tag: 'nova-ev-' + e.key }); } catch (err) { /* needs a service worker on some phones */ }
         }
       }
     });
@@ -565,7 +565,7 @@
     J.data.tasks.forEach(function (t) {
       if (!t.due || t.status === 'done') return;
       var tt = taskTimes(t);
-      items.push({ uid: t.id + '@jarvis', title: J.taskPhrase(t), description: (t.kind === 'interview' ? 'Interview' : t.kind === 'deadline' ? 'Application deadline' : 'Task') + ' from Jarvis' + (t.person ? ' · ' + t.person : ''), allDay: tt.allDay, date: tt.date, endDate: tt.endDate, start: tt.start, end: tt.end, categories: t.kind || 'task' });
+      items.push({ uid: t.id + '@jarvis', title: J.taskPhrase(t), description: (t.kind === 'interview' ? 'Interview' : t.kind === 'deadline' ? 'Application deadline' : 'Task') + ' from NOVA' + (t.person ? ' · ' + t.person : ''), allDay: tt.allDay, date: tt.date, endDate: tt.endDate, start: tt.start, end: tt.end, categories: t.kind || 'task' });
     });
     J.data.apps.forEach(function (a) {
       if (a.deadline && a.stage !== 'saved' && a.stage !== 'rejected' && a.stage !== 'offer') return;
@@ -576,7 +576,7 @@
   }
   function exportIcs() {
     var items = exportItems();
-    download('jarvis-calendar-' + J.today() + '.ics', ICS.build(items, { name: 'Jarvis' }));
+    download('nova-calendar-' + J.today() + '.ics', ICS.build(items, { name: 'NOVA' }));
     return items.length;
   }
   function download(name, text) {
@@ -629,7 +629,7 @@
   function outboxBanner() {
     var ops = allOps();
     if (!ops.length) return '';
-    return '<div class="outbox" role="status"><span><b>' + J.plural(ops.length, 'change') + '</b> waiting to be sent to your online calendar. Jarvis never changes your calendar without asking.</span><button type="button" class="btn small gold" data-act="calOutbox">Review &amp; send</button></div>';
+    return '<div class="outbox" role="status"><span><b>' + J.plural(ops.length, 'change') + '</b> waiting to be sent to your online calendar. NOVA never changes your calendar without asking.</span><button type="button" class="btn small gold" data-act="calOutbox">Review &amp; send</button></div>';
   }
 
   /* ================= CALENDAR screen (week + month) ================= */
@@ -711,7 +711,7 @@
       '<p class="mono">' + esc(whenText(e)) + '</p>' + (e.location ? '<p>' + esc(e.location) + '</p>' : '') +
       '<p class="btn-row">' + (e.url && /^https:\/\//.test(e.url) ? '<a class="btn small ghost" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">Open in ' + esc(P(e.src)) + ' ↗</a>' : '') +
       (writable ? '<button type="button" class="btn small danger" data-act="calDelEvent" data-id="' + esc(e.key) + '">Delete event</button>' : '') + '</p>' +
-      (!writable ? '<p class="small-text muted">' + (e.src === 'ics' ? 'Imported from a calendar file, so it is read-only here. Change it in the original calendar app.' : 'Read-only. Choose "Two-way" in Settings → Calendar connections to edit events from Jarvis.') + '</p>' : '') + '</div>';
+      (!writable ? '<p class="small-text muted">' + (e.src === 'ics' ? 'Imported from a calendar file, so it is read-only here. Change it in the original calendar app.' : 'Read-only. Choose "Two-way" in Settings → Calendar connections to edit events from NOVA.') + '</p>' : '') + '</div>';
     var fields = [{ type: 'html', html: info }];
     if (writable) {
       fields.push({ name: 'title', label: 'Title', value: e.title, required: true });
@@ -763,7 +763,7 @@
   function addToCalendarDialog(taskId) {
     var t = J.byId(J.data.tasks, taskId);
     if (!t || !t.due) return;
-    var tt = taskTimes(t), it = { title: J.taskPhrase(t), description: 'From Jarvis', allDay: tt.allDay, date: tt.date, endDate: tt.endDate, start: tt.start, end: tt.end };
+    var tt = taskTimes(t), it = { title: J.taskPhrase(t), description: 'From NOVA', allDay: tt.allDay, date: tt.date, endDate: tt.endDate, start: tt.start, end: tt.end };
     J.openForm({
       title: 'Add to your calendar', submit: 'Done', noFocus: true, hideCancel: true,
       fields: [{ type: 'html', html: '<p class="muted small-text" style="margin:0 0 12px">"' + esc(it.title) + '", ' + esc(J.dueLabel(t.due, t.time)) + '. These open your calendar with the event filled in; you press Save there.</p>' +
@@ -781,22 +781,22 @@
   function guide(prov) {
     if (prov === 'google') {
       return '<details class="guide"><summary>Setup guide: get your free Google Client ID (about 10 minutes, once)</summary><ol>' +
-        '<li>Open <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer">Google Cloud Console ↗</a> and sign in with your Gmail. Create a new project, for example "Jarvis". It is free; you do not need a card.</li>' +
+        '<li>Open <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer">Google Cloud Console ↗</a> and sign in with your Gmail. Create a new project, for example "NOVA". It is free; you do not need a card.</li>' +
         '<li>Turn on the calendar: go to <a href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com" target="_blank" rel="noopener noreferrer">APIs &amp; Services → Library → Google Calendar API ↗</a> and click <b>Enable</b>.</li>' +
-        '<li>Set up the consent screen: <b>APIs &amp; Services → OAuth consent screen</b> (also called "Google Auth Platform"). Choose <b>External</b>, give the app a name (Jarvis) and your email. Leave it in <b>Testing</b> mode and add your own Gmail under <b>Test users</b> (Audience).</li>' +
+        '<li>Set up the consent screen: <b>APIs &amp; Services → OAuth consent screen</b> (also called "Google Auth Platform"). Choose <b>External</b>, give the app a name (NOVA) and your email. Leave it in <b>Testing</b> mode and add your own Gmail under <b>Test users</b> (Audience).</li>' +
         '<li>Create the ID: <b>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</b>. Choose <b>Web application</b>.</li>' +
         '<li>Under <b>Authorised JavaScript origins</b>, add these two addresses exactly (no slash at the end):<pre class="template">https://va130587.github.io\nhttp://localhost:8000</pre>' + (originNote() ? '<span class="gold-text">' + esc(originNote()) + '</span>' : '') + ' Leave "redirect URIs" empty.</li>' +
         '<li>Click <b>Create</b>, copy the <b>Client ID</b> (it ends with ".apps.googleusercontent.com"), paste it above and click <b>Save</b>, then <b>Connect</b>.</li>' +
         '<li>Google will warn that the app is not verified. That is normal for your own testing app: click <b>Continue</b>.</li></ol>' +
-        '<p class="small-text muted">The Client ID is not a secret and costs nothing. Jarvis never sees your Google password.</p></details>';
+        '<p class="small-text muted">The Client ID is not a secret and costs nothing. NOVA never sees your Google password.</p></details>';
     }
     return '<details class="guide"><summary>Setup guide: get your free Microsoft Application ID (about 10 minutes, once)</summary><ol>' +
       '<li>Open <a href="https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener noreferrer">Microsoft Entra → App registrations ↗</a> (or portal.azure.com → App registrations) and sign in. A free account is enough.</li>' +
-      '<li>Click <b>New registration</b>. Name: Jarvis. Supported accounts: <b>Accounts in any organizational directory and personal Microsoft accounts</b>.</li>' +
+      '<li>Click <b>New registration</b>. Name: NOVA. Supported accounts: <b>Accounts in any organizational directory and personal Microsoft accounts</b>.</li>' +
       '<li>Redirect URI: choose <b>Single-page application (SPA)</b> and enter:<pre class="template">' + esc(redirectUri()) + '</pre>Also add these under Authentication → Single-page application:<pre class="template">https://va130587.github.io/jarvis-website/redirect.html\nhttp://localhost:8000/redirect.html</pre></li>' +
       '<li>Click <b>Register</b>. Copy the <b>Application (client) ID</b> from the Overview page, paste it above, click <b>Save</b>, then <b>Connect</b>.</li>' +
       '<li>Permissions are requested when you connect: <b>Calendars.Read</b> (read only) or <b>Calendars.ReadWrite</b> (two-way), plus <b>User.Read</b> for your name.</li></ol>' +
-      '<p class="small-text muted">Microsoft does not let websites revoke a sign-in. After disconnecting, you can also remove Jarvis at account.live.com/consent (personal) or myapps.microsoft.com (work).</p></details>';
+      '<p class="small-text muted">Microsoft does not let websites revoke a sign-in. After disconnecting, you can also remove NOVA at account.live.com/consent (personal) or myapps.microsoft.com (work).</p></details>';
   }
   // Unsaved text typed into a Client ID box survives screen updates.
   var drafts = {};
@@ -810,8 +810,8 @@
     var idValue = drafts[prov] != null ? drafts[prov] : c.clientId;
     var status = !c.connected ? J.tag('Not connected', 'dim') : need ? J.tag('Reconnect needed', 'red') : J.tag('Connected');
     var see = c.mode === 'two-way'
-      ? 'Jarvis can see your calendars and events, and can add, change or delete events, but only after you confirm each change.'
-      : 'Jarvis can see your calendars and events. It cannot change anything.';
+      ? 'NOVA can see your calendars and events, and can add, change or delete events, but only after you confirm each change.'
+      : 'NOVA can see your calendars and events. It cannot change anything.';
     return '<article class="panel cal-card" id="cal-' + prov + '">' +
       '<div class="panel-head"><h3>' + P(prov) + (prov === 'microsoft' ? ' / Microsoft 365' : '') + '</h3>' + status + '</div>' +
       (c.connected ? '<p class="small-text">' + (c.account ? 'Signed in as <b>' + esc(c.account) + '</b> · ' : '') + esc(syncing[prov] ? 'Syncing…' : lastSynced(prov)) + '</p>' : '') +
@@ -838,7 +838,7 @@
   J.calSettingsHTML = function () {
     var c = cfg(), days = [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat'], [0, 'Sun']];
     return '<h2 class="section-title" id="calendar-settings">Calendar connections</h2>' +
-      '<p class="small-text muted" style="margin:-4px 0 14px">Your calendar data stays in this browser. Jarvis talks directly to Google or Microsoft from your browser; there is no Jarvis server. Sign-in tokens are kept only in memory (and this tab\'s session) and are never saved in backups.</p>' +
+      '<p class="small-text muted" style="margin:-4px 0 14px">Your calendar data stays in this browser. NOVA talks directly to Google or Microsoft from your browser; there is no NOVA server. Sign-in tokens are kept only in memory (and this tab\'s session) and are never saved in backups.</p>' +
       outboxBanner() +
       '<div class="grid-2">' + provCard('google') + provCard('microsoft') + '</div>' +
       '<div class="grid-2">' +
@@ -848,7 +848,7 @@
               '<label class="sr-only" for="col_' + esc(x.id) + '">Colour for ' + esc(x.name) + '</label><input type="color" id="col_' + esc(x.id) + '" value="' + esc(x.color) + '" data-calcolor="' + esc('ics|' + x.id) + '">' +
               J.iconBtn('calRemoveIcs', x.id, 'Remove ' + x.name, 'del', 'del') + '</li>';
           }).join('') + '</ul>' : '') +
-          '<div class="btn-row" style="margin-top:12px"><button type="button" class="btn" data-act="calImport">Import .ics file</button><button type="button" class="btn" data-act="calExport">Export Jarvis tasks as .ics</button></div></article>' +
+          '<div class="btn-row" style="margin-top:12px"><button type="button" class="btn" data-act="calImport">Import .ics file</button><button type="button" class="btn" data-act="calExport">Export NOVA tasks as .ics</button></div></article>' +
         '<article class="panel"><h3>Reminders and working hours</h3>' +
           '<div class="field"><label for="calRemind">Spoken reminder before calendar events</label><select id="calRemind" data-calset="reminderMins">' +
             [[0, 'Off'], [5, '5 minutes before'], [10, '10 minutes before'], [15, '15 minutes before'], [30, '30 minutes before'], [60, '1 hour before']].map(function (o) { return '<option value="' + o[0] + '"' + (+c.reminderMins === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
@@ -888,7 +888,7 @@
       });
     },
     calDisconnect: function (prov) {
-      J.confirm('Disconnect ' + P(prov) + '? Jarvis will ' + (prov === 'google' ? 'revoke its access and ' : 'sign out and ') + 'remove the synced events from this browser. Events in ' + P(prov) + ' itself are not touched.', 'Disconnect', 'Disconnect ' + P(prov) + '?').then(function (ok) {
+      J.confirm('Disconnect ' + P(prov) + '? NOVA will ' + (prov === 'google' ? 'revoke its access and ' : 'sign out and ') + 'remove the synced events from this browser. Events in ' + P(prov) + ' itself are not touched.', 'Disconnect', 'Disconnect ' + P(prov) + '?').then(function (ok) {
         if (ok) disconnect(prov).then(function () { J.toast(P(prov) + ' disconnected.'); });
       });
     },
@@ -898,7 +898,7 @@
     calTaskIcs: function (id) {
       var t = J.byId(J.data.tasks, id); if (!t) return;
       var tt = taskTimes(t);
-      download(J.taskPhrase(t).replace(/[^\w\- ]+/g, '').slice(0, 40).trim().replace(/\s+/g, '-') + '.ics', ICS.build([{ uid: t.id + '@jarvis', title: J.taskPhrase(t), allDay: tt.allDay, date: tt.date, endDate: tt.endDate, start: tt.start, end: tt.end }], { name: 'Jarvis' }));
+      download(J.taskPhrase(t).replace(/[^\w\- ]+/g, '').slice(0, 40).trim().replace(/\s+/g, '-') + '.ics', ICS.build([{ uid: t.id + '@jarvis', title: J.taskPhrase(t), allDay: tt.allDay, date: tt.date, endDate: tt.endDate, start: tt.start, end: tt.end }], { name: 'NOVA' }));
     },
     calRemoveIcs: function (id) {
       var c = cfg(), src = J.byId(c.ics, id); if (!src) return;
@@ -1005,12 +1005,12 @@
     });
     return out;
   }
-  // Pushes one Jarvis task straight away (the person already said yes).
+  // Pushes one NOVA task straight away (the person already said yes).
   function pushTask(taskId) {
     var ops = allOps().filter(function (o) { return (o.task && o.task.id === taskId) || o.taskId === taskId; });
     if (!ops.length) return Promise.resolve('');
     var provs = ops.map(function (o) { return o.prov; }).filter(function (v, i, a) { return a.indexOf(v) === i; });
-    return sendOps(ops, false).then(function () { return ' ' + provList(provs) + ' updated too.'; }, function (e) { return ' I saved it in Jarvis, but ' + e.message; });
+    return sendOps(ops, false).then(function () { return ' ' + provList(provs) + ' updated too.'; }, function (e) { return ' I saved it in NOVA, but ' + e.message; });
   }
   function rangeFor(t) {
     var td = J.today();
@@ -1030,7 +1030,7 @@
         if (r.failed.length && !r.ok.length) return r.failed[0].message;
         var n = candidates(7).filter(function (it) { return it.kind === 'event'; }).length;
         return 'Synced ' + provList(r.ok.map(function (x) { return x.prov; })) + '. You have ' + J.plural(n, 'event') + ' in the next 7 days.' + (r.failed.length ? ' ' + r.failed[0].message : '') +
-          (allOps().length ? ' ' + J.plural(allOps().length, 'change') + ' from Jarvis ' + (allOps().length === 1 ? 'is' : 'are') + ' waiting for you to review on the Calendar screen.' : '');
+          (allOps().length ? ' ' + J.plural(allOps().length, 'change') + ' from NOVA ' + (allOps().length === 1 ? 'is' : 'are') + ' waiting for you to review on the Calendar screen.' : '');
       });
     }
 
@@ -1109,7 +1109,7 @@
     var provs = twoWayProvs().filter(function (p) { var c = cfg()[p]; return kind === 'interview' ? c.push.interviews : c.push.tasks; });
     var note = clashText(date, tm.time, null, kind);
     return {
-      text: 'Add "' + title + '" ' + (J.when(date, tm.time)) + (provs.length ? ' to Jarvis and ' + provList(provs) : '') + '? ' + (note ? note + ' ' : '') + 'Say yes or no.',
+      text: 'Add "' + title + '" ' + (J.when(date, tm.time)) + (provs.length ? ' to NOVA and ' + provList(provs) : '') + '? ' + (note ? note + ' ' : '') + 'Say yes or no.',
       confirm: function () {
         var task = J.addTask({ title: title, due: date, time: tm.time, kind: kind, priority: kind === 'interview' ? 'high' : 'medium' });
         return pushTask(task.id).then(function (extra) { return 'Done. ' + title + ' is on your calendar ' + (J.when(date, tm.time)) + '.' + extra; });
@@ -1127,7 +1127,7 @@
     if (!it) return 'I couldn\'t find "' + sel + '" on your calendar in the next two weeks.';
     var ext = it.ref.type === 'ext' ? extByKey(it.ref.key) : null, task = it.ref.type === 'task' ? J.byId(J.data.tasks, it.ref.id) : null;
     if (it.ref.type === 'app') return 'That is an application deadline. Change it in Applications.';
-    if (ext && !canWrite(ext)) return '"' + it.title + '" is read-only for Jarvis. ' + (ext.src === 'ics' ? 'It came from an imported file, so change it in the original calendar.' : 'Turn on two-way access in Settings, Calendar connections, to move events.');
+    if (ext && !canWrite(ext)) return '"' + it.title + '" is read-only for NOVA. ' + (ext.src === 'ics' ? 'It came from an imported file, so change it in the original calendar.' : 'Turn on two-way access in Settings, Calendar connections, to move events.');
     var ttm = J.parseTime(target), tdt = J.parseDate(target);
     if (!ttm && !tdt) return 'To when? For example: move it to 4 pm, or to Monday at 10 am.';
     var newDate = tdt ? tdt.date : it.date, newTime = ttm ? ttm.time : it.time;
@@ -1152,7 +1152,7 @@
   function cancelItem(it) {
     var ext = it.ref.type === 'ext' ? extByKey(it.ref.key) : null, task = it.ref.type === 'task' ? J.byId(J.data.tasks, it.ref.id) : null;
     if (it.ref.type === 'app') return 'That is an application deadline. Change it in Applications.';
-    if (ext && !canWrite(ext)) return '"' + it.title + '" is read-only for Jarvis, so I can\'t cancel it. ' + (ext.src === 'ics' ? 'It came from an imported file.' : 'Turn on two-way access in Settings to manage events.');
+    if (ext && !canWrite(ext)) return '"' + it.title + '" is read-only for NOVA, so I can\'t cancel it. ' + (ext.src === 'ics' ? 'It came from an imported file.' : 'Turn on two-way access in Settings to manage events.');
     return {
       text: 'Cancel "' + it.title + '" ' + whenIt(it) + '?' + (ext ? ' This deletes it from ' + P(ext.src) + '.' : '') + ' Say yes or no.',
       confirm: function () {

@@ -9,7 +9,7 @@ Status after **Phase 2 (agent layer)**. Sections marked *(planned)* describe lat
  ┌──────────────────────────────────────────────────────────────┐
  │ index.html + app.css + nova.css                              │
  │ nova.js   sign-in gate, 13 NOVA pages, orb state store, API  │
- │ app.js / core.js / jobs.js / calendar.js / voice.js ...      │   Jarvis tools: data in this browser (localStorage)
+ │ app.js / core.js / jobs.js / calendar.js / voice.js ...      │   Classic tools: data in this browser (localStorage)
  └───────────────▲──────────────────────────────────────────────┘
                  │ same origin: HttpOnly session cookie + X-NOVA-CSRF header
  ┌───────────────┴──────────────────────────────────────────────┐
@@ -32,7 +32,7 @@ Status after **Phase 2 (agent layer)**. Sections marked *(planned)* describe lat
 
 Two ways to run the same front end:
 - **NOVA server mode** (`node server/index.js`): sign-in, database, API. The front end detects `/api/session` and switches on the NOVA pages.
-- **Static mode** (GitHub Pages or any file server): `nova.js` finds no server and does nothing; the classic Jarvis tools run exactly as before, with data in the browser.
+- **Static mode** (GitHub Pages or any file server): `nova.js` finds no server and does nothing; the classic Classic tools run exactly as before, with data in the browser.
 
 ## 2. Agent execution flow (implemented, Phases 1 and 2)
 
@@ -109,7 +109,7 @@ Free rules answer common requests with zero tokens; only the top ≤5 relevant m
 - Real Google sign-in is verified only against a stand-in Google; it needs your Client ID and a person.
 - `node:sqlite` is marked experimental by Node; it is stable enough for one process but is a swap-able layer (`db.js`).
 - One server process, in-memory rate limits; no automatic data-retention schedule; no backup automation (copy `.nova/nova.db` while the server is stopped, or use `sqlite3 .backup`).
-- Jarvis tools (tasks, notes, calendar, jobs) still store data in the browser.
+- Classic tools (tasks, notes, calendar, jobs) still store data in the browser.
 
 ## 11. Future expansion
 

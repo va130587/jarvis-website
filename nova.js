@@ -1,6 +1,6 @@
 /* NOVA front end (server mode). When this page is served by the NOVA server it asks /api/session who is signed in, shows a sign-in screen if nobody is,
    and adds the NOVA pages: Dashboard, Chat, Memory Vault, Identity, Usage, Security and the labelled "Upcoming" pages. Every number and list comes from the server.
-   When the page is served without the server (for example GitHub Pages) none of this runs and the classic Jarvis tools work exactly as before. */
+   When the page is served without the server (for example GitHub Pages) none of this runs and the classic Classic tools work exactly as before. */
 (function () {
   'use strict';
   var J = window.J, esc = J.esc, $ = J.$, $$ = J.$$;
@@ -85,7 +85,7 @@
   function buildNav() {
     var nav = $('.nav'); if (!nav) return;
     nav.innerHTML = '<p class="nav-group mono">NOVA</p>' + NOVA_NAV.map(function (n) { return link(n[0], n[1], n[2], n[3]); }).join('') +
-      '<p class="nav-group mono">Jarvis tools (stored in this browser)</p>' + TOOLS_NAV.map(function (n) { return link(n[0], n[1], n[2]); }).join('') + '<a href="blueprint/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/></svg><span>Blueprint</span></a>';
+      '<p class="nav-group mono">Classic tools (stored in this browser)</p>' + TOOLS_NAV.map(function (n) { return link(n[0], n[1], n[2]); }).join('') + '<a href="blueprint/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/></svg><span>Blueprint</span></a>';
     var bn = $('.bottom-nav');
     if (bn) { var more = $('#moreBtn'); $$('a', bn).forEach(function (a) { a.remove(); });
       [['dashboard', 'Home', 'dash'], ['chat', 'Chat', 'chat'], ['memory', 'Memory', 'mem'], ['voice', 'Voice', 'mic']].forEach(function (n) { more.insertAdjacentHTML('beforebegin', link(n[0], n[1], n[2])); }); }
@@ -255,11 +255,11 @@
   S.hub = {
     render: function () {
       var t = J.today(), over = J.overdue().length, due = J.dueToday().length, week = J.dueWeek().length, nt = N.cache.tasks ? N.cache.tasks.tasks : null;
-      return J.head('Planner', 'Tasks and Calendar', 'NOVA tasks live in the server database. The Jarvis tools below still keep their own tasks in this browser.', '<a class="btn primary" href="#chat">Ask NOVA to add a task</a>') +
+      return J.head('Planner', 'Tasks and Calendar', 'NOVA tasks live in the server database. The Classic tools below still keep their own tasks in this browser.', '<a class="btn primary" href="#chat">Ask NOVA to add a task</a>') +
         '<article class="panel"><h2 class="label">NOVA tasks (server) ' + (nt ? '<span class="n">' + nt.length + '</span>' : '') + '</h2>' +
           (!nt ? J.empty('Loading…') : nt.length ? '<ul class="items">' + nt.map(function (x) { return '<li class="item' + (x.status === 'done' ? ' done' : '') + '"><div class="item-main"><p class="item-title">' + esc(x.title) + '</p><p class="item-meta"><span>' + (x.status === 'done' ? 'Done' : 'Open') + '</span><span>' + (x.due ? 'due ' + esc(x.due) : 'no due date') + '</span><span>' + esc(x.source || '') + '</span></p></div></li>'; }).join('') + '</ul>' : J.empty('No NOVA tasks yet. In Chat, say <q>add a task to call HR by Friday</q>. You approve it first.')) +
           '<p class="small-text muted">To complete or delete one, ask NOVA in Chat (for example <q>mark call HR as done</q>). Each change shows a preview and can usually be undone.</p></article>' +
-        '<h2 class="section-title">Jarvis tools (this browser)</h2><div class="stats">' + tile('Overdue', over, 'tasks', over ? 'red' : '') + tile('Due today', due, J.fmt ? J.fmt(t) : t) + tile('This week', week, 'after today') + tile('Storage', 'Browser', 'moves to the server later') + '</div>' +
+        '<h2 class="section-title">Classic tools (this browser)</h2><div class="stats">' + tile('Overdue', over, 'tasks', over ? 'red' : '') + tile('Due today', due, J.fmt ? J.fmt(t) : t) + tile('This week', week, 'after today') + tile('Storage', 'Browser', 'moves to the server later') + '</div>' +
         '<div class="btn-row"><a class="btn" href="#tasks">Open Tasks</a><a class="btn" href="#calendar">Open Calendar</a><a class="btn" href="#notes">Notes</a></div>' +
         '<p class="small-text muted">Google and Outlook calendars connect from the browser (Tool settings). Gmail and server-side calendars are upcoming.</p>';
     },
@@ -373,7 +373,7 @@
   });
 
   /* ================= voice -> NOVA ================= */
-  // Anything the built-in Jarvis commands do not understand goes to NOVA's server chat (real request, real answer).
+  // Anything the built-in NOVA commands do not understand goes to NOVA's server chat (real request, real answer).
   // In server mode, phrases NOVA's built-in actions understand (tasks, notes, forget, memory search) go to the server, where changes need approval.
   J.novaIntent = function (text) { return N.mode === 'server' && !!N.user && !!window.NovaIntents && NovaIntents.matches(text); };
   J.novaAsk = function (text) {

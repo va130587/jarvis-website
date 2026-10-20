@@ -81,7 +81,7 @@ test('consented download shows progress, then Smart mode is ready; it only sugge
   await page.waitForFunction(() => J.smart.ready());
   assert.match(await page.innerText('#smartStatus'), /Smart mode is on \(Chrome built-in AI\)/);
   assert.equal(await page.$eval('#smartBar', e => e.hidden), true);
-  // an unclear request: the model picks a command, Jarvis asks, nothing runs until yes
+  // an unclear request: the model picks a command, NOVA asks, nothing runs until yes
   const q = await ask(page, 'gimme the stuff that suits me');
   assert.match(q, /Smart mode thinks you meant "what jobs can hire me"\. Run it\? Say yes or no\./);
   assert.equal(await page.evaluate(() => J.current()), 'settings');          // nothing happened yet

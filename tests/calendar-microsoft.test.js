@@ -115,7 +115,7 @@ test('silent renewal fails -> Reconnect; permission denied; offline; sign-in err
   await page.waitForFunction(() => /Outlook reconnected/.test(document.getElementById('toast').textContent));
   assert.equal(await page.evaluate(() => window.__msal.logins), 2, 'renewed with a pop-up');
   graph.fail = 403;
-  assert.match(await page.evaluate(() => J.cal.sync('microsoft').catch(e => e.message)), /did not give Jarvis permission/);
+  assert.match(await page.evaluate(() => J.cal.sync('microsoft').catch(e => e.message)), /did not give NOVA permission/);
   graph.fail = 401;
   assert.match(await page.evaluate(() => J.cal.sync('microsoft').catch(e => e.message)), /sign-in has expired/);
   graph.fail = null;

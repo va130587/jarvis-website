@@ -1,4 +1,4 @@
-/* Jarvis — optional "Smart mode": a small AI model that runs ON YOUR DEVICE.
+/* NOVA — optional "Smart mode": a small AI model that runs ON YOUR DEVICE.
    Off by default. It only SUGGESTS: explanations, a polished cover-letter draft, or
    "did you mean…" for a voice command. It never changes data without your yes.
    Engines (free, no account, no server of mine):
@@ -64,11 +64,11 @@
     var api = builtin();
     var p = api ? startBuiltin(api).then(function (f) { return f || startWebLLM(); }) : startWebLLM();
     return p.then(function (fn) {
-      if (!fn) { S.state = 'off'; J.data.settings.smart = false; J.persist(); say('Smart mode is not available on this browser or device. Jarvis keeps working with its normal rule-based matching.'); return false; }
+      if (!fn) { S.state = 'off'; J.data.settings.smart = false; J.persist(); say('Smart mode is not available on this browser or device. NOVA keeps working with its normal rule-based matching.'); return false; }
       S.engine = fn; S.state = 'ready'; S.pct = 100; say('Smart mode is on (' + S.name + '). It runs on your device and only suggests.'); J.render(false); return true;
     }).catch(function (err) {
       S.state = 'off'; S.engine = null; J.data.settings.smart = false; J.persist();
-      say('Smart mode could not start (' + String(err && err.message || err).slice(0, 80) + '). Jarvis keeps working with its normal matching.'); J.render(false); return false;
+      say('Smart mode could not start (' + String(err && err.message || err).slice(0, 80) + '). NOVA keeps working with its normal matching.'); J.render(false); return false;
     });
   }
   function disable() { S.state = 'off'; S.engine = null; session = null; say('Smart mode is off.'); }
@@ -109,12 +109,12 @@
     return '<article class="panel" id="smartCard"><h2 class="label">Smart mode (optional, on your device)</h2>' +
       '<label class="switch"><span class="txt"><b>Smart mode</b><small>A small AI that runs in this browser. Off by default. It only suggests: explanations, cover-letter polish, and "did you mean…" for voice. It never changes anything without your yes.</small></span><input type="checkbox" id="smartToggle" data-setting="smart"' + (on ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label>' +
       '<progress id="smartBar" max="100" value="' + S.pct + '" hidden aria-label="Smart mode download progress"></progress>' +
-      '<p class="small-text muted" id="smartStatus" role="status" style="margin:10px 0 0">' + esc(S.msg || (can ? 'Off. Turning it on downloads a model once (about 0.5 to 2 GB, depending on your browser) after you agree.' : 'Not available here: this browser has no built-in AI and no WebGPU. Jarvis works fine without it.')) + '</p></article>';
+      '<p class="small-text muted" id="smartStatus" role="status" style="margin:10px 0 0">' + esc(S.msg || (can ? 'Off. Turning it on downloads a model once (about 0.5 to 2 GB, depending on your browser) after you agree.' : 'Not available here: this browser has no built-in AI and no WebGPU. NOVA works fine without it.')) + '</p></article>';
   }
   function toggled(on) {
     if (!on) { disable(); return; }
     var can = !!(builtin() || navigator.gpu || window.__webllmTest);
-    if (!can) { J.data.settings.smart = false; J.persist(); say('Smart mode is not available on this browser or device. Jarvis keeps working with its normal rule-based matching.'); var t = document.getElementById('smartToggle'); if (t) t.checked = false; return; }
+    if (!can) { J.data.settings.smart = false; J.persist(); say('Smart mode is not available on this browser or device. NOVA keeps working with its normal rule-based matching.'); var t = document.getElementById('smartToggle'); if (t) t.checked = false; return; }
     J.confirm('Smart mode downloads a small AI model to this device once (roughly 0.5 to 2 GB; the browser keeps it afterwards). It runs locally, nothing you type is sent anywhere, and it only makes suggestions. Download it now?', 'Download', 'Turn on Smart mode?').then(function (ok) {
       if (!ok) { J.data.settings.smart = false; J.persist(); var t2 = document.getElementById('smartToggle'); if (t2) t2.checked = false; say('Smart mode stays off.'); return; }
       enable();

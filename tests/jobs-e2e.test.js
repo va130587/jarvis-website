@@ -102,7 +102,7 @@ test('"Why this job?" panel: breakdown, reasons for and against, verdict, source
   assert.match(t, /Tableau/);
   assert.match(t, /Skills to learn to qualify \(free\)/i);
   assert.match(t, /Source: Zeta \(Ashby\)/);
-  assert.match(t, /Salary: not stated in the listing. Jarvis does not guess pay/);
+  assert.match(t, /Salary: not stated in the listing. NOVA does not guess pay/);
   assert.match(t, /Verify the company/i);
   assert.match(t, /not a promise of being hired/);
   assert.ok(await dlg.locator('a[href^="https://"][target=_blank]').count() >= 2);
@@ -174,7 +174,7 @@ test('alerts: first load is silent; later strong matches are spoken and notified
   await page.waitForFunction(() => window.__said.some(s => /1 new strong job match/.test(s)));
   const said = await page.evaluate(() => window.__said.join(' '));
   assert.match(said, /Data Analyst Graduate Programme at Kappa Bank, \d+ percent/);
-  assert.match(await page.evaluate(() => window.__notes.join('|')), /Jarvis: new job matches: Data Analyst Graduate Programme at Kappa Bank/);
+  assert.match(await page.evaluate(() => window.__notes.join('|')), /NOVA: new job matches: Data Analyst Graduate Programme at Kappa Bank/);
   // the weak job did not cause an alert, and nothing repeats
   const n = await page.evaluate(() => window.__said.filter(s => /new strong/.test(s)).length);
   await page.evaluate(() => J.jobs.reload());
@@ -183,7 +183,7 @@ test('alerts: first load is silent; later strong matches are spoken and notified
   // alerts off: new jobs are marked seen but not announced
   version = 2;
   await page.evaluate(() => { J.data.settings.jobAlerts = false; });
-  assert.equal(await H.ask(page, 'turn job alerts on'), 'Job alerts are on. I will speak when a strong new match appears while Jarvis is open.');
+  assert.equal(await H.ask(page, 'turn job alerts on'), 'Job alerts are on. I will speak when a strong new match appears while NOVA is open.');
   assert.equal(await page.evaluate(() => J.data.settings.jobAlerts), true);
   assert.equal(await H.ask(page, 'turn job alerts off'), 'Job alerts are off.');
   assert.equal(await page.evaluate(() => J.data.settings.jobAlerts), false);

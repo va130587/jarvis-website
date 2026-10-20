@@ -1,10 +1,10 @@
-/* Jarvis calendar files: read and write .ics (iCalendar) files, plus "Add to Google / Outlook" links.
-   Works in the browser (window.JarvisICS) and in Node (module.exports) so it can be unit-tested.
-   All Jarvis times are Asia/Dubai (UTC+4, no daylight saving). */
+/* NOVA calendar files: read and write .ics (iCalendar) files, plus "Add to Google / Outlook" links.
+   Works in the browser (window.NovaICS) and in Node (module.exports) so it can be unit-tested.
+   All NOVA times are Asia/Dubai (UTC+4, no daylight saving). */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
-  else root.JarvisICS = api;
+  else root.NovaICS = api;
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
@@ -282,8 +282,8 @@
   function build(items, opts) {
     opts = opts || {};
     var now = stampUtc(opts.now || Date.now());
-    var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Jarvis//Personal Assistant//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
-      'X-WR-CALNAME:' + escapeText(opts.name || 'Jarvis'), 'X-WR-TIMEZONE:Asia/Dubai',
+    var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//NOVA//Personal Assistant//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'X-WR-CALNAME:' + escapeText(opts.name || 'NOVA'), 'X-WR-TIMEZONE:Asia/Dubai',
       'BEGIN:VTIMEZONE', 'TZID:Asia/Dubai', 'BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:+0400', 'TZOFFSETTO:+0400', 'TZNAME:+04', 'END:STANDARD', 'END:VTIMEZONE'];
     items.forEach(function (it) {
       L.push('BEGIN:VEVENT');

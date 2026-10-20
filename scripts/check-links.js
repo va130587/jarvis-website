@@ -11,7 +11,7 @@ async function check(url) {
   for (const method of ['HEAD', 'GET']) {
     const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 20000);
     try {
-      const res = await fetch(url, { method, redirect: 'follow', signal: ctrl.signal, headers: { 'User-Agent': 'jarvis-link-check' } });
+      const res = await fetch(url, { method, redirect: 'follow', signal: ctrl.signal, headers: { 'User-Agent': 'nova-link-check' } });
       if (res.ok) return { ok: true, http: res.status };
       if (method === 'GET' || ![403, 404, 405, 429, 501].includes(res.status)) return { ok: false, http: res.status };
     } catch (e) { if (method === 'GET') return { ok: false, http: 0, error: e.name === 'AbortError' ? 'timed out' : e.message }; }

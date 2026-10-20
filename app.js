@@ -1,4 +1,4 @@
-/* Jarvis app: router, dialogs, HUD helpers, reminders, and the screens
+/* NOVA app: router, dialogs, HUD helpers, reminders, and the screens
    Today, Tasks, Calendar, Notes, Growth, Weekly review, Profile, Settings and Voice commands. */
 (function () {
   'use strict';
@@ -253,15 +253,15 @@
       var newJobs = J.jobs ? J.jobs.newJobs() : [];
       var hasCache = J.jobs && J.jobs.cache();
       return '<section class="hero">' +
-          '<div class="core-stage"><button type="button" class="core-btn" id="coreBtn" data-act="core" aria-label="Talk to Jarvis"><canvas id="coreOrb" aria-hidden="true"></canvas></button>' +
+          '<div class="core-stage"><button type="button" class="core-btn" id="coreBtn" data-act="core" aria-label="Talk to NOVA"><canvas id="coreOrb" aria-hidden="true"></canvas></button>' +
           '<p class="core-caption" id="coreCaption" aria-hidden="true">Tap to talk</p></div>' +
           '<div>' +
             '<p class="eyebrow">' + esc(J.longDate(t)) + ' · Dubai</p>' +
             '<h1 class="greet" data-decode>' + esc(greeting()) + ', ' + esc(name) + '</h1>' +
             '<p class="lead">' + esc(line) + '</p>' + nextLine +
-            '<div class="btn-row"><button type="button" class="btn primary" data-act="talk"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.mic + '</svg>Talk to Jarvis</button>' +
+            '<div class="btn-row"><button type="button" class="btn primary" data-act="talk"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.mic + '</svg>Talk to NOVA</button>' +
             '<button type="button" class="btn" data-act="say" data-say="brief me">Brief me</button></div>' +
-            '<p class="hint">Tap the core, press <kbd>J</kbd>' + (J.data.settings.wake ? ' or say <q>Hey Jarvis</q>' : '') + '. Try <q>what\'s due today</q>.</p>' +
+            '<p class="hint">Tap the core, press <kbd>J</kbd>' + (J.data.settings.wake ? ' or say <q>Hey NOVA</q>' : '') + '. Try <q>what\'s due today</q>.</p>' +
             '<p class="live" id="liveLine" aria-live="polite"></p>' +
           '</div>' +
         '</section>' +
@@ -329,7 +329,7 @@
       return J.head('Command', 'Tasks', 'Everything you need to do: who it is for, when it is due and how important it is.', '<button type="button" class="btn" data-act="addTask"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.plus + '</svg>Add task</button>') +
         '<form class="panel" data-form="capture" autocomplete="off"><label class="label" for="capIn" style="display:block">Quick capture</label>' +
           '<div class="capture-row"><input id="capIn" type="text" placeholder="Submit report to Dr. Ahmed by Sunday" enterkeyhint="done"><button type="submit" class="btn primary">Add task</button></div>' +
-          '<p class="preview" id="capPreview" aria-live="polite">Type in plain English, like <b>Call HR tomorrow at 10am</b>. Jarvis finds the person, date, time and priority.</p></form>' +
+          '<p class="preview" id="capPreview" aria-live="polite">Type in plain English, like <b>Call HR tomorrow at 10am</b>. NOVA finds the person, date, time and priority.</p></form>' +
         '<div class="toolbar"><label class="sr-only" for="taskSearch">Search tasks</label><input class="search" id="taskSearch" type="search" placeholder="Search tasks" value="' + esc(ui.taskQuery) + '" data-ui="taskQuery">' +
           '<div class="segs" role="group" aria-label="Show">' + J.seg('taskFilter', 'open', ui.taskFilter, 'Open') + J.seg('taskFilter', 'done', ui.taskFilter, 'Done') + J.seg('taskFilter', 'all', ui.taskFilter, 'All') + '</div>' +
           '<label class="sr-only" for="taskPri">Priority</label><select id="taskPri" data-ui="taskPriority"><option value="all">All priorities</option>' + PRI.map(function (p) { return '<option value="' + p[0] + '"' + (ui.taskPriority === p[0] ? ' selected' : '') + '>' + p[1] + ' priority</option>'; }).join('') + '</select></div>' +
@@ -345,7 +345,7 @@
         { name: 'person', label: 'Person', value: x ? x.person : preset.person, placeholder: 'Dr. Ahmed', half: true },
         { name: 'priority', label: 'Priority', type: 'select', options: PRI, value: x ? x.priority : (preset.priority || 'medium'), half: true },
         { name: 'due', label: 'Due date', type: 'date', value: x ? x.due : preset.due, half: true },
-        { name: 'time', label: 'Time (reminder)', type: 'time', value: x ? x.time : preset.time, half: true, hint: 'Jarvis reminds you at this time while the site is open.' },
+        { name: 'time', label: 'Time (reminder)', type: 'time', value: x ? x.time : preset.time, half: true, hint: 'NOVA reminds you at this time while the site is open.' },
         { name: 'status', label: 'Status', type: 'select', options: STATUS, value: x ? x.status : 'todo' },
         { type: 'html', html: '<p class="form-warn" id="clashWarn" aria-live="polite"></p>' }
       ],
@@ -394,7 +394,7 @@
     var inp = $('#capIn'), out = $('#capPreview');
     if (!inp || !out) return;
     var v = inp.value.trim();
-    if (!v) { out.innerHTML = 'Type in plain English, like <b>Call HR tomorrow at 10am</b>. Jarvis finds the person, date, time and priority.'; return; }
+    if (!v) { out.innerHTML = 'Type in plain English, like <b>Call HR tomorrow at 10am</b>. NOVA finds the person, date, time and priority.'; return; }
     var p = J.parseTask(v);
     out.innerHTML = '<span>Task: <b>' + esc(p.title || '—') + '</b></span><span>Person: <b>' + esc(p.person || '—') + '</b></span><span>Due: <b>' + esc(p.due ? J.dueLabel(p.due, p.time) : 'No date') + '</b></span><span>Priority: <b>' + esc(J.cap(p.priority)) + '</b></span>';
   }
@@ -459,7 +459,7 @@
           var s = J.byId(J.data.skills, w.skillId);
           return '<li class="item"><span class="win-mark' + (w.kind === 'certificate' ? ' cert' : '') + '" aria-hidden="true"></span><div class="item-main"><p class="item-title">' + esc(w.text) + '</p><p class="item-meta"><span>' + esc(J.fmt(w.date)) + '</span>' + J.tag(w.kind === 'certificate' ? 'Certificate' : 'Win', w.kind === 'certificate' ? '' : 'gold') + (s ? '<span>' + esc(s.name) + '</span>' : '') + J.sampleTag(w) + '</p></div>' +
             '<div class="item-actions">' + J.iconBtn('editWin', w.id, 'Edit', 'edit') + J.iconBtn('delWin', w.id, 'Delete', 'del', 'del') + '</div></li>';
-        }).join('') + '</ul>' : '<div style="margin-top:12px">' + J.empty('Nothing logged yet. Say <b>"log a win"</b> to Jarvis.') + '</div>');
+        }).join('') + '</ul>' : '<div style="margin-top:12px">' + J.empty('Nothing logged yet. Say <b>"log a win"</b> to NOVA.') + '</div>');
     }
   };
   J.forms.win = function () {
@@ -542,7 +542,7 @@
         return '<fieldset class="field" style="border:0;padding:0;margin:0 0 16px"><legend class="flabel" style="padding:0;margin-bottom:8px">' + legend + '</legend><div class="checks">' + opts.map(function (o) { return '<label class="check-chip"><input type="checkbox" name="' + name + '" value="' + esc(o) + '"' + (p[name].indexOf(o) >= 0 ? ' checked' : '') + '>' + esc(o) + '</label>'; }).join('') + '</div></fieldset>';
       }
       var sampleNote = p.sampleFields.length ? '<p class="small-text" style="margin:0 0 14px">' + J.tag('Sample', 'sample') + ' <span class="muted">Some details are examples. Replace them with your own, or clear sample data.</span></p>' : '';
-      return J.head('Identity', 'Profile', 'Jarvis uses this to match jobs, fill cover letters and understand names you mention.', '') +
+      return J.head('Identity', 'Profile', 'NOVA uses this to match jobs, fill cover letters and understand names you mention.', '') +
         '<form class="panel" data-form="profile" autocomplete="off">' + sampleNote +
           '<div class="grid-2" style="gap:0 18px">' +
             '<div class="field"><label for="pName">Name</label><input id="pName" type="text" value="' + val('name') + '" required></div>' +
@@ -561,7 +561,7 @@
           '<p class="small-text muted" style="margin:0 0 10px">Graduation, GPA, skill levels, tools, experience, nationality and visa, salary floor, notice period and industries to avoid. They stay in this browser and are never uploaded.</p>' +
           '<ul class="plain small-text"><li>Skills: ' + esc(J.skillsString ? J.skillsString(p) : p.skills.join(', ')) + '</li><li>Experience: ' + esc(p.yearsExp) + ' years · Nationality: ' + esc(p.nationality || 'not set') + ' · Visa: ' + esc(p.visa) + ' · Remote: ' + esc(p.remote) + '</li><li>Graduation: ' + esc(p.gradDate || 'not set') + ' · GPA: ' + esc(p.gpa || 'not set') + ' · Salary floor: ' + (+p.salaryFloor ? 'AED ' + esc(p.salaryFloor) : 'not set') + '</li></ul></article>' +
         '<article class="panel"><div class="panel-head"><h2 class="label">Important people</h2><button type="button" class="btn small" data-act="addPerson">Add person</button></div>' +
-          '<p class="small-text muted" style="margin:-6px 0 12px">Jarvis recognises these names when you add tasks, for example <q>email Sara by Friday</q>.</p>' +
+          '<p class="small-text muted" style="margin:-6px 0 12px">NOVA recognises these names when you add tasks, for example <q>email Sara by Friday</q>.</p>' +
           (J.data.people.length ? '<ul class="items">' + J.data.people.map(function (x) {
             return '<li class="item"><div class="item-main"><p class="item-title">' + esc(x.name) + '</p><p class="item-meta"><span>' + esc(x.role || '') + '</span>' + J.sampleTag(x) + '</p></div><div class="item-actions">' + J.iconBtn('editPerson', x.id, 'Edit ' + x.name, 'edit') + J.iconBtn('delPerson', x.id, 'Delete ' + x.name, 'del', 'del') + '</div></li>';
           }).join('') + '</ul>' : J.empty('No people yet.')) +
@@ -615,9 +615,9 @@
             '<p class="small-text muted" style="margin:8px 0 0">Permission: ' + esc(notif) + '</p>' +
           '</article>' +
           '<article class="panel"><h2 class="label">Voice</h2>' +
-            sw('voice', 'Spoken replies', 'Jarvis answers out loud.') +
-            sw('wake', 'Wake mode', 'Keep listening for "Hey Jarvis" while this page is open.') +
-            sw('sounds', 'Interface sounds', 'Soft beeps when Jarvis starts and stops listening.') +
+            sw('voice', 'Spoken replies', 'NOVA answers out loud.') +
+            sw('wake', 'Wake mode', 'Keep listening for "Hey NOVA" while this page is open.') +
+            sw('sounds', 'Interface sounds', 'Soft beeps when NOVA starts and stops listening.') +
             '<div class="field" style="margin-top:12px"><label for="voiceSelect">Voice</label><select id="voiceSelect" data-setting="voiceURI"><option value="">Automatic (calm British English male)</option></select></div>' +
             '<div class="field"><label for="rate">Speaking speed: <span class="mono" id="rateOut">' + (+s.rate).toFixed(2) + '×</span></label><input id="rate" type="range" min="0.7" max="1.4" step="0.05" value="' + esc(s.rate) + '" data-setting="rate"></div>' +
             '<div class="btn-row"><button type="button" class="btn small" data-act="say" data-say="test voice">Test voice</button></div>' +
@@ -644,16 +644,16 @@
     ['Everyday', [['Brief me', 'Good morning / what\'s my day'], ['What\'s due today?', 'Also: due this week, what\'s overdue'], ['What\'s my next step?', 'One suggestion'], ['What time is it?', 'Also: what\'s the date'], ['Repeat that', 'Says the last reply again'], ['What can you do?', 'A short list of commands'], ['Stop', 'Also: cancel, Esc, or tap the core']]],
     ['Tasks and reminders', [['Add task submit report to Dr. Ahmed by Sunday', 'Adds a task with person and date'], ['Remind me to call HR tomorrow at 10am', 'Timed reminder: spoken + notification'], ['Mark submit report as done', 'Completes a task'], ['Delete task call HR', 'Asks you to confirm with yes or no']]],
     ['Notes and growth', [['Add note bring printed CVs to the fair', 'Saves a note'], ['Read my notes', 'Reads your latest notes'], ['Log a win finished the SQL course', 'Adds to Growth']]],
-    ['Jobs and applications', [['Find internships', 'Live intern roles in the UAE'], ['Find fresher jobs in Dubai', 'Entry-level roles in a city'], ['Show new jobs', 'New since you last looked'], ['Save this job', 'Saves the job Jarvis just mentioned'], ['How many applications do I have?', 'Counts by stage'], ['What deadlines are coming up?', 'Deadlines and interviews']]],
+    ['Jobs and applications', [['Find internships', 'Live intern roles in the UAE'], ['Find fresher jobs in Dubai', 'Entry-level roles in a city'], ['Show new jobs', 'New since you last looked'], ['Save this job', 'Saves the job NOVA just mentioned'], ['How many applications do I have?', 'Counts by stage'], ['What deadlines are coming up?', 'Deadlines and interviews']]],
     ['Job matching', [['What jobs can hire me?', 'Your best matches, with reasons'], ['Why did you match this job?', 'Or: what am I missing for this job?'], ['Show new jobs since yesterday', 'Then: read the top three'], ['Which job should I apply to first?', 'Best score plus nearest deadline'], ['What should I learn to get more jobs?', 'Skills that unlock the most jobs'], ['Set an alert for data analyst jobs in Dubai above 70 percent', 'Asks you to confirm'], ['Turn job alerts on', 'Or off'], ['Run the job search now', 'Reloads the job list'], ['When did you last check?', 'Time and sources'], ['Prepare an application for this job', 'Saves it with a checklist, letter and reminders'], ['Set up my job profile', 'Short questions by voice']]],
     ['Calendar', [['What\'s on my calendar today?', 'Also: tomorrow, this week, on Monday'], ['What\'s my next meeting?', 'Your next event or interview'], ['Am I free at 3 pm tomorrow?', 'Checks your calendar and tasks'], ['When am I free on Monday?', 'Free time inside your working hours'],
       ['Add interview with Careem on Sunday at 11am', 'Asks you to confirm, then adds it'], ['Move my 3 pm meeting to 4 pm', 'Asks you to confirm first'], ['Cancel the call with HR', 'Asks yes or no first'], ['Sync my calendar', 'Refreshes Google and Outlook']]],
-    ['Navigation and voice', [['Open calendar', 'Any screen: tasks, notes, jobs, applications…'], ['Go back', 'Previous screen'], ['Voice off', 'Text replies only ("voice on" to undo)'], ['Turn on wake mode', 'Listen for "Hey Jarvis"'], ['Speak slower', 'Or "speak faster"']]]
+    ['Navigation and voice', [['Open calendar', 'Any screen: tasks, notes, jobs, applications…'], ['Go back', 'Previous screen'], ['Voice off', 'Text replies only ("voice on" to undo)'], ['Turn on wake mode', 'Listen for "Hey NOVA"'], ['Speak slower', 'Or "speak faster"']]]
   ];
   J.HELP = HELP;
   J.screens.help = {
     render: function () {
-      return J.head('Reference', 'Voice commands', 'Tap the core, press <kbd>J</kbd>, or say <q>Hey Jarvis</q> in wake mode. You can also type any command in the chat panel. Wording is flexible.', '<button type="button" class="btn primary" data-act="talk"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.mic + '</svg>Talk to Jarvis</button>') +
+      return J.head('Reference', 'Voice commands', 'Tap the core, press <kbd>J</kbd>, or say <q>Hey NOVA</q> in wake mode. You can also type any command in the chat panel. Wording is flexible.', '<button type="button" class="btn primary" data-act="talk"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON.mic + '</svg>Talk to NOVA</button>') +
         HELP.map(function (g) {
           return '<article class="panel"><h2 class="label">' + esc(g[0]) + '</h2><div class="table-wrap"><table class="cmds"><thead><tr><th scope="col">Say</th><th scope="col">What happens</th><th scope="col" class="try"><span class="sr-only">Try it</span></th></tr></thead><tbody>' +
             g[1].map(function (c) { return '<tr><td>"' + esc(c[0]) + '"</td><td>' + esc(c[1]) + '</td><td class="try"><button type="button" class="btn small ghost" data-act="say" data-say="' + esc(c[0]) + '" aria-label="Try: ' + esc(c[0]) + '">Try</button></td></tr>'; }).join('') +
@@ -676,7 +676,7 @@
     export: function () {
       var blob = new Blob([JSON.stringify({ app: 'jarvis', version: 3, exported: new Date().toISOString(), data: J.data }, null, 2)], { type: 'application/json' });
       var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob); a.download = 'jarvis-backup-' + J.today() + '.json';
+      a.href = URL.createObjectURL(blob); a.download = 'nova-backup-' + J.today() + '.json';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
       J.toast('Backup downloaded.');
@@ -694,7 +694,7 @@
     r.onload = function () {
       var d;
       try { var parsed = JSON.parse(r.result); d = parsed && parsed.data ? parsed.data : parsed; if (!d || !Array.isArray(d.tasks)) throw new Error('bad'); }
-      catch (e) { J.toast('That file is not a Jarvis backup.'); return; }
+      catch (e) { J.toast('That file is not a NOVA backup.'); return; }
       J.confirm('Replace all data in this browser with this backup?', 'Import', 'Import backup').then(function (ok) {
         if (!ok) return;
         J.snapshot(); J.data = J.normalize(d); J.commit(); J.toast('Backup imported.', true);
@@ -720,7 +720,7 @@
       J.toast(text);
       if (J.voice) J.voice.announce(text);
       if (J.data.settings.notify && 'Notification' in window && Notification.permission === 'granted') {
-        try { new Notification('Jarvis reminder', { body: J.taskPhrase(x) + ' · ' + J.fmtTime(x.time), tag: 'jarvis-' + x.id }); } catch (e) { /* some mobile browsers need a service worker */ }
+        try { new Notification('NOVA reminder', { body: J.taskPhrase(x) + ' · ' + J.fmtTime(x.time), tag: 'jarvis-' + x.id }); } catch (e) { /* some mobile browsers need a service worker */ }
       }
     });
   }

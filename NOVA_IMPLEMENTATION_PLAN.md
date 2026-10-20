@@ -47,7 +47,7 @@ Prices are from my knowledge and **must be re-checked before purchase (unverifie
 
 Effect on the earlier "100% free, no server" rule: **it ends for NOVA.** Free pieces that remain: GitHub (code, Actions job collector), browser speech, Google OAuth, Gmail API. New costs: hosting (about $0 local, about $5 per month deployed) and Claude API usage (section 4).
 
-Impact on GitHub Pages: the NOVA app is served by the Node server. Pages can keep hosting `blueprint/` and the static Jarvis demo if wanted.
+Impact on GitHub Pages: the NOVA app is served by the Node server. Pages can keep hosting `blueprint/` and the static NOVA demo if wanted.
 
 ## 4. Decision brief B: Claude API cost
 
@@ -131,14 +131,14 @@ Security review, accessibility (axe), performance, deployment docs, backup/resto
 - Google OAuth consent screen: unverified app limits (7-day refresh tokens, 100 test users); fine for the demo.
 - Sandbox blocks many external hosts, so Google, Claude and Azure calls can only be verified with Roshan's own credentials on his machine.
 - Scope: 13 pages is a lot; pages for later phases will be honestly labelled "Upcoming".
-- Moving personal data off the browser creates privacy duties (retention, deletion, audit) that the browser-only Jarvis did not have.
+- Moving personal data off the browser creates privacy duties (retention, deletion, audit) that the browser-only NOVA did not have.
 
 ## 8. Decisions needed from Roshan
 
 1. **Backend:** go with option A (Node + SQLite, local first, about $5 per month when deployed)? Or B or C?
 2. **Hosting for the demo:** local laptop only, or a small paid host?
 3. **Claude API:** OK to create an API key and set a monthly cap (suggest $10 to start)? Until then P1 to P3 use a mock model.
-4. **Naming and scope of the repo:** convert this repository in place (Jarvis becomes NOVA, job assistant kept as a module), or start a new `nova` repository that reuses the code?
+4. **Naming and scope of the repo:** convert this repository in place (NOVA becomes NOVA, job assistant kept as a module), or start a new `nova` repository that reuses the code?
 5. **Google Cloud project:** can you create an OAuth client (localhost redirect) and add yourself as a test user when P1 reaches sign-in?
 6. **Voice:** accept browser speech with push-to-talk as the default, Azure optional later?
 7. **Single owner or multi-user from day one?** Recommendation: data model is multi-user; sign-in restricted to an allow-list of Google accounts (you) until P7.

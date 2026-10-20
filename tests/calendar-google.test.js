@@ -135,11 +135,11 @@ test('two-way: switching asks for write permission; tasks are sent only after co
   const created = google.events['roshan@gmail.com'].find(e => e.summary === 'Call HR');
   assert.deepEqual(created.start, { dateTime: '2026-10-16T16:00:00', timeZone: 'Asia/Dubai' });
   assert.deepEqual(created.end, { dateTime: '2026-10-16T16:30:00', timeZone: 'Asia/Dubai' });
-  assert.ok(created.extendedProperties.private.jarvisId, 'linked to the Jarvis task');
+  assert.ok(created.extendedProperties.private.jarvisId, 'linked to the NOVA task');
   assert.equal(await page.evaluate(() => document.getElementById('calChip').hidden), true);
   await page.evaluate(() => location.hash = 'calendar'); await page.waitForTimeout(300);
   assert.equal((await evTitles(page)).filter(t => /Call HR/.test(t)).length, 1, 'no duplicate after sync');
-  // Edit in Jarvis -> update
+  // Edit in NOVA -> update
   const id = await page.evaluate(() => J.data.tasks.find(t => t.title === 'Call HR').id);
   await page.evaluate(id => { const t = J.byId(J.data.tasks, id); t.time = '17:00'; J.commit(); }, id);
   await page.click('#calChip');
@@ -152,13 +152,13 @@ test('two-way: switching asks for write permission; tasks are sent only after co
   const iv = google.events['roshan@gmail.com'].find(e => /Interview: Analyst/.test(e.summary));
   assert.equal(iv.end.dateTime, '2026-10-19T12:00:00', 'interviews last an hour');
   assert.deepEqual(google.events['roshan@gmail.com'].find(e => /Apply: Data Intern/.test(e.summary)).start, { date: '2026-10-20' }, 'deadlines are all-day');
-  // Delete in Jarvis -> delete
+  // Delete in NOVA -> delete
   await page.evaluate(id => J.removeTask(id), id);
   await page.click('#calChip');
   assert.match(await page.textContent('#confirmText'), /−\s+Remove "Call HR"/);
   await confirmAndWait(page, /Sent 1 change/);
   assert.ok(!google.events['roshan@gmail.com'].some(e => e.id === created.id), 'deleted in Google');
-  // Edit and delete a Google event from Jarvis (with confirmation)
+  // Edit and delete a Google event from NOVA (with confirmation)
   await page.click('.ev.ext >> text=Team sync');
   await page.fill('#f_start', '10:30'); await page.fill('#f_end', '11:30');
   await page.click('#dialogSave');
@@ -190,7 +190,7 @@ test('token expiry: Reconnect prompt, renew, and no data lost (also after reload
   await page.evaluate(() => location.hash = 'calendar'); await page.waitForTimeout(200);
   await page.click('[data-act="calSync"]');
   await page.waitForFunction(() => /sign-in has expired/.test(document.getElementById('toast').textContent));
-  assert.match(await page.textContent('#toast'), /Your Google Calendar sign-in has expired\. Click Reconnect\. Your Jarvis data is safe\./);
+  assert.match(await page.textContent('#toast'), /Your Google Calendar sign-in has expired\. Click Reconnect\. Your NOVA data is safe\./);
   assert.equal(await page.textContent('#calChip'), 'Reconnect Google Calendar');
   assert.match(await page.textContent('.cal-bar'), /Sign-in expired/);
   assert.equal(await page.evaluate(() => J.data.extEvents.length), 5, 'cached events stay');
@@ -224,7 +224,7 @@ test('errors: permission denied, API disabled, consent declined, pop-up closed, 
   await connectGoogle(page);
   google.fail = 403;
   await page.click('[data-act="calSyncOne"][data-id="google"]');
-  await page.waitForFunction(() => /did not give Jarvis permission/.test(document.getElementById('toast').textContent));
+  await page.waitForFunction(() => /did not give NOVA permission/.test(document.getElementById('toast').textContent));
   google.fail = 'api-disabled';
   await page.click('[data-act="calSyncOne"][data-id="google"]');
   await page.waitForFunction(() => /Calendar API is not turned on/.test(document.getElementById('toast').textContent));
@@ -232,7 +232,7 @@ test('errors: permission denied, API disabled, consent declined, pop-up closed, 
   // Asking for two-way but only ticking "see" in Google keeps read-only access.
   await page.evaluate(() => { window.__gis.next.grant = 'read'; });
   await page.check('input[data-calmode="google"][value="two-way"]');
-  await page.waitForFunction(() => /did not give Jarvis permission/.test(document.getElementById('toast').textContent));
+  await page.waitForFunction(() => /did not give NOVA permission/.test(document.getElementById('toast').textContent));
   assert.equal(await page.evaluate(() => J.data.cal.google.mode), 'read', 'stays read-only');
   await ctx.close();
 });
@@ -278,7 +278,7 @@ test('spoken reminder before events, clashes, free time', async () => {
   await page.evaluate(() => J.cal.checkEventReminders());
   const said = await page.evaluate(() => window.__said.join(' | '));
   assert.match(said, /Reminder: Call with recruiter at 8:14 am, in 14 minutes\./);
-  assert.match(await page.evaluate(() => window.__notes.join(' | ')), /Jarvis: Call with recruiter: 8:14 am · roshan@gmail\.com/);
+  assert.match(await page.evaluate(() => window.__notes.join(' | ')), /NOVA: Call with recruiter: 8:14 am · roshan@gmail\.com/);
   await page.evaluate(() => J.cal.checkEventReminders());
   assert.equal((await page.evaluate(() => window.__said.join(' | '))).split('Call with recruiter').length - 1, 1, 'each reminder is spoken once');
   // Clashes
@@ -315,7 +315,7 @@ test('.ics import and export in the browser, and add-to-calendar links', async (
   // Export
   await page.evaluate(() => { J.addTask({ title: 'Submit report', person: 'Dr. Ahmed', due: '2026-10-18' }); J.addTask({ title: 'Interview: Analyst at Careem', due: '2026-10-19', time: '11:00', kind: 'interview' }); });
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-act="calExport"]')]);
-  assert.match(dl.suggestedFilename(), /^jarvis-calendar-2026-10-15\.ics$/);
+  assert.match(dl.suggestedFilename(), /^nova-calendar-2026-10-15\.ics$/);
   const text = fs.readFileSync(await dl.path(), 'utf8');
   const back = ICS.parse(text, { from: Date.UTC(2026, 0, 1), to: Date.UTC(2027, 0, 1) });
   const sr = back.events.find(e => e.title === 'Submit report for Dr. Ahmed');
@@ -327,7 +327,7 @@ test('.ics import and export in the browser, and add-to-calendar links', async (
   await page.evaluate(() => location.hash = 'tasks'); await page.waitForTimeout(200);
   await page.click('[data-act="calAdd"][aria-label*="Interview: Analyst"]');
   const links = await page.$$eval('#formDialog a.site-btn', a => a.map(x => x.href));
-  assert.equal(links[0], 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Interview%3A%20Analyst%20at%20Careem&dates=20261019T070000Z/20261019T080000Z&ctz=Asia%2FDubai&details=From%20Jarvis');
+  assert.equal(links[0], 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Interview%3A%20Analyst%20at%20Careem&dates=20261019T070000Z/20261019T080000Z&ctz=Asia%2FDubai&details=From%20NOVA');
   assert.match(links[1], /^https:\/\/outlook\.live\.com\/calendar\/0\/deeplink\/compose\?.*startdt=2026-10-19T11%3A00%3A00%2B04%3A00/);
   assert.match(links[2], /^https:\/\/outlook\.office\.com\//);
   // Bad file
