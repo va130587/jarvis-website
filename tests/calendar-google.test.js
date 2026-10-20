@@ -87,8 +87,10 @@ test('connect (read-only): Client ID checks, scopes, events in week + month view
   assert.equal(await page.$eval('.ev.ext', el => getComputedStyle(el).getPropertyValue('--evc').trim()), '#4285f4', 'calendar colour');
   // Pick which calendars to show
   await page.click('[data-act="calToggle"][data-id="google|uni@group.calendar.google.com"]');
+  await page.waitForFunction(() => !/Data Structures/.test(document.querySelector('main').textContent));
   assert.ok(!(await evTitles(page)).some(t => /Data Structures/.test(t)), 'University hidden');
   await page.click('[data-act="calToggle"][data-id="google|uni@group.calendar.google.com"]');
+  await page.waitForFunction(() => /Data Structures/.test(document.querySelector('main').textContent));
   assert.ok((await evTitles(page)).some(t => /Data Structures/.test(t)), 'University shown again');
   // Month view
   await page.click('[data-act="seg"][data-id="month"]');

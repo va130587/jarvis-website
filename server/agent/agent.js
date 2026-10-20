@@ -7,6 +7,7 @@ const { validate } = require('./schema');
 const { matchIntent } = require('./planner');
 const { redact, audit } = require('../security');
 const { estimate } = require('../ai/claude');
+const { LABEL, TERMINAL } = require('../proofloop/machine');
 
 const STABLE = [
   'You are NOVA, a personal AI assistant. Be concise, accurate and plain-spoken.',
@@ -17,7 +18,7 @@ const STABLE = [
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const needsApproval = (tool, user) => tool.risk !== 'read' && !(tool.risk === 'write' && user.auto_low_risk);
 
-function createAgent(cfg, db, registry, provider) {
+function createAgent(cfg, db, registry, provider, pl) {
   const now = cfg.now, limits = cfg.agent, live = new Map();   // runId -> AbortController for an in-flight model call
 
   const parse = s => { try { return JSON.parse(s); } catch (e) { return null; } };
@@ -48,6 +49,53 @@ function createAgent(cfg, db, registry, provider) {
     return run;
   }
 
+  // ---- ProofLoop hooks: a request with a deadline becomes a tracked commitment. The state follows what really happened. ----
+  const plActor = { actor: 'nova' };
+  function plSafe(run, fn) { try { return fn(); } catch (e) { step(run, 'error', 'ProofLoop could not record this: ' + e.message); return null; } }
+  function plMove(run, user, to, note) { const cid = run.state.commitmentId; if (!cid) return; plSafe(run, () => { pl.transition(user.id, cid, to, { note, actor: 'nova' }); step(run, 'proofloop', 'ProofLoop: commitment #' + cid + ' is now ' + LABEL[to] + '.'); }); }
+  function plStart(run, user, input) {
+    if (run.state.commitmentId) return;
+    plSafe(run, () => {
+      const id = pl.create(user.id, { title: input.title, action: 'Create a task and keep track of it', direction: 'i_owe', deadline: input.due, sourceType: 'agent', sourceRef: 'NOVA run #' + run.id, runId: run.id });
+      run.state.commitmentId = id; step(run, 'proofloop', 'ProofLoop is tracking this as commitment #' + id + ' (you owe it, due ' + input.due + ').');
+      pl.transition(user.id, id, 'request_understood', { note: 'Understood from your request: "' + run.request.slice(0, 120) + '".', actor: 'nova' });
+      pl.transition(user.id, id, 'task_prepared', { note: 'Prepared: create the task "' + input.title + '".', actor: 'nova' });
+    });
+  }
+  function plBeforeExecute(run, user) {
+    const cid = run.state.commitmentId; if (!cid) return;
+    const c = pl.row(user.id, cid); if (c.status === 'task_prepared' || c.status === 'awaiting_approval') plMove(run, user, 'executing', 'Running now.');
+  }
+  function plAfterExecute(run, user, tool, input, r) {
+    const cid = run.state.commitmentId;
+    if (cid && !TERMINAL.includes(pl.row(user.id, cid).status)) {
+      if (r.failed) plMove(run, user, 'failed', 'Tool ' + tool.name + ' failed: ' + r.error);
+      else if (r.unverified) plMove(run, user, 'failed', 'NOVA could not verify that ' + tool.name + ' worked.');
+      else if (tool.name === 'tasks.create') plSafe(run, () => {
+        db.prepare('UPDATE commitments SET task_id = ?, title = ?, deadline = COALESCE(?, deadline), updated_at = ? WHERE id = ? AND user_id = ?').run(r.output.id, r.output.title, input.due || null, now(), cid, user.id);
+        db.prepare('UPDATE tool_executions SET commitment_id = ? WHERE id = ?').run(cid, r.execId);
+        pl.addEvidence(user.id, cid, { kind: 'submitted', description: 'Task #' + r.output.id + ' was created (tool run #' + r.execId + '). ' + (r.evidence || ''), executionId: r.execId });
+        pl.transition(user.id, cid, 'submitted', { note: 'The task exists. That is the action NOVA took.', actor: 'nova' });
+        pl.transition(user.id, cid, 'awaiting_confirmation', { note: 'Waiting for you to do it. NOVA cannot see whether the real-world action happened: tell NOVA when it is done.', actor: 'nova' });
+        step(run, 'proofloop', 'ProofLoop: commitment #' + cid + ' is Awaiting Confirmation. It is not verified.');
+      });
+    }
+    // Finishing a task that backs a commitment: your confirmation is recorded as evidence (self-reported, not independent).
+    if (!r.failed && !r.unverified && tool.name === 'tasks.complete') plSafe(run, () => {
+      const c = db.prepare("SELECT * FROM commitments WHERE user_id = ? AND task_id = ? AND status IN ('submitted', 'awaiting_confirmation')").get(user.id, r.output.id);
+      if (!c) return;
+      pl.addEvidence(user.id, c.id, { kind: 'verified', description: 'You marked task #' + r.output.id + ' as done (self-reported: NOVA cannot check the real-world action).', refType: 'self', executionId: r.execId });
+      pl.transition(user.id, c.id, 'verified', { note: 'You confirmed it.', actor: 'you' }); pl.transition(user.id, c.id, 'completed', { note: 'Verified, so closed.', actor: 'nova' });
+      db.prepare('UPDATE tool_executions SET commitment_id = ? WHERE id = ?').run(c.id, r.execId);
+      step(run, 'proofloop', 'ProofLoop: commitment #' + c.id + ' is Completed (verified by your confirmation).');
+    });
+  }
+  function plNote(run) {
+    const cid = run.state.commitmentId; if (!cid) return '';
+    const c = db.prepare('SELECT status FROM commitments WHERE id = ?').get(cid); if (!c) return '';
+    return c.status === 'awaiting_confirmation' ? ' ProofLoop is tracking this as commitment #' + cid + ' (Awaiting Confirmation). It is NOT verified yet: NOVA created the task but cannot see whether you did it. Tell NOVA when it is done.' : ' ProofLoop commitment #' + cid + ': ' + LABEL[c.status] + '.';
+  }
+
   // ---- one tool call: validate -> permission -> approve or execute ----
   async function handleCall(run, user, call) {
     const tool = registry.get(call.name);
@@ -55,15 +103,20 @@ function createAgent(cfg, db, registry, provider) {
     const v = validate(tool.schema, call.input === undefined ? {} : call.input);
     if (!v.ok) { step(run, 'error', 'Refused: the input for ' + tool.name + ' is not valid (' + v.error + ').'); return { error: 'Invalid input for ' + tool.name + ': ' + v.error + '.' }; }
     step(run, 'tool_call', 'Proposed: ' + tool.name + ' (' + tool.risk + ')', { tool: tool.name, input: call.input });
+    if (tool.name === 'tasks.create' && call.input && call.input.due) plStart(run, user, call.input);
     if (needsApproval(tool, user)) {
       const preview = tool.preview(ctxFor(user, run), call.input);
       const r = db.prepare('INSERT INTO approvals (user_id, run_id, tool, input, preview, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(run.user_id, run.id, tool.name, JSON.stringify(call.input), JSON.stringify(Object.assign({ reason: 'You asked: "' + run.request.slice(0, 120) + '"' }, preview)), now(), now() + limits.approvalTtlMs);
       step(run, 'approval_requested', 'Waiting for your approval: ' + preview.action + '.', { approvalId: Number(r.lastInsertRowid) });
       run.state.pending = { tool: tool.name, input: call.input, toolUseId: call.toolUseId || null, approvalId: Number(r.lastInsertRowid) };
+      if (run.state.commitmentId) { db.prepare('UPDATE approvals SET commitment_id = ? WHERE id = ?').run(run.state.commitmentId, Number(r.lastInsertRowid)); plMove(run, user, 'awaiting_approval', 'Waiting for your approval.'); }
       return { approval: Number(r.lastInsertRowid) };
     }
     step(run, 'approval_not_needed', tool.risk === 'read' ? 'No approval needed: this only reads.' : 'Approved automatically because you turned on auto-approve for low-risk changes.');
-    return execute(run, user, tool, call.input, null);
+    plBeforeExecute(run, user);
+    const res = await execute(run, user, tool, call.input, null);
+    plAfterExecute(run, user, tool, call.input, res);
+    return res;
   }
 
   // ---- run the tool, inspect, verify; records one tool_executions row ----
@@ -109,7 +162,7 @@ function createAgent(cfg, db, registry, provider) {
       if (!st.history.length) return { kind: 'call', name: st.intent.call.name, input: st.intent.call.input };
       const h = st.history[st.history.length - 1], tool = registry.get(h.tool);
       if (h.error) return { kind: 'final', text: 'That did not work: ' + h.error + ' Nothing was changed.' };
-      return { kind: 'final', text: tool.summarize(h.output) + (h.evidence ? ' ' + h.evidence : '') };
+      return { kind: 'final', text: tool.summarize(h.output) + (h.evidence ? ' ' + h.evidence : '') + plNote(run) };
     }
     // model planner
     const t0 = now();
@@ -146,7 +199,7 @@ function createAgent(cfg, db, registry, provider) {
       if (d.kind === 'final') {
         step(run, 'plan', d.blocked ? 'Stopped before calling the model: spending limit reached.' : 'Decided to answer without using a tool.');
         const checked = st.history.filter(h => h.evidence).map(h => h.evidence);
-        return finish(run, (d.text || '(No text returned.)') + (checked.length ? '\n\nChecked by NOVA: ' + checked.join(' ') : ''), d.blocked ? 'failed' : 'completed', d.blocked ? 'spending limit' : null);
+        return finish(run, (d.text || '(No text returned.)') + (checked.length ? '\n\nChecked by NOVA: ' + checked.join(' ') : '') + plNote(run), d.blocked ? 'failed' : 'completed', d.blocked ? 'spending limit' : null);
       }
       const r = await handleCall(run, user, d);
       if (d.name === 'ask.clarify' && r.output) { step(run, 'clarify', 'I am not sure what you meant, so I asked instead of guessing.'); return finish(run, r.output.question, 'completed'); }
@@ -197,7 +250,10 @@ function createAgent(cfg, db, registry, provider) {
   // ---- approvals ----
   function claim(userId, id) {
     const a = own('approvals', userId, id);
-    if (a.status === 'pending' && now() > a.expires_at) { db.prepare("UPDATE approvals SET status = 'expired', decided_at = ? WHERE id = ?").run(now(), a.id); a.status = 'expired'; }
+    if (a.status === 'pending' && now() > a.expires_at) {
+      db.prepare("UPDATE approvals SET status = 'expired', decided_at = ? WHERE id = ?").run(now(), a.id); a.status = 'expired';
+      if (a.commitment_id) { try { pl.transition(userId, a.commitment_id, 'cancelled', { note: 'The approval expired before you decided.', actor: 'system' }); } catch (e) { /* already closed */ } }
+    }
     return a;
   }
   async function approve(auth, id, editedInput) {
@@ -219,14 +275,16 @@ function createAgent(cfg, db, registry, provider) {
     run.state.approvalUsed = 'approval #' + a.id;
     const user = userRow(userId), ac = new AbortController(); live.set(run.id, ac);
     try {
+      plBeforeExecute(run, user);
       const r = await execute(run, user, tool, input, a.id);
       db.prepare('UPDATE approvals SET execution_id = ? WHERE id = ?').run(r.execId, a.id);
+      plAfterExecute(run, user, tool, input, r);
       const pend = run.state.pending; run.state.pending = null;
       run.state.history.push({ tool: tool.name, output: r.output, error: r.error, evidence: r.evidence });
       if (run.state.planner === 'model' && pend && pend.toolUseId) run.state.messages.push(toolTurn(pend.toolUseId, r.error ? r.error : r.output, !!r.error));
       if (r.unverified) finish(run, 'I ran the action but could not verify that it worked, so I am not calling it done. ' + (r.evidence || ''), 'failed', 'unverified');
       else if (r.failed) finish(run, 'That did not work: ' + r.error + ' Nothing was changed.', 'failed', r.error);
-      else if (run.state.planner === 'rules') finish(run, tool.summarize(r.output) + ' ' + (r.evidence || ''), 'completed');
+      else if (run.state.planner === 'rules') finish(run, tool.summarize(r.output) + ' ' + (r.evidence || '') + plNote(run), 'completed');
       else await drive(run, ac.signal);
     } finally { live.delete(run.id); }
     return snapshot(run.id, userId);
@@ -239,6 +297,7 @@ function createAgent(cfg, db, registry, provider) {
     audit(db, now, userId, 'approval_rejected', a.tool + ' #' + a.id, auth.ip);
     step(run, 'approval_rejected', 'You rejected: ' + (parse(a.preview).action || a.tool) + '. Nothing was changed.');
     run.state.pending = null;
+    plMove(run, { id: userId }, 'cancelled', 'Rejected by you.');
     finish(run, 'Okay, I did not do it. Nothing was changed.', 'cancelled', 'Rejected by you');
     return snapshot(run.id, userId);
   }
@@ -247,7 +306,7 @@ function createAgent(cfg, db, registry, provider) {
     if (!['planning', 'awaiting_approval', 'executing'].includes(rr.status)) throw new HttpError(409, 'This request is already ' + rr.status + '.', 'bad_state');
     const run = Object.assign({}, rr, { state: parse(rr.state) });
     db.prepare("UPDATE approvals SET status = 'cancelled', decided_at = ? WHERE run_id = ? AND status = 'pending'").run(now(), run.id);
-    run.state.pending = null; setStatus(run, 'cancelled', { failure: 'Cancelled by you' }); step(run, 'cancelled', 'You cancelled this request. Nothing further was changed.');
+    run.state.pending = null; plMove(run, { id: userId }, 'cancelled', 'Cancelled by you.'); setStatus(run, 'cancelled', { failure: 'Cancelled by you' }); step(run, 'cancelled', 'You cancelled this request. Nothing further was changed.');
     const ac = live.get(run.id); if (ac) ac.abort();
     audit(db, now, userId, 'run_cancelled', 'run #' + run.id, auth.ip);
     return snapshot(run.id, userId);
@@ -257,6 +316,7 @@ function createAgent(cfg, db, registry, provider) {
     if (!ex.undoable || !tool || !tool.undo) throw new HttpError(409, 'This action cannot be undone.', 'not_undoable');
     if (ex.undone_at) throw new HttpError(409, 'This action was already undone.', 'bad_state');
     const msg = tool.undo({ db, user: { id: userId }, now }, parse(ex.output));
+    if (ex.tool === 'tasks.create') { const c = db.prepare('SELECT id, status FROM commitments WHERE user_id = ? AND task_id = ?').get(userId, parse(ex.output).id); if (c && !TERMINAL.includes(c.status)) { try { pl.transition(userId, c.id, 'cancelled', { note: 'You undid the task creation.', actor: 'you' }); } catch (e) { /* ignore */ } } }
     db.prepare('UPDATE tool_executions SET undone_at = ? WHERE id = ?').run(now(), ex.id);
     const rr = own('runs', userId, ex.run_id); step({ id: rr.id, user_id: userId }, 'undone', 'Undone at your request: ' + msg);
     audit(db, now, userId, 'undo', ex.tool + ' exec #' + ex.id, auth.ip);

@@ -54,6 +54,17 @@ function matchIntent(message, ctx) {
   if ((m = P.note[0].exec(m0)) || (m = P.note[1].exec(m0))) return { understood: 'Save a note', call: { name: 'notes.create', input: { text: m[1].trim().replace(/[.!]+$/, '') } } };
   if (P.notes.test(m0)) return { understood: 'List your notes', call: { name: 'notes.list', input: {} } };
   if ((m = P.search.exec(m0))) return { understood: 'Search your memories for "' + m[1] + '"', call: { name: 'memory.search', input: { query: m[1].trim() } } };
+  if ((m = P.commitList.exec(m0))) { const f = /owed to me|owes me/i.test(m0) ? 'owed_to_me' : /overdue/i.test(m0) ? 'overdue' : /do i owe/i.test(m0) ? 'i_owe' : 'open'; return { understood: 'List your ' + f.replace('_', ' ') + ' commitments', call: { name: 'commitments.list', input: { filter: f } } }; }
+  if ((m = P.oweMe.exec(m0)) && !/^(?:i|you|we)$/i.test(m[1].trim())) { const due = m[3] ? parseDue(m[3], ctx.now()) : null; return { understood: m[1].trim() + ' owes you "' + m[2].trim() + '"', call: { name: 'commitments.create', input: Object.assign({ title: m[2].trim().replace(/[.!]+$/, ''), direction: 'owed_to_me', counterparty: m[1].trim() }, due ? { deadline: due } : {}) } }; }
+  if ((m = P.iPromised.exec(m0))) { const due = m[3] ? parseDue(m[3], ctx.now()) : null; return { understood: 'You promised ' + m[1].trim() + ': "' + m[2].trim() + '"', call: { name: 'commitments.create', input: Object.assign({ title: m[2].trim().replace(/[.!]+$/, ''), direction: 'i_owe', counterparty: m[1].trim() }, due ? { deadline: due } : {}) } }; }
+  if ((m = P.confirm.exec(m0))) {
+    const rows = ctx.db.prepare("SELECT id, title FROM commitments WHERE user_id = ? AND status IN ('submitted', 'awaiting_confirmation')").all(ctx.user.id), b = bestMatch(rows, m[1], 'title');
+    if (!b.none && !b.ambiguous) return { understood: 'Confirm commitment #' + b.row.id + ' "' + b.row.title + '" is done', call: { name: 'commitments.confirm', input: { id: b.row.id } } };
+    if (b.ambiguous) return { understood: 'Confirm a commitment: "' + m[1] + '"', final: 'More than one commitment matches: ' + b.ambiguous.map(t => '#' + t.id + ' ' + t.title).join('; ') + '. Please say which one. Nothing was changed.' };
+    const trows = ctx.db.prepare("SELECT id, title FROM tasks WHERE user_id = ? AND deleted_at IS NULL AND status = 'open'").all(ctx.user.id), tb = bestMatch(trows, m[1], 'title');
+    if (!tb.none && !tb.ambiguous) return { understood: 'Complete task #' + tb.row.id + ' "' + tb.row.title + '"', call: { name: 'tasks.complete', input: { id: tb.row.id } } };
+    return { understood: 'Confirm that "' + m[1] + '" is done', final: 'I could not find an open commitment or task matching "' + m[1] + '" (or more than one matched). Nothing was changed.' };
+  }
   if ((m = P.forget.exec(m0))) {
     const rows = ctx.db.prepare("SELECT id, text FROM memories WHERE user_id = ? AND status = 'active'").all(ctx.user.id), b = bestMatch(rows, m[1], 'text');
     if (b.none) return { understood: 'Forget: "' + m[1] + '"', final: 'I could not find a saved memory matching that. Nothing was changed.' };

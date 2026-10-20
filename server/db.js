@@ -72,7 +72,23 @@ const MIGRATIONS = [
    CREATE TABLE tool_executions (
      id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, run_id INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE, approval_id INTEGER,
      tool TEXT NOT NULL, input TEXT NOT NULL, status TEXT NOT NULL, output TEXT, error TEXT, evidence TEXT, undoable INTEGER NOT NULL DEFAULT 0, undo_data TEXT, undone_at INTEGER,
-     attempts INTEGER NOT NULL DEFAULT 1, started_at INTEGER NOT NULL, finished_at INTEGER);`
+     attempts INTEGER NOT NULL DEFAULT 1, started_at INTEGER NOT NULL, finished_at INTEGER);`,
+  // 3: ProofLoop (commitments, their state history and evidence)
+  `CREATE TABLE commitments (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     title TEXT NOT NULL, action TEXT, direction TEXT NOT NULL, counterparty TEXT, deadline TEXT,
+     source_type TEXT NOT NULL, source_ref TEXT, run_id INTEGER, task_id INTEGER,
+     status TEXT NOT NULL, reason TEXT, follow_up_at TEXT, is_demo INTEGER NOT NULL DEFAULT 0,
+     created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, closed_at INTEGER);
+   CREATE INDEX commitments_user ON commitments(user_id, status);
+   CREATE TABLE commitment_events (
+     id INTEGER PRIMARY KEY, commitment_id INTEGER NOT NULL REFERENCES commitments(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     seq INTEGER NOT NULL, from_status TEXT, to_status TEXT NOT NULL, note TEXT, actor TEXT NOT NULL, ts INTEGER NOT NULL);
+   CREATE TABLE evidence (
+     id INTEGER PRIMARY KEY, commitment_id INTEGER NOT NULL REFERENCES commitments(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     kind TEXT NOT NULL, description TEXT NOT NULL, ref_type TEXT, ref_id INTEGER, independent INTEGER NOT NULL DEFAULT 0, execution_id INTEGER, ts INTEGER NOT NULL);
+   ALTER TABLE tool_executions ADD COLUMN commitment_id INTEGER;
+   ALTER TABLE approvals ADD COLUMN commitment_id INTEGER;`
 ];
 
 function migrate(db) {

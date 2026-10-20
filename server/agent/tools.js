@@ -8,7 +8,7 @@ const RISKS = ['read', 'write', 'destructive', 'external'];
 const date = ms => new Date(ms).toISOString().slice(0, 10);
 
 function createRegistry(deps) {
-  const { db, memory } = deps;
+  const { db, memory, pl } = deps;
   const tools = new Map();
 
   function register(t) {
@@ -86,6 +86,41 @@ function createRegistry(deps) {
     run: (ctx, i) => { const m = db.prepare("SELECT * FROM memories WHERE id = ? AND user_id = ? AND status = 'active'").get(i.id, ctx.user.id); if (!m) throw new Error('Memory #' + i.id + ' was not found.'); db.prepare('DELETE FROM memories WHERE id = ? AND user_id = ?').run(m.id, ctx.user.id); return { id: m.id, text: m.text }; },
     verify: (ctx, i, o) => !db.prepare('SELECT 1 FROM memories WHERE id = ? AND user_id = ?').get(o.id, ctx.user.id) ? { ok: true, evidence: 'Read back from the Memory Vault: memory #' + o.id + ' is gone.' } : { ok: false, evidence: 'The memory still exists.' },
     summarize: o => 'Deleted the memory "' + o.text + '".' });
+
+  if (pl) {
+    const { LABEL, TERMINAL } = require('../proofloop/machine');
+    const own = (u, id) => db.prepare('SELECT * FROM commitments WHERE id = ? AND user_id = ?').get(id, u);
+    const mine = (u, id) => { const c = own(u, id); if (!c) throw new Error('Commitment #' + id + ' was not found.'); return c; };
+
+    register({ name: 'commitments.create', risk: 'write', description: 'Track a commitment: something the owner owes someone, or something someone owes the owner.', schema: { type: 'object', required: ['title', 'direction'], properties: { title: { type: 'string', minLength: 3, maxLength: 200 }, direction: { type: 'string', enum: ['i_owe', 'owed_to_me'] }, counterparty: { type: 'string', maxLength: 100 }, deadline: { type: 'string', format: 'date' } } },
+      preview: (ctx, i) => ({ action: i.direction === 'owed_to_me' ? 'Track something owed to you' : 'Track something you owe', target: 'ProofLoop (server database)', changes: ['New commitment: "' + i.title + '"' + (i.counterparty ? ' with ' + i.counterparty : '') + (i.deadline ? ', due ' + i.deadline : ', no deadline')],
+        consequences: 'It appears in ProofLoop Mission Control and stays open until it is verified. Nothing is sent to anyone.', undoable: true, undoNote: 'You can undo this: the commitment is cancelled.' }),
+      run: (ctx, i) => { const id = pl.create(ctx.user.id, { title: i.title.trim(), direction: i.direction, counterparty: i.counterparty, deadline: i.deadline, sourceType: 'agent', sourceRef: 'NOVA run #' + ctx.runId, runId: ctx.runId });
+        pl.transition(ctx.user.id, id, 'request_understood', { note: 'Understood from your request.', actor: 'nova' });
+        if (i.direction === 'owed_to_me') pl.transition(ctx.user.id, id, 'awaiting_confirmation', { note: 'Waiting for ' + (i.counterparty || 'them') + '. NOVA cannot see their side: confirm when it arrives.', actor: 'nova' });
+        return { id, title: i.title.trim(), direction: i.direction, status: pl.row(ctx.user.id, id).status }; },
+      verify: (ctx, i, o) => { const c = own(ctx.user.id, o.id); return c ? { ok: true, evidence: 'Read back from ProofLoop: commitment #' + c.id + ' exists and is ' + LABEL[c.status] + '.' } : { ok: false, evidence: 'The commitment could not be found after it was created.' }; },
+      undo: (ctx, o) => { try { pl.transition(ctx.user.id, o.id, 'cancelled', { note: 'You undid the creation.', actor: 'you' }); } catch (e) { /* already closed */ } return 'Commitment #' + o.id + ' cancelled.'; },
+      summarize: o => 'Now tracking "' + o.title + '" (' + (o.direction === 'owed_to_me' ? 'owed to you' : 'you owe it') + ').' });
+
+    register({ name: 'commitments.list', risk: 'read', description: 'List the owner\'s ProofLoop commitments.', schema: { type: 'object', properties: { filter: { type: 'string', enum: ['open', 'overdue', 'i_owe', 'owed_to_me', 'all'] } } },
+      preview: () => ({ action: 'List your commitments', target: 'ProofLoop', changes: [], consequences: 'Nothing changes.', undoable: true }),
+      run: (ctx, i) => { const f = i.filter || 'open', rows = db.prepare('SELECT * FROM commitments WHERE user_id = ? ORDER BY (deadline IS NULL), deadline, id LIMIT 100').all(ctx.user.id)
+          .filter(c => f === 'all' || (f === 'overdue' ? pl.isOverdue(c) : f === 'i_owe' || f === 'owed_to_me' ? c.direction === f && !TERMINAL.includes(c.status) : !TERMINAL.includes(c.status)));
+        return { commitments: rows.slice(0, 20).map(c => ({ id: c.id, title: c.title, direction: c.direction, counterparty: c.counterparty, deadline: c.deadline, status: c.status, overdue: pl.isOverdue(c) })) }; },
+      summarize: o => o.commitments.length ? o.commitments.length + (o.commitments.length === 1 ? ' commitment: ' : ' commitments: ') + o.commitments.map(c => '#' + c.id + ' ' + c.title + ' (' + (c.direction === 'owed_to_me' ? 'owed to you' : 'you owe') + (c.counterparty ? ', ' + c.counterparty : '') + ', ' + LABEL[c.status] + (c.deadline ? ', due ' + c.deadline : '') + (c.overdue ? ', OVERDUE' : '') + ')').join('; ') + '.' : 'No matching commitments.' });
+
+    register({ name: 'commitments.confirm', risk: 'write', description: 'The owner confirms a submitted commitment is really done (recorded as self-reported evidence, not independent proof).', schema: { type: 'object', required: ['id'], properties: { id: { type: 'integer', minimum: 1 }, note: { type: 'string', maxLength: 300 } } },
+      preview: (ctx, i) => { const c = own(ctx.user.id, i.id); return { action: 'Confirm a commitment is done', target: 'ProofLoop', changes: [c ? 'Commitment #' + c.id + ' "' + c.title + '": ' + LABEL[c.status] + ' → Verified → Completed' + (c.task_id ? ' (and task #' + c.task_id + ' marked done)' : '') : 'Commitment #' + i.id + ' (not found)'], consequences: 'Your confirmation is recorded as evidence. It is marked self-reported: NOVA did not independently check the real-world result.', undoable: false, undoNote: 'This cannot be undone: a completed commitment is finished.' }; },
+      run: (ctx, i) => { const c = mine(ctx.user.id, i.id);
+        if (!['submitted', 'awaiting_confirmation'].includes(c.status)) throw new Error('Commitment #' + c.id + ' is ' + LABEL[c.status] + '. Only a Submitted or Awaiting Confirmation commitment can be confirmed.');
+        pl.addEvidence(ctx.user.id, c.id, { kind: 'verified', description: 'You confirmed it is done' + (i.note ? ': ' + i.note : '') + ' (self-reported: NOVA did not independently check it).', refType: 'self' });
+        pl.transition(ctx.user.id, c.id, 'verified', { note: 'You confirmed it.', actor: 'you' }); pl.transition(ctx.user.id, c.id, 'completed', { note: 'Verified, so closed.', actor: 'nova' });
+        if (c.task_id) db.prepare("UPDATE tasks SET status = 'done', completed_at = ? WHERE id = ? AND user_id = ? AND status = 'open' AND deleted_at IS NULL").run(ctx.now(), c.task_id, ctx.user.id);
+        return { id: c.id, title: c.title }; },
+      verify: (ctx, i, o) => { const c = own(ctx.user.id, o.id); return c && c.status === 'completed' ? { ok: true, evidence: 'Read back from ProofLoop: commitment #' + c.id + ' is Completed (verified by your confirmation, not independently).' } : { ok: false, evidence: 'The commitment is not completed after the update.' }; },
+      summarize: o => 'Marked "' + o.title + '" as done, on your confirmation.' });
+  }
 
   return {
     register, get: n => tools.get(n), has: n => tools.has(n), list: () => [...tools.values()],

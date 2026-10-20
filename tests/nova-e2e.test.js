@@ -56,7 +56,7 @@ test('13 NOVA pages: working ones are real, the rest are clearly labelled Upcomi
   const nav = await page.$$eval('.nav a[data-view]', as => as.map(a => [a.getAttribute('data-view'), a.textContent.trim()]));
   const novaPages = ['dashboard', 'chat', 'voice', 'email', 'hub', 'proofloop', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security'];
   for (const v of novaPages) assert.ok(nav.some(n => n[0] === v), 'nav has ' + v);
-  const live = ['dashboard', 'chat', 'voice', 'hub', 'identity', 'memory', 'usage', 'connections', 'security'], upcoming = ['email', 'proofloop', 'automation', 'knowledge'];
+  const live = ['dashboard', 'chat', 'voice', 'hub', 'proofloop', 'identity', 'memory', 'usage', 'connections', 'security'], upcoming = ['email', 'automation', 'knowledge'];
   for (const v of novaPages) {
     await page.evaluate(h => { location.hash = h; }, v); await page.waitForTimeout(250);
     const t = await page.innerText('main');

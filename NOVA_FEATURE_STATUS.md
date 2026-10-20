@@ -1,6 +1,6 @@
 # NOVA Feature Status
 
-Honest status after **Phase 2**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
+Honest status after **Milestone 1 (local model) and Milestone 2 (ProofLoop)**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
 
 | Feature | Status | Notes |
 |---|---|---|
@@ -26,6 +26,14 @@ Honest status after **Phase 2**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT U
 | Automatic data-retention schedule, backup automation | NOT IMPLEMENTED | Manual export and deletion exist; backup guidance is in ARCHITECTURE.md. |
 | Voice requests reach NOVA (typed path) | WORKING AND TESTED | Task, note, forget and memory-search phrases, and anything the Classic tools do not know, go to the server; changes show an approval request. In server mode these phrases no longer edit the browser-only NOVA tasks. |
 | Voice: real microphone speech recognition | IMPLEMENTED BUT UNVERIFIED | Browser Web Speech engine; no real-microphone test; accuracy unmeasured. Editing transcript and language choice: NOT IMPLEMENTED (Phase 5). |
+| ProofLoop state machine (11 states, validated transitions) | WORKING AND TESTED | Every one of the 2 x 11 x 11 from/to pairs is tested; owed-to-me commitments may start "waiting for them" early. |
+| ProofLoop evidence rules | WORKING AND TESTED | A draft is not an action; submitted/acknowledged are not proof; Verified needs verified evidence; Completed needs Verified; closing needs a reason. |
+| Verification checks (task, note, memory exist; task done; self-confirmation) | WORKING AND TESTED | Real stored state, scoped to the user. Self-confirmation is recorded as NOT independent. **Calendar, e-mail and file checks: NOT IMPLEMENTED** (those connectors do not exist yet). |
+| Agent runs create and advance commitments (task with a deadline, owed-to-me, I-promised, confirm) | WORKING AND TESTED | Reject, cancel, expiry, undo, tool failure and failed verification each end the commitment honestly; "created" is Awaiting Confirmation, never "done". |
+| Mission Control page, Dashboard panel, evidence chain, filters, manual add / move / evidence | WORKING AND TESTED | Browser tests incl. refusal to verify without proof, layout at 3 widths, axe, keyboard. |
+| Proof receipts (Markdown download, printable HTML) | WORKING AND TESTED | State exactly what the evidence does and does not prove; hostile text is escaped. |
+| ProofLoop demo mode (9 labelled fictional scenarios, Reset, Remove) | DEMO ONLY | Fictional data, but it runs through the real machine and database. |
+| Follow-up dates on commitments | IMPLEMENTED BUT UNVERIFIED | Stored (day before the deadline; +3 days for things owed to you). Nothing acts on them until the scheduler (Milestone 4). |
 | Tool registry with JSON-schema validation (10 tools: tasks, notes, memory, time) | WORKING AND TESTED | Unknown tools and invalid input are refused; the model sees only these tools. |
 | Permissions and risk levels (read / write / destructive / external) | WORKING AND TESTED | Writes ask first unless you turn on auto-approve; destructive and external tools always ask (tested with a stand-in external tool). |
 | Human approvals with Future Preview (action, reason, target, what changes, consequences, undoable?) and Approve / Reject / Edit / Cancel | WORKING AND TESTED | Backend verifies owner, state, expiry and edits; double approval never runs twice. |
@@ -37,12 +45,10 @@ Honest status after **Phase 2**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT U
 | Local model provider (Ollama, free): tool calling, clarifying questions, setup/health status, reply badge | REQUIRES CONFIGURATION | Needs Ollama on your machine. Tested end to end against a stand-in Ollama server (call parsing incl. JSON-in-text, malformed arguments, timeout, offline, cancel, injection, request shape, status). **Real-model accuracy is UNVERIFIED** until you run `node scripts/eval-nlu.js --provider ollama`. |
 | NLU eval set (65 phrasings, 11 categories incl. typos, Arabic-English mix, ambiguous, injection) and scorer | WORKING AND TESTED | Keyword-only baseline measured at 23% (15/65); an oracle stand-in scores 100% (harness check only, not a model accuracy claim). |
 | Model planner (Claude tool calling) | REQUIRES CONFIGURATION | Tested end to end with a stand-in client: one tool call at a time, results returned as untrusted data, no forced tool choice, usage and estimated cost per call, injection attempt cannot skip approval. Never run against the real API (paid).
-| ProofLoop (state machine, evidence, commitments) | NOT IMPLEMENTED | Phase 3. The Dashboard shows an Upcoming panel only. |
 | Gmail, email classification, deadlines, drafts | NOT IMPLEMENTED | Phase 4 |
 | Outlook / Microsoft Graph on the server | NOT IMPLEMENTED | Phase 6. Browser-side Outlook calendar from NOVA still exists (IMPLEMENTED BUT UNVERIFIED). |
 | Automation engine, scheduler, daily briefing | NOT IMPLEMENTED | Phase 5 |
 | Mission Autopilot, Skill Studio, Commitment Radar, LifeGraph, Screen Vision | NOT IMPLEMENTED | Phase 6 |
-| Demo mode with NOVA scenarios | NOT IMPLEMENTED | Phase 3 onward. NOVA sample data remains. |
 | Tasks, notes, calendar (browser), jobs, applications, growth, NOVA voice commands | WORKING AND TESTED | Unchanged; 144 earlier tests still pass. Data is in the browser, not the NOVA database yet. |
 | Job collector (GitHub Action), ntfy alerts, Smart mode | REQUIRES CONFIGURATION | As before: fixture-tested, never run against the live internet. |
 | CI running the tests | NOT IMPLEMENTED |  |

@@ -45,7 +45,9 @@ test('dashboard: tabs, counts, cards with source + dates, nothing invented', asy
   const first = page.locator('.match-card').first();
   assert.match(await first.innerText(), /Example Co \(Greenhouse\).*last seen 15 Oct/s);
   assert.equal(await first.locator('a:has-text("View")').getAttribute('href'), 'https://example.com/jobs/1');
+  await page.waitForTimeout(1200);                                  // the page re-draws once when the start-up job check finishes; open the list after that
   await page.click('details.quiet summary');
+  await page.waitForFunction(() => document.querySelector('details.quiet').open && /Broken Board: HTTP 404/.test(document.querySelector('details.quiet').innerText));
   assert.match(await page.innerText('details.quiet'), /Broken Board: HTTP 404/);
   // skills gap summary
   assert.match(text, /Learning Tableau would open 2 more jobs/);

@@ -14,6 +14,9 @@ const { createClaude } = require('./ai/claude');
 const { createOllama } = require('./ai/ollama');
 const { createRegistry } = require('./agent/tools');
 const { createAgent } = require('./agent/agent');
+const { createProofLoop } = require('./proofloop/machine');
+const { createAdapters } = require('./proofloop/verify');
+const { createProofLoopApi } = require('./proofloop/api');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -29,13 +32,15 @@ function createApp(over, deps) {
   const auth = createAuth(cfg, db);
   const memory = createMemory(db, now);
   const provider = deps.provider || (cfg.ai.provider === 'claude' ? createClaude(cfg, deps) : cfg.ai.provider === 'ollama' ? createOllama(cfg, deps) : { name: 'none', kind: 'none', model: null, available: () => false });
-  const registry = deps.registry || createRegistry({ db, memory });
-  const agent = createAgent(cfg, db, registry, provider);
+  const pl = createProofLoop(db, now), adapters = createAdapters(db);
+  const registry = deps.registry || createRegistry({ db, memory, pl });
+  const agent = createAgent(cfg, db, registry, provider, pl);
+  const plApi = createProofLoopApi(cfg, db, pl, adapters);
   const chat = createChat(cfg, db, memory, provider, agent);
   const router = new Router();
   const hdr = securityHeaders(cfg);
 
-  auth.register(router); memory.register(router); chat.register(router); agent.register(router);
+  auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
 
   router.get('/api/profile', ctx => ({ status: 200, body: { user: auth.publicUser(ctx.auth.user) } }));
   router.patch('/api/profile', ctx => {
@@ -67,7 +72,7 @@ function createApp(over, deps) {
     try {
       db.prepare('DELETE FROM memories WHERE user_id = ?').run(id);
       if (scope === 'all') {
-        for (const t of ['tool_executions', 'approvals', 'run_steps', 'runs', 'tasks', 'notes', 'messages', 'conversations', 'activity', 'usage_ledger', 'sessions']) db.prepare('DELETE FROM ' + t + ' WHERE user_id = ?').run(id);
+        for (const t of ['evidence', 'commitment_events', 'commitments', 'tool_executions', 'approvals', 'run_steps', 'runs', 'tasks', 'notes', 'messages', 'conversations', 'activity', 'usage_ledger', 'sessions']) db.prepare('DELETE FROM ' + t + ' WHERE user_id = ?').run(id);
         db.prepare('DELETE FROM users WHERE id = ?').run(id);
       }
       db.exec('COMMIT');
@@ -127,7 +132,7 @@ function createApp(over, deps) {
   const server = http.createServer((req, res) => { onRequest(req, res); });
   const sweeper = setInterval(() => { limiter.sweep(); db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(now()); }, 10 * 60e3); sweeper.unref();
   return {
-    cfg, db, server, memory, provider, registry, agent,
+    cfg, db, server, memory, provider, registry, agent, pl,
     listen() { return new Promise(r => server.listen(cfg.port, cfg.host, () => r(server.address().port))); },
     close() { clearInterval(sweeper); return new Promise(r => server.close(() => { try { db.close(); } catch (e) { /* closed */ } r(); })); }
   };

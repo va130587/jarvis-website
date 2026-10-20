@@ -78,7 +78,7 @@
     book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>', cost: '<path d="M4 19h16"/><path d="M7 16V9M12 16V5M17 16v-4"/>', plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', tool: '<circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.4"/>'
   };
-  var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail', 'Upcoming'], ['hub', 'Tasks and Calendar', 'cal'], ['proofloop', 'ProofLoop', 'loop', 'Upcoming'],
+  var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail', 'Upcoming'], ['hub', 'Tasks and Calendar', 'cal'], ['proofloop', 'ProofLoop', 'loop'],
     ['automation', 'Automation Centre', 'auto', 'Upcoming'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book', 'Upcoming'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock']];
   var TOOLS_NAV = [['today', 'Today', 'tool'], ['tasks', 'Tasks', 'tool'], ['calendar', 'Calendar', 'cal'], ['notes', 'Notes', 'book'], ['matches', 'Jobs for you', 'tool'], ['jobs', 'Job finder', 'tool'], ['applications', 'Applications', 'tool'], ['growth', 'Growth', 'cost'], ['review', 'Weekly review', 'cost'], ['profile', 'Job profile', 'id'], ['settings', 'Tool settings', 'tool'], ['help', 'Voice commands', 'mic']];
   function link(v, label, ic, badge) { return '<a href="#' + v + '" data-view="' + v + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (IC[ic] || IC.tool) + '</svg><span>' + esc(label) + '</span>' + (badge ? '<em class="count soon" aria-hidden="true">Soon</em><span class="sr-only"> (upcoming, not built yet)</span>' : '') + '</a>'; }
@@ -126,14 +126,13 @@
         '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'memories and actions' : 'nothing pending', proposed ? 'gold' : '') +
         tile('Replies without AI', rules, 'free rule-based, this month') + tile('Replies from a model', N.session && N.session.aiProvider !== 'local' ? model : 'off', N.session && N.session.aiProvider !== 'local' ? (N.session.aiProvider === 'ollama' ? 'local model, free' : 'this month') : 'no AI model configured') + '</div>' +
         (ap && ap.length ? '<article class="panel gold" id="approvalsPanel"><h2 class="label">Waiting for your approval <span class="n">' + ap.length + '</span></h2>' + ap.map(function (x) { return previewCard({ id: x.runId, pendingApproval: x }); }).join('') + '</article>' : '') +
-        '<div class="grid-2"><article class="panel upcoming"><p class="tag gold">Upcoming: Phase 3</p><h2 class="label">ProofLoop</h2><p class="muted">ProofLoop will track every commitment from request to verified result and never treat a draft or a "sent" response as proof. It is not built yet, so there are no commitments to show.</p>' +
-          '<ol class="loop-states">' + ['Request Detected', 'Request Understood', 'Task Prepared', 'Awaiting Approval', 'Executing', 'Submitted', 'Awaiting Confirmation', 'Verified', 'Completed'].map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></article>' +
+        '<div class="grid-2">' + plPanel() +
         '<article class="panel"><div class="panel-head"><h2 class="label">Recent activity (real)</h2><a class="btn small ghost" href="#chat">Chat</a></div>' +
           (a && a.activity.length ? '<ul class="mini-list">' + a.activity.slice(0, 5).map(function (x) { return '<li><span class="when">' + esc(ago(x.at)) + '</span><span class="what">' + esc(x.request) + '<small>' + esc(x.operation.replace(/_/g, ' ')) + ' · ' + esc(x.handler === 'rules' ? 'built-in rule' : x.handler) + ' · ' + esc(x.status.replace(/_/g, ' ')) + '</small></span></li>'; }).join('') + '</ul>' : J.empty(a ? 'No activity yet. Ask NOVA something in Chat.' : 'Loading…')) + '</article></div>' +
-        '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> sign-in, memories you approve, chat with built-in rules, tasks and notes that NOVA can create after you approve (with Undo where possible), activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Upcoming:</b> email, ProofLoop, automations, voice conversations with NOVA, knowledge base.</li></ul></article>' +
+        '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> ProofLoop commitments with evidence and receipts, sign-in, memories you approve, chat with built-in rules, tasks and notes that NOVA can create after you approve (with Undo where possible), activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Upcoming:</b> email, automations, a knowledge base.</li></ul></article>' +
         (convs ? '' : '');
     },
-    after: function () { stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals']]); }
+    after: function () { stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals'], ['pl', '/api/proofloop/summary']]); }
   };
 
   /* ---- chat ---- */
@@ -247,7 +246,80 @@
     }
   };
   S.email = { render: function () { return J.head('Inbox', 'Smart Email', 'Not built yet.', '') + soon('Phase 4', 'Gmail intelligence', ['Read-only Gmail connection (official Google sign-in)', 'Priority: Critical, Important, Normal, Low Priority, Needs Review, always with a reason', 'Deadlines and requests found in messages, with a link to the original', 'Reply drafts you review and edit. Nothing is sent without separate permission and your approval']); } };
-  S.proofloop = { render: function () { return J.head('Signature feature', 'ProofLoop Mission Control', 'Not built yet.', '') + soon('Phase 3', 'Commitments tracked to a verified result', ['A saved state machine: Request Detected → … → Verified → Completed, plus Failed and Cancelled', 'Evidence for every step: a draft is not a sent email, and "sent" is not proof of delivery', 'What you owe, what is owed to you, what is overdue, what is awaiting confirmation']); } };
+  /* ---- ProofLoop ---- */
+  var PL_LANES = [['Needs your attention', function (c) { return c.overdue || c.status === 'awaiting_approval'; }], ['In progress', function (c) { return ['request_detected', 'request_understood', 'task_prepared', 'executing'].indexOf(c.status) >= 0; }],
+    ['Submitted, waiting for confirmation', function (c) { return c.status === 'submitted' || c.status === 'awaiting_confirmation'; }], ['Verified and completed', function (c) { return c.status === 'verified' || c.status === 'completed'; }], ['Failed or cancelled', function (c) { return c.status === 'failed' || c.status === 'cancelled'; }]];
+  function plTile(label, n, note, tone) { return tile(label, n, note, tone); }
+  function plPanel() {
+    var s = N.cache.pl;
+    if (!s) return '<article class="panel" id="plPanel"><h2 class="label">ProofLoop</h2>' + J.empty('Loading…') + '</article>';
+    return '<article class="panel" id="plPanel"><div class="panel-head"><h2 class="label">ProofLoop: request to verified result</h2><a class="btn small" href="#proofloop">Mission Control</a></div>' +
+      '<p class="small-text muted" style="margin:0 0 10px"><b class="gold-text">' + s.iOwe + '</b> you owe · <b class="gold-text">' + s.owedToMe + '</b> owed to you · <b class="' + (s.overdue ? 'red-text' : 'gold-text') + '">' + s.overdue + '</b> overdue · <b class="gold-text">' + s.awaitingConfirmation + '</b> awaiting confirmation · <b class="gold-text">' + s.verified + '</b> verified</p>' +
+      (s.attention.length ? '<ul class="mini-list">' + s.attention.slice(0, 4).map(function (c) { return '<li><span class="when">' + esc(c.deadline || 'no date') + '</span><span class="what">' + esc(c.title) + (c.isDemo ? ' <span class="tag sample">Demo</span>' : '') + '<small>' + esc(c.statusLabel) + (c.overdue ? ' · OVERDUE' : '') + ' · ' + (c.direction === 'owed_to_me' ? 'owed to you' : 'you owe') + '</small></span></li>'; }).join('') + '</ul>' : J.empty(s.total ? 'Nothing needs attention.' : 'No commitments yet. Say <q>remind me to send the proposal by Friday</q> in Chat, or load the demo scenarios in Mission Control.')) + '</article>';
+  }
+  function plCard(c) {
+    return '<li class="item' + (c.overdue ? ' late' : '') + '"><div class="item-main"><p class="item-title">' + esc(c.title) + '</p><p class="item-meta"><span class="tag ' + (c.status === 'failed' ? 'red' : c.status === 'verified' || c.status === 'completed' ? '' : 'gold') + '">' + esc(c.statusLabel) + '</span>' + J.tag(c.direction === 'owed_to_me' ? 'Owed to me' : 'I owe', 'dim') +
+      (c.counterparty ? '<span>' + esc(c.counterparty) + '</span>' : '') + (c.deadline ? '<span>due ' + esc(c.deadline) + '</span>' : '') + (c.overdue ? J.tag('Overdue', 'red') : '') + (c.isDemo ? J.tag('Demo', 'sample') : '') + '</p></div>' +
+      '<div class="item-actions"><button type="button" class="btn small" data-act="plOpen" data-id="' + c.id + '">Open</button></div></li>';
+  }
+  S.proofloop = {
+    render: function () {
+      var s = N.cache.pl, d = N.cache.commitments, f = N.plFilter || 'all';
+      var list = d ? d.commitments.filter(function (c) { return f === 'all' || (f === 'overdue' ? c.overdue : f === 'i_owe' || f === 'owed_to_me' ? c.direction === f && ['completed', 'failed', 'cancelled'].indexOf(c.status) < 0 : c.status === f); }) : [];
+      var seen = {};   // each commitment sits in exactly one lane (the first that fits)
+      var chips = [['all', 'All'], ['i_owe', 'I owe'], ['owed_to_me', 'Owed to me'], ['overdue', 'Overdue'], ['awaiting_approval', 'Awaiting approval'], ['awaiting_confirmation', 'Awaiting confirmation'], ['verified', 'Verified']];
+      return J.head('Signature feature', 'ProofLoop Mission Control', 'Every commitment, tracked from request to verified result. A draft is not sent, "sent" is not delivered, and nothing is Verified without evidence.', '<button type="button" class="btn primary" data-act="plAdd">Add a commitment</button>') +
+        (s ? '<div class="stats">' + plTile('I owe', s.iOwe, 'open') + plTile('Owed to me', s.owedToMe, 'open') + plTile('Awaiting approval', s.awaitingApproval, 'needs you', s.awaitingApproval ? 'gold' : '') + plTile('Overdue', s.overdue, 'past deadline', s.overdue ? 'red' : '') + plTile('Awaiting confirmation', s.awaitingConfirmation, 'not verified yet') + plTile('Verified', s.verified, 'with evidence') + '</div>' : J.empty('Loading…')) +
+        (s && s.demo ? '<article class="panel gold"><p style="margin:0"><span class="tag sample">Demo</span> <b>' + s.demo + ' fictional demo commitments are showing.</b> They use the real state machine and evidence rules, so you can try every state. <span class="btn-row" style="display:inline-flex;margin-left:8px"><button type="button" class="btn small" data-act="plDemoReset">Reset demo</button><button type="button" class="btn small ghost" data-act="plDemoRemove">Remove demo data</button></span></p></article>'
+          : s && !s.total ? '<article class="panel"><p style="margin:0">No commitments yet. Say <q>remind me to send the proposal to the client by Friday</q> in <a href="#chat">Chat</a>, add one here, or <button type="button" class="btn small" data-act="plDemoLoad">load 9 demo scenarios</button> (fictional, clearly labelled).</p></article>' : s && !s.demo ? '<p class="small-text muted"><button type="button" class="btn small ghost" data-act="plDemoLoad">Load demo scenarios</button> (fictional examples you can remove again)</p>' : '') +
+        '<div class="tabs" role="group" aria-label="Filter commitments">' + chips.map(function (c) { return '<button type="button" class="tab" data-act="plFilter" data-id="' + c[0] + '" aria-pressed="' + (f === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' +
+        (!d ? J.empty('Loading…') : PL_LANES.map(function (l) { var rows = list.filter(function (c) { return !seen[c.id] && l[1](c); }); rows.forEach(function (c) { seen[c.id] = 1; }); return rows.length ? '<article class="panel"><h2 class="label">' + esc(l[0]) + ' <span class="n">' + rows.length + '</span></h2><ul class="items">' + rows.map(plCard).join('') + '</ul></article>' : ''; }).join('') || J.empty('Nothing matches this filter.'));
+    },
+    after: function () { stale('proofloop', [['pl', '/api/proofloop/summary'], ['commitments', '/api/commitments']]); }
+  };
+  function plReload(openId) {
+    return Promise.all([load('pl', '/api/proofloop/summary'), load('commitments', '/api/commitments')]).then(function () { N.cache.approvals = null; J.render(false); if (openId) plDetail(openId); });
+  }
+  var EVIDENCE_LABEL = { draft: 'Draft (not an action)', submitted: 'Submitted (an action was taken)', acknowledged: 'Acknowledged (not acceptance)', verified: 'Verified (proof the outcome holds)', note: 'Note' };
+  function plDetail(id) {
+    api('GET', '/api/commitments/' + id).then(function (r) {
+      var c = r.commitment;
+      var html = '<div class="why"><p class="verdict ' + (c.status === 'failed' ? 'red' : c.status === 'verified' || c.status === 'completed' ? '' : 'gold') + '"><b>' + esc(c.statusLabel) + '.</b> ' + esc(c.reason || '') + (c.overdue ? ' <b>OVERDUE.</b>' : '') + (c.isDemo ? ' <span class="tag sample">Demo (fictional)</span>' : '') + '</p>' +
+        '<p class="mono small-text muted">' + (c.direction === 'owed_to_me' ? 'Owed to me' : 'I owe') + (c.counterparty ? ' · ' + esc(c.counterparty) : '') + ' · due ' + esc(c.deadline || 'no date') + (c.followUpAt ? ' · follow up ' + esc(c.followUpAt) : '') + ' · source: ' + esc(c.source.type) + (c.source.ref ? ' (' + esc(c.source.ref) + ')' : '') + '</p>' +
+        (c.next.length ? '<h3>Move it forward</h3><div class="btn-row">' + c.next.map(function (n) { return '<button type="button" class="btn small' + (n.to === 'failed' || n.to === 'cancelled' ? ' ghost' : '') + '" data-act="plMove" data-id="' + c.id + '" data-to="' + n.to + '">' + esc(n.label) + '</button>'; }).join('') + '</div><p class="small-text muted">NOVA refuses moves the evidence does not support, and tells you why.</p>' : '<p class="small-text muted">This commitment is finished.</p>') +
+        '<h3>Evidence chain</h3>' + (c.evidence.length ? '<ul class="why-list">' + c.evidence.map(function (e) { return '<li class="' + (e.kind === 'verified' ? 'yes' : 'no') + '"><b>' + esc(EVIDENCE_LABEL[e.kind] || e.kind) + '</b>' + (e.kind === 'verified' ? (e.independent ? ' · independent check' : ' · self-reported') : '') + ': ' + esc(e.description) + ' <span class="muted small-text">' + esc(when(e.at)) + '</span></li>'; }).join('') + '</ul>' : '<p class="muted small-text">No evidence yet.</p>') +
+        '<div id="plEvForm" class="field-row"><div class="field"><label for="plEvKind">Add evidence</label><select id="plEvKind"><option value="draft">Draft (not an action)</option><option value="submitted">Submitted (an action was taken)</option><option value="acknowledged">Acknowledged (not acceptance)</option><option value="verified">Verified: I confirm it is done</option><option value="note">Note</option></select></div>' +
+          '<div class="field"><label for="plEvText">What happened?</label><input id="plEvText" type="text" maxlength="500"></div><button type="button" class="btn small" data-act="plAddEvidence" data-id="' + c.id + '">Add</button></div>' +
+        '<h3>Timeline</h3><ol class="plain small-text">' + c.events.map(function (e) { return '<li><b>' + esc(e.toLabel) + '</b> · ' + esc(e.actor) + ' · ' + esc(when(e.at)) + (e.note ? ' · ' + esc(e.note) : '') + '</li>'; }).join('') + '</ol>' +
+        (c.executions.length ? '<h3>Tool runs</h3><ul class="plain small-text">' + c.executions.map(function (e) { return '<li>#' + e.id + ' ' + esc(e.tool) + ' · ' + esc(e.status) + (e.evidence ? ' · ' + esc(e.evidence) : '') + (e.error ? ' · ' + esc(e.error) : '') + '</li>'; }).join('') + '</ul>' : '') +
+        (c.approvals.length ? '<h3>Approvals</h3><ul class="plain small-text">' + c.approvals.map(function (a) { return '<li>#' + a.id + ' ' + esc(a.tool) + ' · ' + esc(a.status) + '</li>'; }).join('') + '</ul>' : '') +
+        '<div class="btn-row"><button type="button" class="btn primary" data-act="plReceipt" data-id="' + c.id + '">Export proof receipt (Markdown)</button><a class="btn" href="/api/commitments/' + c.id + '/receipt?format=html" target="_blank" rel="noopener">Printable receipt</a></div></div>';
+      J.openForm({ title: c.title, submit: 'Close', hideCancel: true, noFocus: true, fields: [{ type: 'html', html: html }], onSave: function () {},
+        after: function (root) { var t = root.querySelector('#plEvText'); if (t) t.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); root.querySelector('[data-act="plAddEvidence"]').click(); } }); } });
+    }).catch(fail);
+  }
+  Object.assign(J.actions, {
+    plOpen: function (id) { plDetail(id); },
+    plAddEvidence: function (id) {
+      var kind = $('#plEvKind').value, text = $('#plEvText').value.trim();
+      if (!text) { J.toast('Describe what happened first.'); $('#plEvText').focus(); return; }
+      api('POST', '/api/commitments/' + id + '/evidence', { kind: kind, description: text, refType: kind === 'verified' ? 'self' : undefined }).then(function () { J.closeForm(); J.toast('Evidence added.'); return plReload(id); }).catch(fail);
+    },
+    plFilter: function (id) { N.plFilter = id; J.render(false); },
+    plMove: function (id, el) {
+      var to = el.getAttribute('data-to');
+      if (to === 'failed' || to === 'cancelled') { J.closeForm(); setTimeout(function () { J.openForm({ title: 'Why is it ' + (to === 'failed' ? 'failed' : 'cancelled') + '?', submit: 'Save', fields: [{ name: 'note', label: 'Reason (required)', required: true }], onSave: function (v) { api('POST', '/api/commitments/' + id + '/transition', { to: to, note: v.note }).then(function () { return plReload(id); }).catch(function (e) { fail(e); plDetail(id); }); } }); }, 60); return; }
+      api('POST', '/api/commitments/' + id + '/transition', { to: to, note: '' }).then(function () { J.closeForm(); return plReload(id); }).catch(fail);
+    },
+    plAdd: function () {
+      J.openForm({ title: 'Add a commitment', fields: [{ name: 'title', label: 'What is it?', required: true, placeholder: 'Send the updated proposal' }, { name: 'direction', label: 'Who owes it?', type: 'select', value: 'i_owe', options: [['i_owe', 'I owe it'], ['owed_to_me', 'Someone owes it to me']] }, { name: 'counterparty', label: 'Who with? (optional)', half: true }, { name: 'deadline', label: 'Deadline (YYYY-MM-DD, optional)', half: true }],
+        onSave: function (v) { var o = { title: v.title, direction: v.direction }; if (v.counterparty) o.counterparty = v.counterparty; if (v.deadline) o.deadline = v.deadline; api('POST', '/api/commitments', o).then(function (r) { J.toast('Commitment added.'); return plReload(r.commitment.id); }).catch(fail); } });
+    },
+    plReceipt: function (id) { fetch('/api/commitments/' + id + '/receipt?format=md', { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw new Error('Could not create the receipt.'); return r.text(); }).then(function (t) { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/markdown' })); a.download = 'proof-receipt-' + id + '.md'; document.body.appendChild(a); a.click(); a.remove(); J.toast('Receipt downloaded.'); }).catch(fail); },
+    plDemoLoad: function () { api('POST', '/api/demo/load', {}).then(function (r) { J.toast(r.created ? '9 demo scenarios loaded (fictional).' : 'Demo data is already loaded.'); return plReload(); }).catch(fail); },
+    plDemoReset: function () { api('POST', '/api/demo/reset', {}).then(function () { J.toast('Demo reset.'); return plReload(); }).catch(fail); },
+    plDemoRemove: function () { J.confirm('Remove all demo (fictional) commitments? Your real ones stay.', 'Remove demo data', 'Remove demo data?').then(function (ok) { if (ok) api('POST', '/api/demo/reset', { reload: false }).then(function () { J.toast('Demo data removed.'); return plReload(); }).catch(fail); }); }
+  });
   S.automation = { render: function () { return J.head('Automation', 'Automation Centre', 'Not built yet.', '') + soon('Phase 5', 'Scheduled work that runs with the browser closed', ['Daily briefing, deadline reminders, pending-reply reminders, follow-ups', 'Run now, enable, disable, history, next run, retries without duplicates']) + '<article class="panel"><h2 class="label">Running today (separate from NOVA)</h2><p class="small-text muted">The GitHub Action that collects jobs every 6 hours is the only scheduled automation. See Connected Apps.</p></article>'; } };
   S.knowledge = { render: function () { return J.head('Knowledge', 'Knowledge Base', 'Not built yet.', '') + soon('Phase 6', 'Your documents and notes, searchable with sources', ['Add notes and files you choose', 'Answers cite the source passage']); } };
 

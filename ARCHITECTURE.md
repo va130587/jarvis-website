@@ -1,6 +1,6 @@
 # NOVA Architecture
 
-Status after **Phase 2 (agent layer)**. Sections marked *(planned)* describe later phases and are **not built yet**.
+Status after **Phase 2 (agent layer), Milestone 1 (free local model) and Milestone 2 (ProofLoop)**. Sections marked *(planned)* describe later phases and are **not built yet**.
 
 ## 1. System diagram
 
@@ -28,7 +28,7 @@ Status after **Phase 2 (agent layer)**. Sections marked *(planned)* describe lat
                  │
           .nova/nova.db  (SQLite file, git-ignored)
 ```
-*(planned)* ProofLoop engine (Phase 3), Gmail/Graph connectors (Phases 4 and 6), scheduler/worker (Phase 5).
+*(planned)*  Gmail/Graph connectors (Phases 4 and 6), scheduler/worker (Phase 5).
 
 Two ways to run the same front end:
 - **NOVA server mode** (`node server/index.js`): sign-in, database, API. The front end detects `/api/session` and switches on the NOVA pages.
@@ -83,9 +83,21 @@ POST /api/chat
 
 All foreign keys cascade on user deletion. *(planned)* `commitments`, `evidence`, `connectors`, `jobs`, `skills`.
 
-## 5. ProofLoop state machine *(planned, Phase 3)*
+## 5. ProofLoop state machine (implemented)
 
-`Request Detected → Request Understood → Task Prepared → Awaiting Approval → Executing → Submitted → Awaiting Confirmation → Verified → Completed`, with `Failed` and `Cancelled` reachable from any non-terminal state. Transitions will be validated in one function and persisted with evidence. Rules: a draft is not a sent email; an API success is `Submitted`, not `Verified`; an acknowledgement is not proof of acceptance. The Dashboard shows this as an **Upcoming** panel until then.
+```
+Request Detected -> Request Understood -> Task Prepared -> Awaiting Approval -> Executing -> Submitted -> Awaiting Confirmation -> Verified -> Completed
+   (Task Prepared -> Executing when auto-approved; Submitted -> Verified when the evidence already proves it; Failed and Cancelled from any open state, with a reason;
+    for things OWED TO ME, Request Understood -> Awaiting Confirmation = "waiting for them")
+```
+One function (`server/proofloop/machine.js: transition`) decides every move and every move is logged in `commitment_events` (from, to, who, why, when). The honesty rules live there, not in the UI:
+- **a draft is not an action** - only `submitted` evidence allows Submitted;
+- **an API success or an acknowledgement is not proof** - only `verified` evidence allows Verified;
+- **nothing is Completed unless it was Verified**; Failed and Cancelled need a reason; finished commitments cannot move.
+
+Evidence kinds: draft, submitted, acknowledged, verified, note. A `verified` item is either checked against real stored state (`verify.js`: task / note / memory exists, task done) or is the owner's own confirmation, stored with `independent = false` and shown as "self-reported" everywhere (UI, receipt). The agent creates a commitment for a task with a deadline (and via `commitments.create` for things owed either way); after the task is created the commitment is **Awaiting Confirmation, not Verified**, because NOVA cannot see whether the real-world action happened. Proof receipts (`GET /api/commitments/:id/receipt`) list the timeline, evidence, tool runs and approvals and state what they do and do not prove.
+
+Tables: `commitments`, `commitment_events`, `evidence` (+ `commitment_id` on `tool_executions` and `approvals`). Demo scenarios (`demo.js`) use the same machine and are removable (`is_demo`).
 
 ## 6. Email integration *(planned, Phase 4)*, scheduling *(planned, Phase 5)*
 
@@ -105,7 +117,8 @@ Free rules answer common requests with zero tokens; only the top ≤5 relevant m
 
 ## 10. Known limitations
 
-- Claude replies are verified only against an injected stand-in client; a real call needs an API key and has not been run.
+- Claude replies are verified only against an injected stand-in client; a real call needs an API key and has not been run. The Ollama (local model) provider is verified only against a stand-in server; real-model accuracy is measured by `node scripts/eval-nlu.js --provider ollama` on your machine.
+- ProofLoop follow-up dates are stored but nothing acts on them until the scheduler exists; calendar/e-mail/file verification checks arrive with those connectors.
 - Real Google sign-in is verified only against a stand-in Google; it needs your Client ID and a person.
 - `node:sqlite` is marked experimental by Node; it is stable enough for one process but is a swap-able layer (`db.js`).
 - One server process, in-memory rate limits; no automatic data-retention schedule; no backup automation (copy `.nova/nova.db` while the server is stopped, or use `sqlite3 .backup`).
