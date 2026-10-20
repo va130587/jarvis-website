@@ -11,6 +11,7 @@ const { createAuth } = require('./auth');
 const { createMemory } = require('./memory');
 const { createChat } = require('./chat');
 const { createClaude } = require('./ai/claude');
+const { createOllama } = require('./ai/ollama');
 const { createRegistry } = require('./agent/tools');
 const { createAgent } = require('./agent/agent');
 
@@ -27,7 +28,7 @@ function createApp(over, deps) {
   const limiter = new RateLimiter(now);
   const auth = createAuth(cfg, db);
   const memory = createMemory(db, now);
-  const provider = deps.provider || (cfg.ai.provider === 'claude' ? createClaude(cfg, deps) : { name: 'none', model: null, available: () => false });
+  const provider = deps.provider || (cfg.ai.provider === 'claude' ? createClaude(cfg, deps) : cfg.ai.provider === 'ollama' ? createOllama(cfg, deps) : { name: 'none', kind: 'none', model: null, available: () => false });
   const registry = deps.registry || createRegistry({ db, memory });
   const agent = createAgent(cfg, db, registry, provider);
   const chat = createChat(cfg, db, memory, provider, agent);
@@ -73,6 +74,15 @@ function createApp(over, deps) {
     } catch (e) { db.exec('ROLLBACK'); throw e; }
     audit(db, now, scope === 'all' ? null : id, 'data_deleted', scope + ' (user ' + id + ')', ctx.req.socket.remoteAddress);
     return { status: 200, headers: scope === 'all' ? { 'Set-Cookie': require('./http').cookie(auth.COOKIE, '', { secure: cfg.secureCookies, maxAge: 0 }) } : {}, body: { ok: true, scope } };
+  });
+  router.get('/api/ai/status', async ctx => {
+    const p = provider, base = { provider: cfg.ai.provider, kind: p.kind || 'none', model: p.model || null };
+    if (cfg.ai.provider === 'ollama' && p.health) {
+      const h = await p.health();
+      return { status: 200, body: Object.assign(base, h, { url: cfg.ai.ollamaUrl, setup: ['Install Ollama from https://ollama.com (free).', 'Run: ollama serve (it often starts by itself).', 'Download the model once: ollama pull ' + cfg.ai.ollamaModel, 'Slow or low on memory? Use NOVA_OLLAMA_MODEL=qwen2.5:3b. Strong machine? qwen2.5:14b.'] }) };
+    }
+    if (cfg.ai.provider === 'claude') return { status: 200, body: Object.assign(base, { reachable: null, configured: p.available(), setup: ['Claude is a paid API. Set ANTHROPIC_API_KEY and NOVA_MONTHLY_LIMIT_USD on the server.'] }) };
+    return { status: 200, body: Object.assign(base, { reachable: null, setup: ['No model is connected. NOVA uses free built-in rules.', 'For natural-language understanding, install Ollama (free) and start NOVA with NOVA_AI_PROVIDER=ollama.'] }) };
   });
   router.get('/api/health', { public: true }, () => ({ status: 200, body: { ok: true, name: 'NOVA', time: now() } }));
 

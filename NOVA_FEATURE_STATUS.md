@@ -34,6 +34,8 @@ Honest status after **Phase 2**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT U
 | Limits, timeouts, safe retries, cancellation | WORKING AND TESTED | Step limit, run and tool timeouts, reads retried up to 3 times, changes never auto-retried, in-flight model call aborted on cancel. |
 | Run timeline and activity history in plain English | WORKING AND TESTED | Persisted steps per run; shown under each reply. |
 | Free rule planner for task, note and memory requests | WORKING AND TESTED | Same intent list is shared by server and browser. |
+| Local model provider (Ollama, free): tool calling, clarifying questions, setup/health status, reply badge | REQUIRES CONFIGURATION | Needs Ollama on your machine. Tested end to end against a stand-in Ollama server (call parsing incl. JSON-in-text, malformed arguments, timeout, offline, cancel, injection, request shape, status). **Real-model accuracy is UNVERIFIED** until you run `node scripts/eval-nlu.js --provider ollama`. |
+| NLU eval set (65 phrasings, 11 categories incl. typos, Arabic-English mix, ambiguous, injection) and scorer | WORKING AND TESTED | Keyword-only baseline measured at 23% (15/65); an oracle stand-in scores 100% (harness check only, not a model accuracy claim). |
 | Model planner (Claude tool calling) | REQUIRES CONFIGURATION | Tested end to end with a stand-in client: one tool call at a time, results returned as untrusted data, no forced tool choice, usage and estimated cost per call, injection attempt cannot skip approval. Never run against the real API (paid).
 | ProofLoop (state machine, evidence, commitments) | NOT IMPLEMENTED | Phase 3. The Dashboard shows an Upcoming panel only. |
 | Gmail, email classification, deadlines, drafts | NOT IMPLEMENTED | Phase 4 |

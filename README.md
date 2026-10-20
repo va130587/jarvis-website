@@ -19,7 +19,15 @@ Open http://127.0.0.1:8787, type the same e-mail, and you are in. `AUTH_MODE=dev
 
 **Real Google sign-in (free):** in Google Cloud Console create an OAuth client of type *Web application* with the redirect address `http://127.0.0.1:8787/auth/google/callback`, then start the server with `AUTH_MODE=google GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... OWNER_EMAILS=you@gmail.com`. See `.env.example` for every setting. Never put these values in a file that is committed.
 
-**AI answers are optional and paid.** By default NOVA uses free built-in rules (who am I, remember, list memories, time, help) and tells you honestly when a question needs an AI model. To connect Claude later, set `NOVA_AI_PROVIDER=claude`, `ANTHROPIC_API_KEY` and a spending cap `NOVA_MONTHLY_LIMIT_USD`, and run `npm install @anthropic-ai/sdk`. The Claude Code subscription you use to build NOVA and the Claude API key a running NOVA uses are billed separately.
+**Understand normal sentences with a free local model (Ollama).** Install Ollama from https://ollama.com, then:
+
+```
+ollama pull qwen2.5:7b          # once (use qwen2.5:3b on an 8 GB laptop, qwen2.5:14b on a strong one)
+NOVA_AI_PROVIDER=ollama OWNER_EMAILS=you@gmail.com AUTH_MODE=dev node server/index.js
+```
+NOVA tries its fixed rules first, then the local model with the approved tools. The model only proposes: tool calls are validated, changes ask your approval, and when it is unsure it asks you a short question instead of guessing. Every reply carries a badge (*built-in rule*, *local model* or *cloud*). Connected Apps shows whether Ollama is running and what is missing. To measure how well *your* model understands, run `node scripts/eval-nlu.js --provider ollama --min 0.8` (65 phrasings; add `--verbose` to see the misses). With keyword rules alone the same test scores 23%, which is the gap the model closes.
+
+**Cloud AI is optional and paid.** By default NOVA uses free built-in rules (who am I, remember, list memories, time, help) and tells you honestly when a question needs an AI model. To connect Claude later, set `NOVA_AI_PROVIDER=claude`, `ANTHROPIC_API_KEY` and a spending cap `NOVA_MONTHLY_LIMIT_USD`, and run `npm install @anthropic-ai/sdk`. The Claude Code subscription you use to build NOVA and the Claude API key a running NOVA uses are billed separately.
 
 **What works today:** sign-in and sessions, an agent that can create tasks and notes, complete or delete tasks and forget memories **only after you approve each change** (you see a preview first, NOVA re-reads the result to verify it, and most changes have Undo), the Memory Vault (you approve every memory; secrets are refused; sensitive details need confirmation), chat with plain-English "what NOVA did" steps, the NOVA orb, activity and usage pages, data export and deletion, voice requests that reach NOVA. In server mode, voice or typed phrases like "add a task to call HR by Friday" go to NOVA (server tasks, with approval) instead of the browser-only NOVA task list. **Upcoming and clearly labelled in the app:** Smart Email, ProofLoop, Automation Centre, Knowledge Base.
 

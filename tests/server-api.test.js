@@ -218,7 +218,7 @@ test('relevance retrieval: only matching memories are used, at most five, and no
   const r = (await c.post('/api/chat', { message: 'Help me plan the Atlas project milestone' })).json;
   assert.equal(r.handler, 'claude'); assert.equal(r.reply, 'Here is a plan.');
   const sys = calls[0].system.map(b => b.text).join('\n');
-  assert.equal((sys.match(/- \[fact\] Atlas project milestone/g) || []).length, 5);
+  assert.equal((sys.match(/- #\d+ \[fact\] Atlas project milestone/g) || []).length, 5);
   assert.doesNotMatch(sys, /football|Biscuit/);
   await c.post('/api/chat', { message: 'Tell me a joke' });
   assert.match(calls[1].system[1].text, /\(none\)/);

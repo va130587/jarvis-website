@@ -65,3 +65,5 @@ body.nova-server[data-group="nova"] #sampleBanner { display: none; }   /* the sa
 .preview .kv { margin: 0; } .preview .kv dd ul { margin: 0; padding-left: 18px; }
 .steps li.k-error { color: #ffb3b3; } .steps li.k-verified { color: var(--ok); } .steps li.k-approval_requested { color: var(--gold); }
 .item.done .item-title { text-decoration: line-through; opacity: .7; }
+.badge { margin-left: 6px; vertical-align: middle; text-transform: none; letter-spacing: .02em; }
+ol[aria-label="Setup checklist"] { margin: 6px 0 0; padding-left: 20px; }

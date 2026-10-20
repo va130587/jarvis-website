@@ -118,13 +118,13 @@
     render: function () {
       var m = N.cache.memories, u = N.cache.usage, a = N.cache.activity, convs = N.cache.conversations, ap = N.cache.approvals ? N.cache.approvals.approvals : null;
       var active = m ? m.memories.filter(function (x) { return x.status === 'active'; }).length : '…', proposed = (m ? m.memories.filter(function (x) { return x.status === 'proposed'; }).length : 0) + (ap ? ap.length : 0);
-      var rules = 0, model = 0; if (u) u.byHandler.forEach(function (h) { if (h.handler === 'rules') rules += h.calls; else if (h.handler === 'claude') model += h.calls; });
+      var rules = 0, model = 0; if (u) u.byHandler.forEach(function (h) { if (h.handler === 'rules') rules += h.calls; else if (h.handler === 'claude' || h.handler === 'local-model') model += h.calls; });
       return '<section class="hero nova-hero"><div class="core-stage">' + orb('big') + '</div><div>' +
         '<p class="eyebrow">' + esc(J.longDate ? J.longDate(J.today()) : '') + ' · Dubai</p><h1 class="greet">Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening') + ', ' + esc(name()) + '</h1>' +
         '<p class="lead">From Request to Verified Result.</p><p class="live" id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p>' +
         '<div class="btn-row"><a class="btn primary" href="#chat">Talk to NOVA</a><a class="btn" href="#memory">Memory Vault</a></div></div></section>' +
         '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'memories and actions' : 'nothing pending', proposed ? 'gold' : '') +
-        tile('Replies without AI', rules, 'free rule-based, this month') + tile('Replies from a model', N.session && N.session.aiProvider === 'claude' ? model : 'off', N.session && N.session.aiProvider === 'claude' ? 'this month' : 'no AI model configured') + '</div>' +
+        tile('Replies without AI', rules, 'free rule-based, this month') + tile('Replies from a model', N.session && N.session.aiProvider !== 'local' ? model : 'off', N.session && N.session.aiProvider !== 'local' ? (N.session.aiProvider === 'ollama' ? 'local model, free' : 'this month') : 'no AI model configured') + '</div>' +
         (ap && ap.length ? '<article class="panel gold" id="approvalsPanel"><h2 class="label">Waiting for your approval <span class="n">' + ap.length + '</span></h2>' + ap.map(function (x) { return previewCard({ id: x.runId, pendingApproval: x }); }).join('') + '</article>' : '') +
         '<div class="grid-2"><article class="panel upcoming"><p class="tag gold">Upcoming: Phase 3</p><h2 class="label">ProofLoop</h2><p class="muted">ProofLoop will track every commitment from request to verified result and never treat a draft or a "sent" response as proof. It is not built yet, so there are no commitments to show.</p>' +
           '<ol class="loop-states">' + ['Request Detected', 'Request Understood', 'Task Prepared', 'Awaiting Approval', 'Executing', 'Submitted', 'Awaiting Confirmation', 'Verified', 'Completed'].map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></article>' +
@@ -164,7 +164,7 @@
       var steps = run ? runBlock(m) : (m.steps && m.steps.length ? '<details class="steps"><summary>What NOVA did</summary><ol>' + m.steps.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol><p class="small-text muted">Handled by: ' + esc(m.handler === 'rules' ? 'a built-in rule (no AI)' : m.handler === 'claude' ? 'the AI model ' + (m.model || '') : m.handler === 'none' ? 'no AI model (none configured)' : m.handler) + (m.usage && (m.usage.input || m.usage.output) ? ' · ' + m.usage.input + ' in / ' + m.usage.output + ' out tokens' : '') + '</p></details>' : '');
       var prop = m.proposal && m.proposal.status === 'proposed' ? '<div class="proposal" role="group" aria-label="Memory waiting for your approval"><p><b>Waiting for your approval:</b> “' + esc(m.proposal.text) + '” <span class="tag dim">' + esc(m.proposal.kind) + '</span>' + (m.proposal.sensitive ? ' <span class="tag red">looks sensitive</span>' : '') + '</p><div class="btn-row"><button type="button" class="btn small primary" data-act="novaApprove" data-id="' + m.proposal.id + '">Save this memory</button><button type="button" class="btn small" data-act="novaReject" data-id="' + m.proposal.id + '">Don\'t save</button></div></div>'
         : m.proposal && m.proposal.status === 'active' ? '<p class="small-text muted">Saved to your Memory Vault.</p>' : m.proposal && m.proposal.status === 'rejected' ? '<p class="small-text muted">Not saved.</p>' : '';
-      return '<div class="msg bot"><p class="who mono">NOVA</p><p class="text">' + esc(text) + '</p>' + steps + prop + '</div>';
+      return '<div class="msg bot"><p class="who mono">NOVA' + (m.badge ? ' <span class="tag dim badge" title="Where this reply was produced">' + esc(m.badge) + '</span>' : '') + '</p><p class="text">' + esc(text) + '</p>' + steps + prop + '</div>';
     }).join('');
   }
   S.chat = {
@@ -175,7 +175,7 @@
         '<section class="panel chat-main" aria-label="Conversation">' + '<div class="chat-head">' + orb('mini') + '<span id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</span></div>' +
           '<div class="chat-log" id="novaLog" tabindex="0" aria-live="polite">' + (c.msgs.length ? chatHTML() : J.empty('Try: <q>who am I?</q> · <q>remember that I prefer short replies</q> · <q>what do you remember about me?</q> · <q>what time is it?</q>')) + (c.busy ? '<p class="typing">NOVA is working…</p>' : '') + '</div>' +
           '<form id="novaChatForm" class="chat-form"><label class="sr-only" for="novaMsg">Message to NOVA</label><textarea id="novaMsg" rows="2" maxlength="2000" placeholder="Message NOVA…"' + (c.busy ? ' disabled' : '') + '>' + esc(c.draft) + '</textarea><button type="submit" class="btn primary"' + (c.busy ? ' disabled' : '') + '>Send</button></form>' +
-          '<p class="small-text muted">Enter sends, Shift+Enter adds a line. ' + (N.session && N.session.aiProvider === 'claude' ? 'An AI model is connected; it can only write text.' : 'No AI model is connected, so NOVA answers with built-in rules and says so when it cannot answer.') + '</p></section></div>';
+          '<p class="small-text muted">Enter sends, Shift+Enter adds a line. ' + (N.session && N.session.aiProvider === 'claude' ? 'A cloud AI model is connected; it can only propose, and you approve changes.' : N.session && N.session.aiProvider === 'ollama' ? 'A local model (Ollama, free, on your computer) helps NOVA understand everyday phrasing; it can only propose, and you approve changes.' : 'No AI model is connected, so NOVA understands fixed phrasings only and says so when it cannot answer.') + '</p></section></div>';
     },
     after: function () {
       var f = $('#novaChatForm'), ta = $('#novaMsg'), log = $('#novaLog');
@@ -190,11 +190,11 @@
   N.send = function (text) {
     text = String(text || '').trim(); var c = N.chat;
     if (!text || c.busy) return Promise.resolve();
-    c.msgs.push({ role: 'user', text: text }); c.draft = ''; c.busy = true; N.setState(N.session && N.session.aiProvider === 'claude' ? 'planning' : 'understanding'); J.render(false);
+    c.msgs.push({ role: 'user', text: text }); c.draft = ''; c.busy = true; N.setState(N.session && N.session.aiProvider !== 'local' ? 'planning' : 'understanding'); J.render(false);
     return api('POST', '/api/chat', { message: text, conversationId: c.cid }).then(function (r) {
       c.cid = r.conversationId; c.busy = false;
       if (r.run) N.runs[r.run.id] = r.run;
-      c.msgs.push({ role: 'assistant', text: r.reply, steps: r.steps, handler: r.handler, model: r.model, usage: r.usage, proposal: r.proposal, runId: r.run ? r.run.id : null });
+      c.msgs.push({ role: 'assistant', text: r.reply, steps: r.steps, handler: r.handler, model: r.model, usage: r.usage, proposal: r.proposal, runId: r.run ? r.run.id : null, badge: r.badge });
       N.setState(r.status === 'failed' ? 'error' : r.status === 'awaiting_approval' ? 'waiting_approval' : 'completed');
       N.cache.activity = null; N.cache.memories = null; N.cache.usage = null; N.cache.approvals = null; N.cache.tasks = null;
       J.render(false);
@@ -320,7 +320,7 @@
     render: function () {
       var u = N.cache.usage;
       if (!u) return J.head('Monitor', 'AI Usage and Cost', 'Real numbers from the server\'s usage ledger.', '') + J.empty('Loading…');
-      var rows = u.byHandler.map(function (h) { return '<tr><th scope="row">' + esc(h.handler === 'rules' ? 'Built-in rules (no AI)' : h.handler === 'claude' ? 'AI model' : h.handler === 'none' ? 'No AI model configured (honest fallback)' : h.handler === 'blocked' ? 'Blocked by spending limit' : h.handler) + '</th><td>' + h.calls + '</td><td>' + h.ok + '</td><td>' + h.inputTokens + '</td><td>' + h.outputTokens + '</td><td>' + h.cacheReadTokens + '</td><td>' + Math.round(h.durationMs / Math.max(1, h.calls)) + ' ms</td><td>' + (h.estCostUsd == null ? 'n/a' : '$' + h.estCostUsd.toFixed(4)) + '</td></tr>'; }).join('');
+      var rows = u.byHandler.map(function (h) { return '<tr><th scope="row">' + esc(h.handler === 'rules' ? 'Built-in rules (no AI)' : h.handler === 'claude' ? 'Cloud AI model' : h.handler === 'local-model' ? 'Local model (free)' : h.handler === 'none' ? 'No AI model configured (honest fallback)' : h.handler === 'blocked' ? 'Blocked by spending limit' : h.handler) + '</th><td>' + h.calls + '</td><td>' + h.ok + '</td><td>' + h.inputTokens + '</td><td>' + h.outputTokens + '</td><td>' + h.cacheReadTokens + '</td><td>' + Math.round(h.durationMs / Math.max(1, h.calls)) + ' ms</td><td>' + (h.estCostUsd == null ? 'n/a' : '$' + h.estCostUsd.toFixed(4)) + '</td></tr>'; }).join('');
       return J.head('Monitor', 'AI Usage and Cost', 'Real numbers from the server\'s usage ledger for ' + esc(u.month) + '. Nothing here is invented.', '') +
         '<div class="stats">' + tile('AI provider', u.provider === 'claude' ? 'Claude' : 'None', u.model ? 'model ' + u.model : 'rules only: free') + tile('Monthly limit', u.monthlyLimitUsd == null ? 'None' : '$' + u.monthlyLimitUsd, u.monthlyLimitUsd == null ? 'set NOVA_MONTHLY_LIMIT_USD' : 'AI calls stop at the limit') + '</div>' +
         '<article class="panel"><h2 class="label">This month</h2>' + (rows ? '<div class="table-wrap"><table class="cmds"><thead><tr><th scope="col">Handled by</th><th scope="col">Calls</th><th scope="col">Succeeded</th><th scope="col">Input tokens</th><th scope="col">Output tokens</th><th scope="col">Cache-read tokens</th><th scope="col">Avg time</th><th scope="col">Est. cost</th></tr></thead><tbody>' + rows + '</tbody></table></div>' : J.empty('No requests this month yet.')) +
@@ -332,17 +332,26 @@
   /* ---- connected apps ---- */
   S.connections = {
     render: function () {
-      var ai = N.session && N.session.aiProvider === 'claude';
+      var st = N.cache.aistatus;
+      function aiRow() {
+        if (!st) return '<li><span class="grow"><b>AI model</b><br><span class="small-text muted">Checking…</span></span></li>';
+        var local = st.provider === 'ollama', ok = local ? st.reachable && st.modelPulled : st.provider === 'claude' ? st.configured : false;
+        var title = local ? 'Local model (Ollama, free): ' + (st.model || '') : st.provider === 'claude' ? 'Claude (cloud, paid)' : 'AI model';
+        var status = local ? (st.reachable ? (st.modelPulled ? 'Ready' : 'Model not downloaded') : 'Not reachable') : st.provider === 'claude' ? (st.configured ? 'Configured' : 'No key') : 'Built-in rules only';
+        var note = local ? (ok ? 'Understands everyday phrasing. It only proposes; you approve changes.' : (st.error || 'Ollama is running but the model is missing.')) : st.provider === 'claude' ? 'Text and tool proposals only.' : 'NOVA understands fixed phrasings only. A free local model fixes that.';
+        return '<li><span class="grow"><b>' + esc(title) + '</b><br><span class="small-text muted">' + esc(note) + '</span>' + (ok ? '' : '<ol class="small-text" aria-label="Setup checklist">' + (st.setup || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>') + '</span>' + J.tag(status, ok ? '' : 'gold') + '</li>';
+      }
       function row(n, status, tone, note, act) { return '<li><span class="grow"><b>' + esc(n) + '</b><br><span class="small-text muted">' + esc(note) + '</span></span>' + J.tag(status, tone) + (act || '') + '</li>'; }
       return J.head('Integrations', 'Connected Applications', 'Each connection shows its real status and permissions.', '') +
         '<article class="panel"><ul class="sources">' +
         row('NOVA server and database', 'Connected', '', 'SQLite database on the server that runs NOVA. Signed in as ' + (N.user ? N.user.email : '')) +
-        row('Claude (AI model)', ai ? 'Configured' : 'Not configured', ai ? '' : 'gold', ai ? 'Text replies only. It cannot act.' : 'Optional and paid: set NOVA_AI_PROVIDER=claude and ANTHROPIC_API_KEY on the server.') +
+        aiRow() +
         row('Google Calendar (browser)', 'Browser-side', 'dim', 'Read-only or two-way, set up in Tool settings. Not yet connected through the server.', ' <a class="btn small" href="#settings">Open</a>') +
         row('Outlook / Microsoft 365 calendar (browser)', 'Browser-side', 'dim', 'Set up in Tool settings.', ' <a class="btn small" href="#settings">Open</a>') +
         row('Gmail', 'Upcoming', 'gold', 'Phase 4. Will start read-only.') +
         row('Job collector (GitHub Action)', 'Separate', 'dim', 'Collects public job listings every 6 hours. See Jobs for you.', ' <a class="btn small" href="#matches">Open</a>') + '</ul></article>';
-    }
+    },
+    after: function () { stale('connections', [['aistatus', '/api/ai/status']]); }
   };
 
   /* ---- security and settings ---- */

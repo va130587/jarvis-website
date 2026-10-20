@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server/index.js",
     "test": "node tests/run.js",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "eval:nlu": "node scripts/eval-nlu.js"
   },
   "devDependencies": {
     "axe-core": "^4.14.0",

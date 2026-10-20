@@ -24,8 +24,9 @@ function load(env, over) {
     },
     session: { idleMs: (+env.SESSION_IDLE_MINUTES || 480) * 60e3, absoluteMs: (+env.SESSION_MAX_HOURS || 168) * 3600e3 },
     ai: {
-      provider: env.NOVA_AI_PROVIDER || 'local',                  // 'local' (free, rules only) | 'claude' (needs ANTHROPIC_API_KEY)
+      provider: env.NOVA_AI_PROVIDER || 'local',                  // 'local' (free, rules only) | 'ollama' (free local model) | 'claude' (needs ANTHROPIC_API_KEY)
       anthropicKey: env.ANTHROPIC_API_KEY || '',
+      ollamaUrl: env.NOVA_OLLAMA_URL || 'http://127.0.0.1:11434', ollamaModel: env.NOVA_OLLAMA_MODEL || 'qwen2.5:7b', ollamaTimeoutMs: +env.NOVA_OLLAMA_TIMEOUT_MS || 60000,
       modelChat: env.NOVA_MODEL_CHAT || 'claude-sonnet-5-5',
       maxTokens: +env.NOVA_MAX_TOKENS || 800,
       monthlyLimitUsd: env.NOVA_MONTHLY_LIMIT_USD === undefined || env.NOVA_MONTHLY_LIMIT_USD === '' ? null : +env.NOVA_MONTHLY_LIMIT_USD

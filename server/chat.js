@@ -59,14 +59,14 @@ function createChat(cfg, db, memory, provider, agent) {
         steps.push('No built-in action matched and no AI model is configured, so I did not guess an answer.');
       } else {
         run = snap;
-        handler = snap.planner === 'rules' ? 'rules' : (snap.failure === 'spending limit' ? 'blocked' : 'claude');
+        handler = snap.planner === 'rules' ? 'rules' : (snap.failure === 'spending limit' ? 'blocked' : (provider.kind === 'local' ? 'local-model' : 'claude'));
         model = snap.planner === 'model' ? provider.model : null;
         steps.push(...snap.steps.map(x => x.summary));
         const pend = snap.pendingApproval;
         status = snap.status === 'awaiting_approval' ? 'awaiting_approval' : snap.status === 'failed' ? 'failed' : 'completed';
         failure = snap.failure || null;
         out = { operation: snap.executions.length ? snap.executions[snap.executions.length - 1].tool : 'answer_with_model', reply: pend ? 'I need your approval before I do this: ' + pend.preview.action + '. Review the details below.' : (snap.result || '') };
-        const u = db.prepare("SELECT SUM(input_tokens) i, SUM(output_tokens) o, SUM(cache_read_tokens) c FROM usage_ledger WHERE user_id = ? AND ts >= ? AND handler = 'claude'").get(user.id, t0);
+        const u = db.prepare("SELECT SUM(input_tokens) i, SUM(output_tokens) o, SUM(cache_read_tokens) c FROM usage_ledger WHERE user_id = ? AND ts >= ? AND handler IN ('claude', 'local-model')").get(user.id, t0);
         usage = { input: u.i || 0, output: u.o || 0, cacheRead: u.c || 0 };
       }
     }
@@ -84,7 +84,8 @@ function createChat(cfg, db, memory, provider, agent) {
         .run(user.id, conv.id, message.slice(0, 500), out.operation, handler, proposal ? 'memory.propose' : null, proposal ? 'required' : null, proposal ? 'memory #' + proposal.id : null, status, out.reply.slice(0, 300), failure, now());
       ledger(user.id, { handler, provider: null, model, input: usage.input, output: usage.output, cacheRead: usage.cacheRead, ms, ok: status !== 'failed', cost });
     }
-    return { conversationId: conv.id, reply: out.reply, handler, status, steps, proposal, model, usage, run };
+    const badge = run ? run.badge : (handler === 'none' ? 'no model' : 'built-in rule');
+    return { conversationId: conv.id, reply: out.reply, handler, status, steps, proposal, model, usage, run, badge };
   }
 
   function register(router) {

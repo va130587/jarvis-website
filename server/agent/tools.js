@@ -22,6 +22,10 @@ function createRegistry(deps) {
   }
   const taskRow = (userId, id) => db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL').get(id, userId);
 
+  register({ name: 'ask.clarify', risk: 'read', description: 'Ask the owner ONE short question when the request is ambiguous, incomplete or you are not sure. Use this instead of guessing.', schema: { type: 'object', required: ['question'], properties: { question: { type: 'string', minLength: 3, maxLength: 300 } } },
+    preview: () => ({ action: 'Ask you a question', target: 'NOVA chat', changes: [], consequences: 'Nothing changes.', undoable: true }),
+    run: (ctx, i) => ({ question: i.question.trim() }), summarize: o => o.question });
+
   register({ name: 'time.now', risk: 'read', description: 'Current date and time in Dubai.', schema: { type: 'object', properties: {} },
     preview: () => ({ action: 'Read the clock', target: 'NOVA server', changes: [], consequences: 'Nothing changes.', undoable: true }),
     run: ctx => ({ iso: new Date(ctx.now()).toISOString(), dubai: new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dubai', dateStyle: 'full', timeStyle: 'short' }).format(new Date(ctx.now())) }),
