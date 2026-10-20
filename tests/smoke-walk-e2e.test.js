@@ -1,4 +1,4 @@
-// SMOKE WALK: every NOVA page at 390 / 768 / 1024 / 1440 px on the demo data. On each page the main interaction is used
+// SMOKE WALK: every NOVA page at 390 / 768 / 1024 / 1440 px in the Deep Space theme, and at 390 / 1440 px in Daylight, on the demo data. On each page the main interaction is used
 // (a dialog opened, a preview shown, a search run...), then the page must have: no console errors, no failed requests,
 // no layout problems (tests/layout-check.js) and no serious or critical accessibility issues (axe-core, WCAG 2.1 AA).
 // Destructive actions are only opened to their preview and then rejected or cancelled.
@@ -48,15 +48,17 @@ const STEPS = {
   security: async p => { await p.waitForSelector('#installPanel'); await p.keyboard.press('Control+k'); await p.waitForSelector('#novaPalette:not([hidden])'); await p.keyboard.type('visa'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); }
 };
 
-for (const width of [390, 768, 1024, 1440]) {
-  test('smoke walk at ' + width + ' px: all 17 pages are clean after their main interaction', async () => {
-    const { page, ctx, errors } = await H.openApp(browser, { base, hash: '', width, height: width === 390 ? 844 : 900 });
+for (const [width, theme] of [[390, 'dark'], [768, 'dark'], [1024, 'dark'], [1440, 'dark'], [390, 'light'], [1440, 'light']]) {
+  test('smoke walk at ' + width + ' px, ' + (theme === 'light' ? 'Daylight' : 'Deep Space') + ' theme: all 17 pages are clean after their main interaction', async () => {
+    const init = theme === 'light' ? "try { localStorage.setItem('nova.theme', 'light'); } catch (e) {}" : undefined;
+    const { page, ctx, errors } = await H.openApp(browser, { base, hash: '', width, height: width === 390 ? 844 : 900, init });
     const failed = [];
     page.on('requestfailed', r => { if (!ignoreUrl(r.url())) failed.push('failed ' + r.url()); });
     page.on('response', r => { if (r.status() >= 400 && !ignoreUrl(r.url())) failed.push(r.status() + ' ' + r.url()); });
     await page.waitForFunction(() => window.NOVA && NOVA.mode !== 'unknown');
     await page.fill('#novaDevEmail', 'demo@nova.local'); await page.click('#novaDevForm button');
     await page.waitForFunction(() => window.NOVA && NOVA.user && window.J && J.current() === 'dashboard');
+    assert.equal(await page.evaluate(() => document.documentElement.getAttribute('data-theme') || 'dark'), theme);
     await page.evaluate(src => (0, eval)(src), AXE);
     const problems = [];
     for (const [hash, step] of Object.entries(STEPS)) {

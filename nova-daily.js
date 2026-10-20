@@ -75,7 +75,7 @@
     opts = opts || {};
     var c = b.counts, load = c.overdue * 3 + c.today * 2 + c.followUps + c.approvals + c.importantEmail;
     var level = load === 0 ? ['Clear', 'ok', 8] : load < 5 ? ['Light', 'ok', 30] : load < 10 ? ['Moderate', 'gold', 60] : ['Heavy', 'red', 90];
-    return '<section class="brief-hero sky-' + phase() + '" aria-labelledby="briefTitle">' +
+    return '<section class="brief-hero theme-dark sky-' + phase() + '" aria-labelledby="briefTitle">' +
       '<div class="sky" aria-hidden="true"><i class="sun"></i><i class="ray"></i></div>' +
       '<div class="brief-top"><div><p class="eyebrow">' + esc(b.weekday + ' · ' + b.day) + ' · Dubai' + (b.demo ? ' · <span class="tag gold">includes demo data</span>' : '') + '</p>' +
       '<h2 id="briefTitle" class="brief-greet">' + esc(b.greeting) + '</h2><p class="brief-head">' + esc(b.headline) + '</p></div>' +

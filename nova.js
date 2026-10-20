@@ -22,6 +22,13 @@
     clearTimeout(resetTimer);
     if (s === 'completed' || (s === 'error' && !hold)) resetTimer = setTimeout(function () { if (N.state === s) N.setState(voiceState() || (N.focusRunning ? 'focusing' : 'idle')); }, s === 'error' ? 4000 : 1800);
   };
+  /* ---- theme: "dark" (Deep Space, default) or "light" (Daylight); boot.js applies it before the first paint ---- */
+  N.theme = function () { return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; };
+  N.setTheme = function (t) {
+    if (t === 'light') document.documentElement.setAttribute('data-theme', 'light'); else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('nova.theme', t === 'light' ? 'light' : 'dark'); } catch (e) {}
+    $$('meta[name="theme-color"]').forEach(function (m) { m.setAttribute('content', t === 'light' ? '#f5f8fc' : '#03060d'); });
+  };
   function voiceState() { var v = document.body.getAttribute('data-voice'); return v === 'listening' ? 'listening' : v === 'speaking' ? 'speaking' : v === 'thinking' ? 'understanding' : null; }
   function orb(size) { return '<div class="nova-orb ' + (size || '') + '" role="img" aria-label="NOVA status: ' + esc(STATES[N.state]) + '" data-state="' + N.state + '"><i class="o-glow"></i><i class="o-ring r1"></i><i class="o-ring r2"></i><i class="o-ring r3"></i><i class="o-core"></i></div>'; }
 
@@ -598,6 +605,9 @@
           (ses ? '<ul class="sources">' + ses.sessions.map(function (s) { return '<li><span class="grow"><b>' + (s.current ? 'This session' : 'Another session') + '</b><br><span class="small-text muted">started ' + esc(when(s.createdAt)) + ' · last active ' + esc(ago(s.lastSeenAt)) + ' · expires ' + esc(when(s.expiresAt)) + '</span></span></li>'; }).join('') + '</ul>' : J.empty('Loading…')) +
           '<p class="small-text muted">Sessions end after inactivity and after a maximum time. The cookie is HttpOnly and SameSite, so page scripts cannot read it.</p></article>' +
         '<article class="panel"><h2 class="label">What NOVA is allowed to do</h2>' + (N.cache.tools ? '<div class="table-wrap" tabindex="0" role="region" aria-label="Table (scrolls sideways on small screens)"><table class="cmds"><thead><tr><th scope="col">Tool</th><th scope="col">Kind</th><th scope="col">Asks you first?</th><th scope="col">Undo?</th></tr></thead><tbody>' + N.cache.tools.tools.map(function (t) { return '<tr><th scope="row">' + esc(t.name) + '<br><small class="muted">' + esc(t.description) + '</small></th><td>' + esc({ read: 'Reads only', write: 'Changes your NOVA data', destructive: 'Deletes', external: 'Affects another system' }[t.risk]) + '</td><td>' + (t.needsApproval ? 'Yes' : 'No') + '</td><td>' + (t.undoable ? 'Yes' : 'No') + '</td></tr>'; }).join('') + '</tbody></table></div>' : J.empty('Loading…')) + '<p class="small-text muted">NOVA can only use tools on this list. The server checks every request, runs nothing that fails validation, and re-reads the result to verify it.</p></article>' +
+        '<article class="panel" id="themePanel"><h2 class="label" id="themeLabel">Appearance</h2><div class="theme-pick" role="radiogroup" aria-labelledby="themeLabel">' +
+          [['dark', 'Deep Space', 'Dark, for evenings and focus'], ['light', 'Daylight', 'Light, for bright rooms']].map(function (t) { var on = N.theme() === t[0]; return '<button type="button" class="theme-opt t-' + t[0] + '" role="radio" aria-checked="' + on + '" data-act="novaTheme" data-id="' + t[0] + '"><i aria-hidden="true"></i><b>' + t[1] + '</b><small>' + t[2] + '</small></button>'; }).join('') +
+          '</div><p class="small-text muted">Remembered in this browser. Both themes meet the WCAG AA contrast level.</p></article>' +
         '<article class="panel" id="installPanel"><h2 class="label">Install NOVA as an app</h2><p class="small-text muted">' + (N.install && N.install.installed() ? 'You are using the installed app.' : 'Open NOVA from your home screen or dock like any app, in its own window. Free; nothing is sent anywhere. Your data stays on the NOVA server.') + '</p>' +
           (N.install && N.install.can() ? '<button type="button" class="btn small primary" data-act="novaInstall">Install NOVA</button>' : (N.install && N.install.installed() ? '' : '<p class="small-text">In Chrome or Edge: the install icon in the address bar, or menu &gt; "Install NOVA". On iPhone (Safari): Share &gt; "Add to Home Screen". The browser only offers this on https or on this computer (127.0.0.1).</p>')) + '</article>' +
         '<article class="panel"><h2 class="label">Your data</h2><div class="btn-row"><button type="button" class="btn" data-act="novaExport">Download everything (JSON)</button><button type="button" class="btn danger" data-act="novaDeleteMem">Delete all my memories</button><button type="button" class="btn danger" data-act="novaDeleteAll">Delete my account and all data</button></div>' +
@@ -609,6 +619,7 @@
   };
   function typed(title, phrase, run) { J.openForm({ title: title, submit: 'Delete', fields: [{ type: 'html', html: '<p>This cannot be undone. Type <b>DELETE MY DATA</b> to confirm.</p>' }, { name: 'confirm', label: 'Confirmation', required: true }], onSave: function (v) { run(v.confirm); } }); }
   Object.assign(J.actions, {
+    novaTheme: function (t) { N.setTheme(t); J.render(false); var b = $('.theme-opt.t-' + t); if (b) b.focus(); J.toast(t === 'light' ? 'Daylight theme on.' : 'Deep Space theme on.'); },
     novaSignOut: function () { api('POST', '/api/logout', {}).then(function () { N.user = null; location.hash = ''; location.reload(); }).catch(fail); },
     novaRevoke: function () { api('POST', '/api/sessions/revoke-others', {}).then(function (r) { J.toast(r.revoked + ' other session' + (r.revoked === 1 ? '' : 's') + ' signed out.'); return load('sessions', '/api/sessions'); }).then(function () { J.render(false); }).catch(fail); },
     novaExport: function () {

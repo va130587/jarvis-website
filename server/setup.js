@@ -50,7 +50,7 @@ function checks(root) {
 function runSetup(opts) {
   const root = opts.root, envPath = opts.envPath, token = rand(18), host = opts.host || '127.0.0.1', port = opts.port === undefined ? 8787 : opts.port;
   if (!LOOPBACK.test(host)) return Promise.reject(new Error('First-run setup only runs on this computer (HOST must be 127.0.0.1 or localhost). Set OWNER_EMAILS in .env instead.'));
-  const files = { '/': ['setup.html', 'text/html; charset=utf-8'], '/setup-page.js': ['setup-page.js', 'text/javascript; charset=utf-8'], '/setup.css': ['setup.css', 'text/css; charset=utf-8'] };
+  const files = { '/': ['setup.html', 'text/html; charset=utf-8'], '/setup-page.js': ['setup-page.js', 'text/javascript; charset=utf-8'], '/setup.css': ['setup.css', 'text/css; charset=utf-8'], '/design.css': ['design.css', 'text/css; charset=utf-8'] };
   const headers = { 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
     'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY', 'Cache-Control': 'no-store' };
   let done;

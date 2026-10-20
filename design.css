@@ -1,0 +1,91 @@
+/* NOVA design tokens. Every colour, size, space, radius, shadow and duration in app.css / nova.css comes from here.
+   Two themes: "Deep Space" (default, dark) and "Daylight" (light, chosen in Security and Settings, remembered).
+   Colours that are also used with transparency are stored as "R G B" triples: rgb(var(--cyan-rgb) / .2). See DESIGN_SYSTEM.md.
+   .theme-dark keeps a part of the page in Deep Space in either theme (the briefing's sky scene). */
+:root, .theme-dark {
+  /* ---- colour: Deep Space ---- */
+  --bg-top: #03060d;
+  --bg-bottom: #071226;
+  --bg-glow-1: rgb(30 100 170 / .18);
+  --bg-glow-2: rgb(20 70 130 / .16);
+  --surface-rgb: 10 22 42;            /* glass panels */
+  --deep-rgb: 3 8 16;                 /* wells, inputs, the darkest layer */
+  --glass: rgb(var(--surface-rgb) / .72);
+  --glass-blur: 14px;
+  --edge-rgb: 120 200 255;
+  --edge: rgb(var(--edge-rgb) / .18);
+  --edge-hi: rgb(var(--edge-rgb) / .45);
+  --cyan-rgb: 79 216 255;     --cyan: #4fd8ff;   --cyan-ink: #a6ecff;   --on-cyan: #021219;
+  --violet-rgb: 155 123 255;  --violet: #9b7bff; --violet-ink: #d2c5ff;
+  --ok-rgb: 91 227 164;       --ok: #5be3a4;     --ok-ink: #b9f3d6;
+  --warn-rgb: 245 196 106;    --warn: #f5c46a;   --warn-ink: #ffe08a;   --on-warn: #1d1300;
+  --danger-rgb: 255 107 107;  --danger: #ff6b6b; --danger-ink: #ffd0d0;
+  --ink-rgb: 232 243 255;     /* text colour as a triple, for faint white tints */
+  --text: #e8f3ff;
+  --text-2: #a3b8d0;          /* secondary text: 9.6:1 on the background */
+  --text-3: #8aa0ba;          /* tertiary (labels, hints): 6.6:1 */
+  --muted-rgb: 163 184 208;
+  --shadow-rgb: 0 0 0;
+  --chart: #4fd8ff, #9b7bff, #5be3a4, #f5c46a, #ff8fb1, #7aa7ff;   /* validated categorical order, see DESIGN_SYSTEM.md */
+  --fx-opacity: 1;            /* ambient background effects */
+
+  /* ---- type ---- */
+  --head: 'Rajdhani', 'IBM Plex Sans', system-ui, sans-serif;
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-12: 12px; --fs-14: 14px; --fs-16: 16px; --fs-20: 20px; --fs-25: 25px; --fs-31: 31px; --fs-39: 39px;
+  --lh-tight: 1.15; --lh-body: 1.6;
+
+  /* ---- space (4 px grid) ---- */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px;
+
+  /* ---- shape ---- */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-full: 999px;
+
+  /* ---- elevation: 1 resting panel, 2 raised (menus, toasts), 3 dialogs ---- */
+  --e1: 0 1px 0 rgb(var(--edge-rgb) / .06) inset, 0 8px 24px -16px rgb(var(--shadow-rgb) / .7);
+  --e2: 0 1px 0 rgb(var(--edge-rgb) / .08) inset, 0 18px 44px -18px rgb(var(--shadow-rgb) / .8), 0 0 36px -20px rgb(var(--cyan-rgb) / .45);
+  --e3: 0 30px 80px -20px rgb(var(--shadow-rgb) / .85), 0 0 50px -22px rgb(var(--cyan-rgb) / .45);
+
+  /* ---- motion ---- */
+  --t-fast: 150ms; --t-med: 250ms; --t-slow: 400ms;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+
+  color-scheme: dark;
+}
+
+/* ---- Daylight ---- */
+:root[data-theme="light"] {
+  --bg-top: #f5f8fc;
+  --bg-bottom: #e6edf6;
+  --bg-glow-1: rgb(79 170 230 / .16);
+  --bg-glow-2: rgb(155 123 255 / .10);
+  --surface-rgb: 255 255 255;
+  --deep-rgb: 238 243 250;
+  --glass: rgb(var(--surface-rgb) / .78);
+  --edge-rgb: 20 70 120;
+  --edge: rgb(var(--edge-rgb) / .16);
+  --edge-hi: rgb(var(--edge-rgb) / .38);
+  --cyan-rgb: 0 120 170;      --cyan: #00679a;   --cyan-ink: #005580;   --on-cyan: #ffffff;
+  --violet-rgb: 106 75 216;   --violet: #5b3fc4; --violet-ink: #4a32a8;
+  --ok-rgb: 14 138 90;        --ok: #0b7a4f;     --ok-ink: #075c3b;
+  --warn-rgb: 180 120 0;      --warn: #8a5a00;   --warn-ink: #6e4700;   --on-warn: #ffffff;
+  --danger-rgb: 198 40 40;    --danger: #b3261e; --danger-ink: #8c1d18;
+  --ink-rgb: 11 26 46;
+  --text: #0b1a2e;
+  --text-2: #3e5470;
+  --text-3: #4f6582;
+  --muted-rgb: 62 84 112;
+  --shadow-rgb: 20 40 70;
+  --chart: #00679a, #5b3fc4, #0b7a4f, #a86a00, #c2306a, #2f5fd0;
+  --fx-opacity: .45;
+  --e1: 0 1px 2px rgb(var(--shadow-rgb) / .08), 0 8px 24px -16px rgb(var(--shadow-rgb) / .25);
+  --e2: 0 2px 6px rgb(var(--shadow-rgb) / .1), 0 18px 44px -18px rgb(var(--shadow-rgb) / .3);
+  --e3: 0 30px 80px -20px rgb(var(--shadow-rgb) / .35);
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-med: 0ms; --t-slow: 0ms; }
+}
