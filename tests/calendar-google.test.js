@@ -119,7 +119,8 @@ test('two-way: switching asks for write permission; tasks are sent only after co
   const req = await page.evaluate(() => window.__gis.requests[1]);
   assert.equal(req.scope, READ + ' ' + WRITE, 'two-way asks for calendar.events too');
   await page.waitForFunction(() => J.data.cal.google.mode === 'two-way');
-  assert.match(await page.textContent('#cal-google'), /only after you confirm each change/);
+  // the settings card redraws just after the mode changes (a slower machine can be caught in between)
+  await page.waitForFunction(() => /only after you confirm each change/.test(document.querySelector('#cal-google').textContent));
   // Create a task with a time: it waits in the outbox until confirmed.
   await page.evaluate(() => location.hash = 'tasks'); await page.waitForTimeout(200);
   await page.fill('#capIn', 'Call HR tomorrow at 4pm');
