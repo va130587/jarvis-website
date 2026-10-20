@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after all five milestones (local model, ProofLoop, voice, daily use, delivery): **297 tests: 296 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestone 6 (knowledge, search, install) on top of the first five: **309 tests: 308 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -19,6 +19,8 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 | Daily use in the browser | `tests/nova-daily-e2e.test.js` | 7 pass (run 3 times, stable) | Daily Briefing page and dashboard strip, read aloud, saved copies; Smart Email demo inbox, filters, reasons, draft edit/save, send refused, phishing guard, tracking; Automation Centre switch/time/days/run now/history; bell, Escape, open from a notification, read all, browser pop-up; voice "brief me" / "any important emails"; Connected Apps rows; Gmail callback message; layout and axe at 1440/768/390 |
 | Delivery | `tests/server-ops.test.js` | 5 pass | `.env` building and validation; setup server (loopback only, headers, code, cross-site refusal, write once, mode 600); **`npm start` end to end in a child process** (setup -> NOVA on the same port -> owner can sign in -> next start skips setup); demo seeding (once, all labelled) and the demo script; backup / restore (snapshot while open, manifest, pruning, safety copy, refusals) |
 | ACCEPTANCE | `tests/acceptance-e2e.test.js` | 2 pass (run twice) | the setup page in a browser (wrong code, success, .env content, axe, phone width) and **NOVA_DEMO_GUIDE.md followed step by step** on the demo data: briefing focus and sections, read aloud, "brief me", Future Preview + verified result + Undo, destructive deletion not undoable, ProofLoop evidence -> Verified -> Completed -> receipt text, owed-to-me by sentence, Smart Email reasons / draft / send refused / phishing / tracking / voice, Automation run now, bell, Security tools and download, Usage |
+| Knowledge, search, install (server) | `tests/server-kb.test.js` | 6 pass | passage splitting; add / ask / cited answer / "found nothing" / stemming / search-syntax injection / open / delete with index clean-up / size limit; isolation, samples, hostile document text shown not obeyed; chat phrases; global search across six kinds with literal wildcards; manifest, icons, service worker rules and offline shell completeness |
+| Knowledge, search, install (browser) | `tests/nova-plus-e2e.test.js` | 6 pass (run twice) | add by typing and by file, highlighted sources, honest not-found, open, delete, samples, voice; Ctrl+K palette with keyboard, pages, "> ask NOVA", Escape and outside click; service worker registers and NOVA opens offline; layout and axe at 3 widths |
 | Classic tools (unchanged) | earlier files | 144 pass, 1 skipped | calendar, .ics, collector, matching, Jobs for you, voice commands, Smart mode (mocked), layout, axe |
 
 ## Not tested (and why)
@@ -70,6 +72,13 @@ The older reminder timer can post "Reminder: ..." into the voice log at any mome
 3. Clicking a notification did nothing: the panel stopped the click from reaching NOVA's action handler.
 4. A decorative layer of the briefing banner extended off-screen at 768 px (layout check), and the run-history table could not be scrolled by keyboard at 390 px (axe). Both fixed.
 5. "Read it to me" claimed to be reading aloud when spoken replies were switched off; it now shows the text instead and says why.
+
+## Defects found and fixed while testing (Milestone 6)
+
+1. The command palette stayed visible after Escape: its CSS display rule overrode the `hidden` attribute.
+2. Escape only closed the palette while its input had focus; it now works from anywhere while the palette is open.
+3. The new Search button pushed the clock out of the top bar at 768 px; its label now collapses to an icon below 1100 px.
+4. The Security tools table could not be scrolled by keyboard at 390 px (axe); tables are now focusable regions.
 
 ## Not tested (Milestone 4)
 

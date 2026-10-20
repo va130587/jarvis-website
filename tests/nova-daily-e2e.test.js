@@ -117,7 +117,8 @@ test('voice: "brief me" and "check my email" are answered and spoken; Connected 
   await page.waitForFunction(() => /Gmail \(read-only\)/.test(document.querySelector('main').textContent) && !/Checking/.test(document.querySelector('main').textContent));
   const t = await page.innerText('main'); assert.match(t, /Gmail \(read-only\)/); assert.match(t, /Demo inbox/i); assert.match(t, /Phone push \(ntfy\)/);
   await page.goto(srv.base + '/?gmail=denied#email'); await page.waitForFunction(() => window.NOVA && NOVA.user);
-  await page.waitForSelector('.toast:has-text("cancelled at Google")');
+  await page.waitForSelector('.gmail-msg:has-text("cancelled at Google")');                  // stays on the page until dismissed
+  await page.click('button[data-act="dGmailMsgOff"]'); assert.equal(await page.locator('.gmail-msg').count(), 0);
   assert.equal(await page.evaluate(() => location.search), '');
   await post(page, '/api/email/demo/remove');
   assert.deepEqual(clean(errors), []); await ctx.close();

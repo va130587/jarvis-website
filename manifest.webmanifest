@@ -1,0 +1,22 @@
+{
+  "name": "NOVA: From Request to Verified Result",
+  "short_name": "NOVA",
+  "description": "Your free personal assistant: daily briefing, tasks with approval, ProofLoop, Smart Email, voice and your own Knowledge Base.",
+  "id": "/",
+  "start_url": "/#dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#03070f",
+  "theme_color": "#03070f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Daily Briefing", "url": "/#briefing" },
+    { "name": "Voice", "url": "/#voice" },
+    { "name": "Smart Email", "url": "/#email" }
+  ]
+}

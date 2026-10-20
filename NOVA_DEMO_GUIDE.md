@@ -51,6 +51,13 @@ Open **Smart Email**. The demo inbox is fictional (labelled DEMO).
 
 Real Gmail: needs your own Google OAuth client (free) and `NOVA_SECRET_KEY`; tested only against a stand-in Google. See DEPLOYMENT.md.
 
+## 5b. Knowledge Base and Ctrl+K (1 minute)
+
+Open **Knowledge Base**. The demo has three sample documents (labelled demo).
+- Ask **"when should I renew my visa?"**: the answer quotes the passage and shows the source with the matching words highlighted. Ask something that is not in the documents: NOVA says it found nothing instead of guessing.
+- Say or type **"what do my notes say about the p-value"** in Chat or Voice.
+- Press **Ctrl+K** (Cmd+K on a Mac) anywhere: type "visa" to find documents, memories, tasks and e-mail in one list; type a page name to jump there; start with **>** to ask NOVA.
+
 ## 6. Automation and notifications (1 minute)
 
 Open **Automation Centre**.

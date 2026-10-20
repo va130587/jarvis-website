@@ -65,6 +65,7 @@ function matchIntent(message, ctx) {
     if (!tb.none && !tb.ambiguous) return { understood: 'Complete task #' + tb.row.id + ' "' + tb.row.title + '"', call: { name: 'tasks.complete', input: { id: tb.row.id } } };
     return { understood: 'Confirm that "' + m[1] + '" is done', final: 'I could not find an open commitment or task matching "' + m[1] + '" (or more than one matched). Nothing was changed.' };
   }
+  for (const r of P.kb) if ((m = r.exec(m0))) return { understood: 'Search your documents for "' + m[1].trim() + '"', call: { name: 'kb.search', input: { query: m[1].trim().slice(0, 300) } } };
   if (P.briefing.test(m0)) return { understood: 'Read your daily briefing', call: { name: 'briefing.today', input: {} } };
   if (P.email.test(m0)) return { understood: 'Check your e-mail', call: { name: 'email.list', input: { filter: /reply|replies|answer/i.test(m0) ? 'needs_reply' : /important|urgent/i.test(m0) ? 'important' : /^(?:check|read|show|list)/i.test(m0) || /new|unread/i.test(m0) ? 'all' : 'important' } } };
   if ((m = P.forget.exec(m0))) {

@@ -137,3 +137,9 @@ Tool registry and approvals, ProofLoop, Gmail and Outlook, scheduler, speech pro
 - `server/daily/notify.js`: `notifications` with a `dedupe` key (a retried job never notifies twice); optional ntfy push (topic from the environment only; never returned or logged).
 - `server/daily/email.js` + `classify.js`: Gmail read-only (OAuth code + PKCE, `gmail.readonly` only, state bound to the signed-in user, tokens sealed with AES-256-GCM in `connections.token_enc`, refresh, revoke on disconnect). Only headers and Gmail's snippet are stored (`emails`); classification is rule-based with reasons; drafts (`email_drafts`) are never sent (the send endpoint always answers 403). E-mail text is untrusted: it is matched, never obeyed, and reaches a model only as tool-result data.
 - Agent tools `briefing.today` and `email.list` are read-only, so "brief me" and "check my e-mail" need no approval.
+
+## Knowledge, search and install (Milestone 6)
+
+- `server/kb.js`: `documents` and `chunks` (passages split at headings and paragraphs, about 700 characters) with an SQLite FTS5 index (`chunks_fts`, porter stemming, BM25 ranking, headings weighted double). Query words are quoted before matching, so search syntax in a question cannot change the query. Answers are extractive: the best passage plus its document, heading and position; below a minimum word match the answer is "found nothing". The `kb.search` tool is read-only.
+- `GET /api/search`: one per-user search across tasks, notes, memories, commitments, e-mail and documents (LIKE with escaped wildcards, plus FTS) for the Ctrl+K palette in `nova-plus.js`.
+- `manifest.webmanifest`, `icons/`, `sw.js`: installable app. The service worker is network-first for the app's own files and never handles `/api/` or `/auth/`.

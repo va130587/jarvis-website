@@ -51,12 +51,12 @@ test('sign-in gate: nothing is shown until you sign in; the allow-list is enforc
   await ctx.close();
 });
 
-test('14 NOVA pages: working ones are real, the rest are clearly labelled Upcoming', async () => {
+test('14 NOVA pages: all are live (nothing labelled Upcoming any more)', async () => {
   const { page, ctx, errors } = await open(); await signIn(page);
   const nav = await page.$$eval('.nav a[data-view]', as => as.map(a => [a.getAttribute('data-view'), a.textContent.trim()]));
   const novaPages = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'proofloop', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security'];
   for (const v of novaPages) assert.ok(nav.some(n => n[0] === v), 'nav has ' + v);
-  const live = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'automation', 'hub', 'proofloop', 'identity', 'memory', 'usage', 'connections', 'security'], upcoming = ['knowledge'];
+  const live = novaPages, upcoming = [];
   for (const v of novaPages) {
     await page.evaluate(h => { location.hash = h; }, v); await page.waitForTimeout(250);
     const t = await page.innerText('main');
@@ -64,7 +64,7 @@ test('14 NOVA pages: working ones are real, the rest are clearly labelled Upcomi
     if (upcoming.includes(v)) { assert.match(t, /Upcoming/i, v); assert.match(t, /not (been )?built yet|Not built yet/i, v); assert.match(nav.find(n => n[0] === v)[1], /upcoming/i); }
     else assert.doesNotMatch(t, /Not built yet\./, v);
   }
-  assert.match(await page.innerText('.nav'), /Soon/i);
+  assert.doesNotMatch(await page.innerText('.nav'), /Soon/i);
   assert.equal(await page.evaluate(() => document.getElementById('sampleBanner').offsetParent === null || getComputedStyle(document.getElementById('sampleBanner')).display === 'none'), true);
   assert.match(await page.innerText('.nav'), /Classic tools \(stored in this browser\)/i);
   // the existing Classic tools still open

@@ -17,6 +17,7 @@
     commitList: /^(?:what\s+do\s+i\s+owe|what(?:'s| is)\s+owed\s+to\s+me|who\s+owes\s+me|what(?:'s| is)\s+overdue|(?:show|list)(?:\s+me)?(?:\s+my)?\s+(?:open\s+|overdue\s+)?commitments)\??$/i,
     briefing: /^(?:(?:give me|read me|show me|read|show|what(?:'s| is))\s+)?(?:my\s+|the\s+|today's\s+)?(?:daily\s+|morning\s+)?briefing\??$|^brief me$|^what(?:'s| is)\s+(?:on\s+)?my\s+day(?:\s+look\s+like)?\??$|^how\s+does\s+my\s+day\s+look\??$/i,
     email: /^(?:(?:check|read|show|list|summari[sz]e)(?:\s+me)?\s+)?(?:my\s+)?(?:important\s+|new\s+|urgent\s+|unread\s+)?(?:e-?mails?|inbox|mail)\??$|^(?:(?:do\s+i\s+have\s+)?any|are\s+there\s+any)\s+(?:important\s+|new\s+|urgent\s+)?e-?mails?\??$|^(?:which|what)\s+e-?mails?\s+(?:need|needs)\s+(?:a\s+)?(?:reply|replies|answer)\??$/i,
+    kb: [/^(?:search|look\s+up|find|check)\s+(?:in\s+)?(?:my\s+)?(?:documents?|docs|files|knowledge\s+base|kb)\s+(?:for|about)\s+(.{2,})$/i, /^what\s+(?:do|does)\s+my\s+(?:notes|documents?|docs|files|knowledge\s+base)\s+say\s+about\s+(.{2,}?)\??$/i, /^(?:ask\s+my\s+(?:documents?|docs|knowledge\s+base)|according\s+to\s+my\s+(?:notes|documents?|docs))[,:]?\s+(.{2,}?)\??$/i],
     confirm: /^(?:i(?:'ve| have)?\s+(?:sent|finished|delivered|submitted|handed in|completed)|confirm(?:\s+that)?(?:\s+commitment)?)\s+(.+)$/i
   };
   function clean(message) { return String(message).trim().replace(/^(?:hey |ok |okay |hi )?(?:nova|jarvis)[, ]+/i, '').replace(/^please\s+/i, ''); }
@@ -27,7 +28,7 @@
     if (P.list.test(m) || P.notes.test(m) || P.del.test(m) || P.search.test(m) || P.forget.test(m)) return true;
     var o = P.oweMe.exec(m);
     if (P.commitList.test(m) || (o && !/^(?:i|you|we)$/i.test(o[1].trim())) || P.iPromised.test(m)) return true;
-    if (P.confirm.test(m) || P.briefing.test(m) || P.email.test(m)) return true;
+    if (P.confirm.test(m) || P.briefing.test(m) || P.email.test(m) || P.kb.some(function (r) { return r.test(m); })) return true;
     c = P.complete.exec(m); return !!c && !/^(?:note|memory)/i.test(c[1]);
   }
   return { P: P, clean: clean, matches: matches };

@@ -119,7 +119,16 @@ const MIGRATIONS = [
      id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, email_id INTEGER NOT NULL REFERENCES emails(id) ON DELETE CASCADE,
      body TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'draft', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
    ALTER TABLE oauth_states ADD COLUMN purpose TEXT;
-   ALTER TABLE oauth_states ADD COLUMN user_id INTEGER;`
+   ALTER TABLE oauth_states ADD COLUMN user_id INTEGER;`,
+  // 5: Knowledge Base: your own documents, split into passages with full-text search (stemmed, ranked)
+  `CREATE TABLE documents (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'note',
+     source TEXT, chars INTEGER NOT NULL, chunks INTEGER NOT NULL, is_demo INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+   CREATE INDEX documents_user ON documents(user_id, id);
+   CREATE TABLE chunks (
+     id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE, user_id INTEGER NOT NULL, seq INTEGER NOT NULL, heading TEXT, text TEXT NOT NULL);
+   CREATE INDEX chunks_doc ON chunks(document_id, seq);
+   CREATE VIRTUAL TABLE chunks_fts USING fts5(text, heading, tokenize = 'porter unicode61');`
 ];
 
 function migrate(db) {

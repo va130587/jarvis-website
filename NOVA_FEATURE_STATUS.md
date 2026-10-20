@@ -72,3 +72,12 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 | Dockerfile | WORKING AND TESTED (manually) | Built and run in this environment: health check endpoint answers, runs as user `node`, data in `/data`, image contains no tests, `.env` or database, development sign-in refused. Not part of `npm test`. |
 | CI workflow (`.github/workflows/ci.yml`) | WORKING, ONE FLAKE FIXED | First GitHub run: 295 of 297 passed in 4.5 minutes; one older calendar test checked the screen a moment before it redrew on the slower runner. The test now waits for the text. Check the latest run in the Actions tab. |
 | DEPLOYMENT.md (home, always-on, Docker, free VM with HTTPS) | DOCUMENTATION | Steps are standard; only the local and Docker paths were executed here. |
+
+## Knowledge, search and install (Milestone 6)
+
+| Feature | Status | Notes |
+|---|---|---|
+| Knowledge Base: add notes or text files, ask, answer with the cited passage, "found nothing" when absent, open and delete documents, samples | WORKING AND TESTED | Full-text search with stemming and ranking (SQLite FTS5), no AI, so answers are quotes from your documents, never invented. Per-user, deleted documents leave the index. PDF and Word files are NOT supported (paste their text instead). |
+| "What do my notes say about …" / "according to my documents …" by text or voice | WORKING AND TESTED | Read-only tool; hostile text inside a document is shown, never obeyed (tested). |
+| Ctrl+K command palette | WORKING AND TESTED | Searches tasks, notes, memories, commitments, e-mail and documents; pages and quick actions; "> ask NOVA"; keyboard-only, focus returns on Escape; axe and layout at 3 widths. |
+| Install as an app (manifest, icons, service worker, offline shell) | WORKING AND TESTED | Service worker registration and opening offline tested in Chromium. The browser's own install prompt cannot be clicked by a test: install it once yourself (Security and Settings explains how). |

@@ -27,6 +27,7 @@ function seed(app) {
     db.prepare("INSERT INTO memories (user_id, kind, text, source, status, sensitive, created_at, updated_at) VALUES (?, 'fact', ?, 'demo', 'active', 0, ?, ?)").run(uid, m, now, now);
   loadDemo({ db, pl: app.pl, adapters: createAdapters(db), now: () => now }, uid);
   app.email.loadDemo(uid);
+  for (const d of app.kb.DEMO) app.kb.add(uid, { title: d.title, text: d.text, isDemo: true, source: 'demo' });
   app.scheduler.ensureDefaults(uid);
   app.briefing.create(db.prepare('SELECT * FROM users WHERE id = ?').get(uid), 'schedule');
   app.notifier.notify(uid, { kind: 'briefing', title: 'Your briefing is ready (demo)', body: 'Open Daily Briefing to see what matters today.', link: '#briefing', push: false });
