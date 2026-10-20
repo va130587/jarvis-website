@@ -1,0 +1,555 @@
+{
+  "390-dashboard": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-briefing": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-chat": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-voice": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-email": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-hub": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-focus": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-life": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-proofloop": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-insights": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-automation": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-identity": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-memory": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-knowledge": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-usage": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-connections": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "390-security": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-dashboard": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-briefing": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-chat": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-voice": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-email": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-hub": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-focus": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-life": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-proofloop": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-insights": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-automation": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-identity": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-memory": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-knowledge": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-usage": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-connections": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "768-security": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-dashboard": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-briefing": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-chat": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-voice": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-email": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-hub": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-focus": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-life": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-proofloop": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-insights": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-automation": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-identity": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-memory": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-knowledge": {
+    "layout": [
+      "off-screen: article.panel \"Add a documentTitleText (paste\"",
+      "off-screen: h2.label \"Add a document\"",
+      "off-screen: form#kbAddForm \"TitleText (paste, or choose a \"",
+      "off-screen: div.field \"Title\"",
+      "off-screen: label \"Title\"",
+      "off-screen: input#kbTitle \"\"",
+      "off-screen: div.field \"Text (paste, or choose a file)\"",
+      "off-screen: label \"Text (paste, or choose a file)\""
+    ],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-usage": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-connections": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1024-security": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-dashboard": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-briefing": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-chat": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-voice": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-email": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-hub": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-focus": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-life": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-proofloop": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-insights": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-automation": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-identity": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-memory": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-knowledge": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-usage": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-connections": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  },
+  "1440-security": {
+    "layout": [],
+    "axe": [],
+    "console": [
+      "warning: Couldn't load preload assets:  ProgressEvent"
+    ],
+    "failedRequests": []
+  }
+}
