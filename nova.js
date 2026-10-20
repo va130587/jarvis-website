@@ -129,6 +129,9 @@
   // Any change (a POST, PATCH or DELETE) can alter what other pages show, so after it nothing counts as fresh and no
   // request that started earlier is shared or trusted. The data already shown stays on screen until the refetch arrives.
   function changed() { gen++; inflight = {}; fetchedAt = {}; }
+  // Opening a page is a new visit: it always asks for fresh data (something may have changed elsewhere: another tab, a
+  // scheduled job). Only redraws of the page you are on use the 2-second window. Capture phase: runs before the router draws.
+  window.addEventListener('hashchange', function () { fetchedAt = {}; }, true);
   function load(key, path) {
     if (!inflight[path]) { var g = gen, box = inflight; box[path] = api('GET', path).then(function (d) { delete box[path]; if (g === gen) fetchedAt[path] = Date.now(); return { d: d, g: g }; }, function (e) { delete box[path]; throw e; }); }
     return inflight[path].then(function (r) { if (r.g >= (shownGen[key] || 0)) { N.cache[key] = r.d; shownGen[key] = r.g; } return N.cache[key]; });   // an older answer never replaces a newer one
@@ -664,6 +667,7 @@
       else if (['listening', 'transcribing', 'speaking', 'understanding'].indexOf(N.state) >= 0) N.setState('idle');
     }).observe(document.body, { attributes: true, attributeFilter: ['data-voice'] });
   }
+  function reveal() { document.documentElement.classList.remove('nova-wait'); }   // see boot.js
   function start() {
     fetch('/api/session', { credentials: 'same-origin' }).then(function (r) { if (!r.ok || !/json/.test(r.headers.get('content-type') || '')) throw new Error('no server'); return r.json(); })
       .then(function (s) {
@@ -671,10 +675,11 @@
         document.title = 'NOVA'; var bt = $('.brand-text b'); if (bt) bt.textContent = 'NOVA';
         if (!s.authenticated) { showLogin(); return; }
         N.user = s.user; N.csrf = s.csrf; hideLogin(); buildNav(); observeVoice(); if (N.daily) N.daily.start();
+        document.addEventListener('jarvis:rendered', reveal, { once: true });
         if (!location.hash || location.hash === '#today') location.hash = 'dashboard'; else J.render(true);
         N.setState('idle');
       })
-      .catch(function () { N.mode = 'standalone'; });
+      .catch(function () { N.mode = 'standalone'; reveal(); });
   }
   var NOVA_VIEWS = NOVA_NAV.map(function (n) { return n[0]; });
   document.addEventListener('jarvis:rendered', function (e) { document.body.setAttribute('data-group', NOVA_VIEWS.indexOf(e.detail.view) >= 0 ? 'nova' : 'tools'); });

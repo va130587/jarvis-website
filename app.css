@@ -19,6 +19,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+html.nova-wait .app, html.nova-wait .bottom-nav { visibility: hidden; }   /* until NOVA has drawn its layout: no jump on first load */
 html { -webkit-text-size-adjust: 100%; }
 html, body { overflow-x: hidden; }
 body {

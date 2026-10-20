@@ -308,7 +308,7 @@ body.nova-server #main { padding-bottom: 112px; }
 /* ---- ambient background: two slow light fields; paused when the tab is hidden (html.paused) and with reduced motion ---- */
 .fx-aurora { position: fixed; inset: -20vmax; z-index: 0; pointer-events: none; opacity: calc(.9 * var(--fx-opacity));
   background: radial-gradient(40vmax 30vmax at 30% 30%, rgb(var(--cyan-rgb) / .07), transparent 70%), radial-gradient(36vmax 28vmax at 70% 65%, rgb(var(--violet-rgb) / .07), transparent 70%);
-  animation: aurora 40s ease-in-out infinite alternate; will-change: transform; }
+  animation: aurora 40s steps(120) infinite alternate; will-change: transform; }   /* small steps: the blurred glass above it is redrawn 3 times a second, not 60 */
 @keyframes aurora { from { transform: translate3d(-4vmax, -2vmax, 0) rotate(0deg); } to { transform: translate3d(4vmax, 3vmax, 0) rotate(8deg); } }
 @media (prefers-reduced-motion: reduce) { .fx-aurora { animation: none; } }
 

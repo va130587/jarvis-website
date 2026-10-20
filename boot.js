@@ -12,3 +12,11 @@
   try { t = localStorage.getItem('nova.theme'); } catch (e) {}
   if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
 })();
+
+// The app shell stays invisible until NOVA has drawn its own layout (or knows it runs without its server), so nothing jumps
+// on first load. nova.js removes the class; this timer is only a safety net.
+(function () {
+  var html = document.documentElement;
+  html.classList.add('nova-wait');
+  setTimeout(function () { html.classList.remove('nova-wait'); }, 2500);
+})();
