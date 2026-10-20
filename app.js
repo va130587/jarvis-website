@@ -18,13 +18,16 @@
   J.ui = ui;
 
   /* ================= small UI helpers ================= */
-  var toastTimer;
+  // Messages stack (newest last, at most three) instead of replacing each other, so a reminder cannot hide a result you need to see.
   J.toast = function (msg, withUndo) {
-    var el = $('#toast');
-    el.innerHTML = '<span>' + esc(msg) + '</span>' + (withUndo && J.canUndo() ? '<button type="button" class="btn small" data-act="undo">Undo</button>' : '');
+    var el = $('#toast'); msg = String(msg); J.lastToast = msg;
+    Array.prototype.slice.call(el.children).forEach(function (c) { if (c.getAttribute('data-msg') === msg) c.remove(); });
+    var row = document.createElement('div'); row.className = 't-msg'; row.setAttribute('data-msg', msg);
+    row.innerHTML = '<span>' + esc(msg) + '</span>' + (withUndo && J.canUndo() ? '<button type="button" class="btn small" data-act="undo">Undo</button>' : '');
+    el.appendChild(row);
+    while (el.children.length > 3) el.removeChild(el.firstChild);
     el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.classList.remove('show'); }, withUndo ? 6500 : 3800);
+    setTimeout(function () { row.remove(); if (!el.children.length) el.classList.remove('show'); }, withUndo ? 6500 : 3800);
   };
   J.actions.undo = function () { if (J.undo()) J.toast('Restored.'); };
 

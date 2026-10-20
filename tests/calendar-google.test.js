@@ -233,7 +233,7 @@ test('errors: permission denied, API disabled, consent declined, pop-up closed, 
   await page.waitForFunction(() => /Calendar API is not turned on/.test(document.getElementById('toast').textContent));
   google.fail = null;
   // Asking for two-way but only ticking "see" in Google keeps read-only access.
-  await page.evaluate(() => { window.__gis.next.grant = 'read'; });
+  await page.evaluate(() => { window.__gis.next.grant = 'read'; document.getElementById('toast').innerHTML = ''; });   // messages stack now: clear the earlier one first
   await page.check('input[data-calmode="google"][value="two-way"]');
   await page.waitForFunction(() => /did not give NOVA permission/.test(document.getElementById('toast').textContent));
   assert.equal(await page.evaluate(() => J.data.cal.google.mode), 'read', 'stays read-only');

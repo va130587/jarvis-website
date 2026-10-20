@@ -77,6 +77,8 @@ The older reminder timer can post "Reminder: ..." into the voice log at any mome
 
 ## Defects found and fixed while testing (Milestone 7)
 
+00. GitHub run 4 failed because the older reminder pop-up replaced the "Evidence added" message a moment after it appeared; a person could miss it the same way. Messages now stack (up to three) and each disappears on its own timer.
+
 0. The orb could drop from "Focusing" to "Idle" when another event (such as voice) ended during a session; idle now means focusing while a session runs. The Focus page also redraws when a session is started or stopped in another tab or device.
 
 1. A global SVG style drew outlines on the charts' invisible hover areas and stroked the axis text; chart parts now set their own stroke.

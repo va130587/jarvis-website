@@ -1141,7 +1141,7 @@
           var upd = Object.assign({}, ext), dur = ext.end - ext.start;
           if (ext.allDay && !ttm) { var len = J.diff(ext.date, ext.endDate); upd.date = newDate; upd.endDate = J.addDays(newDate, len); upd.start = ICS.dubaiTs(newDate, '00:00'); upd.end = ICS.dubaiTs(upd.endDate, '00:00'); }
           else { upd.allDay = false; delete upd.date; delete upd.endDate; upd.start = ICS.dubaiTs(newDate, newTime); upd.end = upd.start + (ext.allDay ? 3600e3 : dur); }
-          return updateExt(ext, upd, false).then(function (ok) { return ok ? 'Moved "' + it.title + '" to ' + to + ' in ' + P(ext.src) + '.' : 'I couldn\'t move it. ' + (document.getElementById('toast').textContent || ''); });
+          return updateExt(ext, upd, false).then(function (ok) { return ok ? 'Moved "' + it.title + '" to ' + to + ' in ' + P(ext.src) + '.' : 'I couldn\'t move it. ' + (J.lastToast || ''); });
         }
         task.due = newDate; task.time = newTime || ''; task.reminded = false;
         J.commit();
@@ -1156,7 +1156,7 @@
     return {
       text: 'Cancel "' + it.title + '" ' + whenIt(it) + '?' + (ext ? ' This deletes it from ' + P(ext.src) + '.' : '') + ' Say yes or no.',
       confirm: function () {
-        if (ext) return deleteExt(ext, false).then(function (ok) { return ok ? 'Cancelled "' + it.title + '". It is removed from ' + P(ext.src) + '.' : 'I couldn\'t cancel it. ' + (document.getElementById('toast').textContent || ''); });
+        if (ext) return deleteExt(ext, false).then(function (ok) { return ok ? 'Cancelled "' + it.title + '". It is removed from ' + P(ext.src) + '.' : 'I couldn\'t cancel it. ' + (J.lastToast || ''); });
         J.removeTask(task.id);
         return pushTask(task.id).then(function (extra) { return 'Cancelled "' + it.title + '".' + extra; });
       }
