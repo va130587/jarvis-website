@@ -45,6 +45,7 @@ function createScheduler(cfg, db, jobs) {
         db.prepare("UPDATE schedule_runs SET status = 'retrying', next_attempt_at = ?, error = 'The previous attempt did not finish (the server may have stopped).' WHERE status = 'running' AND started_at < ? AND attempts < ?").run(t, t - STUCK_MS, MAX_ATTEMPTS);
         db.prepare("UPDATE schedule_runs SET status = 'failed', finished_at = ?, error = 'The job stopped responding on every attempt.' WHERE status = 'running' AND started_at < ? AND attempts >= ?").run(t, t - STUCK_MS, MAX_ATTEMPTS);
         for (const r of db.prepare("SELECT * FROM schedule_runs WHERE status IN ('pending', 'retrying') AND (next_attempt_at IS NULL OR next_attempt_at <= ?) ORDER BY id").all(t)) await execute(r);
+        if (jobs.everyTick) await jobs.everyTick().catch(e => console.error('[nova] reminder delivery failed: ' + String(e && e.message).slice(0, 200)));
       }
     })();
     busy = p.finally(() => { busy = null; });         // reset after the whole pass (also when it finished without awaiting anything)

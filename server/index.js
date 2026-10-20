@@ -24,6 +24,7 @@ const { createEmail } = require('./daily/email');
 const { dubaiDate } = require('./agent/planner');
 const { createKb } = require('./kb');
 const { createProductivity } = require('./productivity');
+const { createLife } = require('./life');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -44,7 +45,7 @@ function createApp(over, deps) {
   const agent = createAgent(cfg, db, registry, provider, pl);
   const plApi = createProofLoopApi(cfg, db, pl, adapters);
   const chat = createChat(cfg, db, memory, provider, agent);
-  const notifier = createNotifier(cfg, db, deps), briefing = createBriefing(cfg, db), email = createEmail(cfg, db, { fetch: deps.fetch, pl });
+  const notifier = createNotifier(cfg, db, deps), life = createLife(cfg, db, { notifier }), briefing = createBriefing(cfg, db), email = createEmail(cfg, db, { fetch: deps.fetch, pl });
   const scheduler = createScheduler(cfg, db, deps.jobs || dailyJobs());
   const kb = createKb(cfg, db), prod = createProductivity(cfg, db);
   registerDailyTools();
@@ -52,7 +53,7 @@ function createApp(over, deps) {
   const hdr = securityHeaders(cfg);
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
-  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router);
+  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
@@ -75,6 +76,7 @@ function createApp(over, deps) {
   function dailyJobs() {
     const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
     return {
+      everyTick: () => life.deliver(),
       async briefing(user, run) {
         const b = briefing.create(user, 'schedule');
         await notifier.notify(user.id, { kind: 'briefing', title: 'Your briefing for ' + b.weekday, body: b.headline + (b.focus ? ' Focus: ' + b.focus.text + '.' : '') + (run.missed ? ' (NOVA was not running for ' + plural(run.missed, 'earlier briefing') + '; this one replaces them.)' : ''), link: '#briefing', dedupe: 'briefing-run-' + run.id, tags: 'sunrise' });
@@ -115,6 +117,7 @@ function createApp(over, deps) {
   // Read-only tools so "brief me" and "check my e-mail" work by text or voice (no approval needed: nothing changes).
   function registerDailyTools() {
     if (registry.has('briefing.today')) return;
+    life.registerTools(registry);
     registry.register({ name: 'plan.today', risk: 'read', description: 'Suggest a time-blocked plan for the owner\'s working day from overdue and due tasks and promises. It only suggests; nothing is changed.', schema: { type: 'object', properties: {} },
       preview: () => ({ action: 'Plan your day', target: 'NOVA tasks and ProofLoop', changes: [], consequences: 'Nothing changes. It is a suggestion.', undoable: true }),
       run: ctx => prod.plan(db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.user.id)),
@@ -164,6 +167,8 @@ function createApp(over, deps) {
       commitments: db.prepare('SELECT * FROM commitments WHERE user_id = ?').all(id), schedules: db.prepare('SELECT kind, hour, minute, days, enabled FROM schedules WHERE user_id = ?').all(id),
       notifications: db.prepare('SELECT kind, title, body, created_at, read_at FROM notifications WHERE user_id = ?').all(id), briefings: db.prepare('SELECT day, trigger, created_at FROM briefings WHERE user_id = ?').all(id),
       email: { connections: db.prepare('SELECT provider, account, scope, status, created_at FROM connections WHERE user_id = ?').all(id), messages: db.prepare('SELECT from_name, from_addr, subject, snippet, received_at, priority, category, reasons, deadline, is_demo FROM emails WHERE user_id = ?').all(id), drafts: db.prepare('SELECT email_id, body, created_at FROM email_drafts WHERE user_id = ?').all(id) },
+      reminders: db.prepare('SELECT text, due_at, repeat, status FROM reminders WHERE user_id = ?').all(id), habits: db.prepare('SELECT id, name, schedule FROM habits WHERE user_id = ?').all(id).map(h => Object.assign(h, { checks: db.prepare('SELECT day FROM habit_checks WHERE habit_id = ?').all(h.id).map(c => c.day) })),
+      expenses: db.prepare('SELECT amount_fils, category, note, day FROM expenses WHERE user_id = ? AND deleted_at IS NULL').all(id),
       focusSessions: db.prepare('SELECT title, planned_min, started_at, ended_at, status FROM focus_sessions WHERE user_id = ?').all(id),
       documents: db.prepare('SELECT id, title, kind, created_at FROM documents WHERE user_id = ?').all(id).map(d => Object.assign(d, { text: db.prepare('SELECT text FROM chunks WHERE document_id = ? ORDER BY seq').all(d.id).map(c => c.text).join('\n\n') })) } };
   });
@@ -176,7 +181,7 @@ function createApp(over, deps) {
     try {
       db.prepare('DELETE FROM memories WHERE user_id = ?').run(id);
       if (scope === 'all') {
-        for (const t of ['focus_sessions', 'day_plans', 'chunks', 'documents', 'email_drafts', 'emails', 'connections', 'briefings', 'notifications', 'schedule_runs', 'schedules', 'evidence', 'commitment_events', 'commitments', 'tool_executions', 'approvals', 'run_steps', 'runs', 'tasks', 'notes', 'messages', 'conversations', 'activity', 'usage_ledger', 'sessions']) db.prepare('DELETE FROM ' + t + ' WHERE user_id = ?').run(id);
+        for (const t of ['reminders', 'habit_checks', 'habits', 'expenses', 'budgets', 'focus_sessions', 'day_plans', 'chunks', 'documents', 'email_drafts', 'emails', 'connections', 'briefings', 'notifications', 'schedule_runs', 'schedules', 'evidence', 'commitment_events', 'commitments', 'tool_executions', 'approvals', 'run_steps', 'runs', 'tasks', 'notes', 'messages', 'conversations', 'activity', 'usage_ledger', 'sessions']) db.prepare('DELETE FROM ' + t + ' WHERE user_id = ?').run(id);
         db.prepare('DELETE FROM chunks_fts WHERE rowid NOT IN (SELECT id FROM chunks)').run();
         db.prepare('DELETE FROM users WHERE id = ?').run(id);
       }
@@ -237,7 +242,7 @@ function createApp(over, deps) {
   const server = http.createServer((req, res) => { onRequest(req, res); });
   const sweeper = setInterval(() => { limiter.sweep(); db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(now()); }, 10 * 60e3); sweeper.unref();
   return {
-    cfg, db, server, memory, provider, registry, agent, pl, scheduler, notifier, briefing, email, kb, prod,
+    cfg, db, server, memory, provider, registry, agent, pl, scheduler, notifier, briefing, email, kb, prod, life,
     listen() { return new Promise(r => server.listen(cfg.port, cfg.host, () => r(server.address().port))); },
     close() { clearInterval(sweeper); scheduler.stop(); return new Promise(r => server.close(() => { try { db.close(); } catch (e) { /* closed */ } r(); })); }
   };

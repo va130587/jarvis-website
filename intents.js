@@ -20,6 +20,10 @@
     kb: [/^(?:search|look\s+up|find|check)\s+(?:in\s+)?(?:my\s+)?(?:documents?|docs|files|knowledge\s+base|kb)\s+(?:for|about)\s+(.{2,})$/i, /^what\s+(?:do|does)\s+my\s+(?:notes|documents?|docs|files|knowledge\s+base)\s+say\s+about\s+(.{2,}?)\??$/i, /^(?:ask\s+my\s+(?:documents?|docs|knowledge\s+base)|according\s+to\s+my\s+(?:notes|documents?|docs))[,:]?\s+(.{2,}?)\??$/i],
     plan: /^(?:(?:plan|organi[sz]e|schedule)\s+my\s+day|(?:make|give\s+me|create|suggest)\s+(?:a\s+|me\s+a\s+)?(?:plan|schedule)\s+for\s+(?:today|my\s+day|tomorrow)|what\s+should\s+i\s+(?:do|work\s+on)\s+(?:first|next|now|today))\??$/i,
     insights: /^(?:how\s+(?:was|is)\s+my\s+week|(?:show|give\s+me|what\s+are)\s+my\s+(?:weekly\s+)?(?:insights|stats|statistics|progress)|my\s+(?:weekly\s+)?(?:insights|progress)|how\s+reliable\s+am\s+i|weekly\s+insights)\??$/i,
+    remindAt: [new RegExp('^remind me ((?:in \\d{1,3} ?(?:minutes?|mins?|hours?|hrs?)|in (?:an?|one|half an) (?:hour|minute)|at \\d{1,2}(?::\\d{2})? ?(?:am|pm)?|at (?:noon|midnight)|tomorrow (?:at [\\w: ]+|morning|afternoon|evening|night)|tonight|this (?:morning|afternoon|evening)|(?:on )?(?:sun|mon|tues|wednes|thurs|fri|satur)day (?:at [\\w: ]+|morning|afternoon|evening|night)|every (?:day|weekday|morning|evening|night)(?: at [\\w: ]+)?|daily at [\\w: ]+)) to (.+)$', 'i'), new RegExp('^remind me to (.+?) ((?:in \\d{1,3} ?(?:minutes?|mins?|hours?|hrs?)|in (?:an?|one|half an) (?:hour|minute)|at \\d{1,2}(?::\\d{2})? ?(?:am|pm)?|at (?:noon|midnight)|tomorrow (?:at [\\w: ]+|morning|afternoon|evening|night)|tonight|this (?:morning|afternoon|evening)|(?:on )?(?:sun|mon|tues|wednes|thurs|fri|satur)day (?:at [\\w: ]+|morning|afternoon|evening|night)|every (?:day|weekday|morning|evening|night)(?: at [\\w: ]+)?|daily at [\\w: ]+))$', 'i')],
+    spent: [/^(?:i\s+)?(?:spent|paid)\s+(?:aed\s*)?(\d[\d.,]*)\s*(?:aed|dhs?|dirhams?)?\s+(?:on|for)\s+(.{2,120})$/i, /^(?:add|log|record)\s+(?:an?\s+)?expense(?:\s+of)?\s+(?:aed\s*)?(\d[\d.,]*)\s*(?:aed|dhs?|dirhams?)?\s+(?:on|for)\s+(.{2,120})$/i],
+    spending: /^(?:how\s+much\s+(?:did|have)\s+i\s+spen[dt](?:\s+(?:this|so\s+far\s+this)\s+month)?|(?:show\s+|what(?:'s|\s+is)\s+)?my\s+(?:spending|expenses)(?:\s+this\s+month)?|spending\s+(?:this\s+month|summary))\??$/i,
+    habit: [/^(?:check\s*-?\s*in|tick\s+off)\s+(?:my\s+)?(.{2,60}?)(?:\s+(?:habit|for\s+today|today))?$/i, /^i\s+did\s+my\s+(.{2,60}?)(?:\s+today)?$/i],
     confirm: /^(?:i(?:'ve| have)?\s+(?:sent|finished|delivered|submitted|handed in|completed)|confirm(?:\s+that)?(?:\s+commitment)?)\s+(.+)$/i
   };
   function clean(message) { return String(message).trim().replace(/^(?:hey |ok |okay |hi )?(?:nova|jarvis)[, ]+/i, '').replace(/^please\s+/i, ''); }
@@ -30,7 +34,7 @@
     if (P.list.test(m) || P.notes.test(m) || P.del.test(m) || P.search.test(m) || P.forget.test(m)) return true;
     var o = P.oweMe.exec(m);
     if (P.commitList.test(m) || (o && !/^(?:i|you|we)$/i.test(o[1].trim())) || P.iPromised.test(m)) return true;
-    if (P.confirm.test(m) || P.briefing.test(m) || P.email.test(m) || P.kb.some(function (r) { return r.test(m); }) || P.plan.test(m) || P.insights.test(m)) return true;
+    if (P.confirm.test(m) || P.briefing.test(m) || P.email.test(m) || P.kb.some(function (r) { return r.test(m); }) || P.plan.test(m) || P.insights.test(m) || P.spending.test(m) || P.remindAt.concat(P.spent, P.habit).some(function (r) { return r.test(m); })) return true;
     c = P.complete.exec(m); return !!c && !/^(?:note|memory)/i.test(c[1]);
   }
   return { P: P, clean: clean, matches: matches };

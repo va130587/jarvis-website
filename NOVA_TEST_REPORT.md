@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestone 7 (plan my day, focus, weekly insights) on top of Milestones 1 to 6: **321 tests: 320 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestone 8 (life tracker) on top of Milestones 1 to 7: **332 tests: 331 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -23,6 +23,8 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 | Knowledge, search, install (browser) | `tests/nova-plus-e2e.test.js` | 6 pass (run twice) | add by typing and by file, highlighted sources, honest not-found, open, delete, samples, voice; Ctrl+K palette with keyboard, pages, "> ask NOVA", Escape and outside click; service worker registers and NOVA opens offline; layout and axe at 3 widths |
 | Productivity (server) | `tests/server-productivity.test.js` | 6 pass | estimates; plan order, reasons, lunch, breaks, no overlaps, nothing changed; plan from now / tomorrow after hours / empty day / saved / estimate validation and isolation; focus one-at-a-time, stop, finish, auto-close, totals, isolation; insights numbers, on-time rate, focus trend, reliability, overdue, sentences, chat; deletion |
 | Productivity (browser) | `tests/nova-focus-e2e.test.js` | 6 pass | planner timeline, hours change re-plans, set an estimate, save, focus on a block (ring, orb, top-bar chip), stop; timer end tells you by toast, voice and pop-up and records completion, marking done goes through approval; insights tiles, charts with hover and keyboard tooltip, table view, read aloud, voice phrases; layout and axe at 3 widths |
+| Life tracker (server) | `tests/server-life.test.js` | 5 pass | time phrases and refusals; money and categories; reminders by sentence with approval, delivered once by the scheduler (concurrent ticks), weekday repeats Friday to Monday, late notice, cancel, snooze, isolation; habits streaks with an open today, weekday habits across weekends, 6-day window, Monday-first grid, unknown habit help, archive; money by sentence and form, summary vs last month, budget alerts once at 80% and 100%, delete, isolation, deletion |
+| Life tracker (browser) | `tests/nova-life-e2e.test.js` | 6 pass | capture bar preview / approve / reject / question; reminder form, bad time message, cancel; habit add, check in, streak, heatmap, uncheck; expense with automatic category, budget, delete; voice phrase; a due reminder reaches the bell and a browser pop-up; layout and axe at 3 widths |
 | Classic tools (unchanged) | earlier files | 144 pass, 1 skipped | calendar, .ics, collector, matching, Jobs for you, voice commands, Smart mode (mocked), layout, axe |
 
 ## Not tested (and why)
@@ -74,6 +76,12 @@ The older reminder timer can post "Reminder: ..." into the voice log at any mome
 3. Clicking a notification did nothing: the panel stopped the click from reaching NOVA's action handler.
 4. A decorative layer of the briefing banner extended off-screen at 768 px (layout check), and the run-history table could not be scrolled by keyboard at 390 px (axe). Both fixed.
 5. "Read it to me" claimed to be reading aloud when spoken replies were switched off; it now shows the text instead and says why.
+
+## Defects found and fixed while testing (Milestone 8)
+
+1. The habit heatmap's first column started on a Tuesday instead of a Monday (off by one day); found by a test that checks the grid's first weekday.
+2. "Remind me to submit the report tomorrow" kept "tomorrow" in the task title instead of setting the due date.
+3. At three columns the Life Tracker forms were cramped (placeholders cut off); the page now uses two columns with wrapping form fields.
 
 ## Defects found and fixed while testing (Milestone 7)
 

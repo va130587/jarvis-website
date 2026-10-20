@@ -89,3 +89,11 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 | Plan my day (time-blocked plan with reasons, lunch, breaks, what does not fit, your estimates or labelled guesses, saved plans) | WORKING AND TESTED | Fake-clock tests: order, reasons, no overlaps, lunch protected, after-hours plans tomorrow, short days, validation. It only suggests; it does not read your Google or Outlook calendar (those stay in the browser), so meetings are not taken into account yet. |
 | Focus sessions (timer, orb state, top-bar chip, end notice by toast / voice / pop-up, history) | WORKING AND TESTED | One at a time; stop early, finish, or auto-closed at the planned end if you walk away. The end notice needs a NOVA tab open (the server records the session either way). |
 | Weekly Insights (reliability score, done / on-time / focus vs last week, two charts with hover, keyboard and table views, sentences) | WORKING AND TESTED | Numbers checked against hand-built data. Reliability needs at least 3 promises in 4 weeks before it shows a score. |
+
+## Life tracker (Milestone 8)
+
+| Feature | Status | Notes |
+|---|---|---|
+| Timed reminders by sentence or form (relative, clock, tomorrow, weekdays, daily / weekday repeats), delivered by the server; cancel, "again in 10 minutes" | WORKING AND TESTED | Fake-clock tests: exact Dubai times, one delivery per occurrence even with concurrent ticks, repeats, late delivery after downtime. Delivery needs the NOVA server running (see DEPLOYMENT.md for always-on). Phone delivery needs ntfy configured. |
+| Habits: check-ins (today and the last 6 days), current and best streak, weekday habits, 13-week heatmap, archive, "check in reading" | WORKING AND TESTED | |
+| Money in AED: sentence or form, automatic category, month by category, vs last month, monthly budget with pace marker, alerts once at 80% and 100%, delete | WORKING AND TESTED | Amounts are stored as whole fils (no rounding errors). Categories are keyword rules: change one with the category menu. No bank connection (by design: free and private). |

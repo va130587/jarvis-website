@@ -65,6 +65,15 @@ Open **Focus and Planner**: NOVA fits the overdue and due tasks and your promise
 - Open **Weekly Insights**: the reliability score (promises kept on time, from ProofLoop), tasks done and focus time compared with last week, two charts (hover or Tab onto a bar; "Show as a table"), and plain sentences about what stands out.
 - Say **"plan my day"** or **"how was my week?"**.
 
+## 5d. Life Tracker (1 minute)
+
+Open **Life Tracker**. The demo has two habits with 12 weeks of history, two reminders, a month of spending and a budget.
+- In the capture bar type **"remind me at 11pm to lock the door"**: a preview appears; press Approve. A clock time makes a timed reminder that the server delivers (bell, pop-up, phone push) even with the page closed. A date only ("tomorrow") still makes a task.
+- Type **"spent 25 dirhams on karak"**: NOVA picks the category (food) and asks first.
+- Tick a habit: the streak and the 13-week heatmap update.
+- Money: this month by category, compared with last month, and the budget bar with a marker for an even pace through the month. NOVA warns you once at 80% and once at 100%.
+- By voice: **"how much did I spend this month?"**, **"check in reading"**.
+
 ## 6. Automation and notifications (1 minute)
 
 Open **Automation Centre**.

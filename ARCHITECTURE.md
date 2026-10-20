@@ -149,3 +149,9 @@ Tool registry and approvals, ProofLoop, Gmail and Outlook, scheduler, speech pro
 - `server/productivity.js`: `plan()` orders overdue tasks, overdue promises, today's tasks and promises, the next two days, then the oldest undated tasks; it places them from now (or the start of the day) in 15-minute steps with 10-minute gaps, keeps lunch free, adds a short break after 90 minutes and lists what does not fit. Estimates come from `tasks.estimate_min` or a labelled guess from the wording. Saved plans live in `day_plans`.
 - `focus_sessions`: one running session per person; stopping early is "stopped", reaching the planned end is "completed"; a session left running more than an hour past its end is closed at its planned end.
 - `insights()`: Monday-to-Sunday weeks in Dubai time; reliability = promises with a deadline closed on time, divided by those closed or overdue in the last 28 days (shown only from 3). Tools `plan.today` and `insights.week` are read-only.
+
+## Life tracker (Milestone 8)
+
+- `server/life.js`: `parseWhen` (Dubai time; relative, clock, parts of day, weekdays, daily / weekday repeats; "at 6" means 6 pm), `parseMoney` (fils, never floats), `categorize` (keyword rules). Tables `reminders`, `habits`, `habit_checks`, `expenses`, `budgets`.
+- Reminders are delivered by `life.deliver()`, called on every scheduler tick: each delivery is a compare-and-set on (id, due time) plus a notification dedupe key, so two ticks or two processes cannot send one reminder twice. Repeating reminders move to their next time; reminders missed while NOVA was off are delivered late and say so.
+- Budget alerts are notifications keyed by month and threshold, so each fires once. Tools `reminders.create`, `expenses.add`, `habits.check` (write, undoable, voice-approvable) and `expenses.summary` (read). A clock time in "remind me ..." selects a reminder; a date only keeps the task behaviour.

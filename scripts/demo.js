@@ -30,6 +30,19 @@ function seed(app) {
     db.prepare("INSERT INTO focus_sessions (user_id, title, planned_min, started_at, ended_at, status) VALUES (?, ?, ?, ?, ?, 'completed')").run(uid, title, focus, t0 - focus * 60e3, t0);
   });
   if (wd === 0) db.prepare("INSERT INTO focus_sessions (user_id, title, planned_min, started_at, ended_at, status) VALUES (?, 'Morning planning', 25, ?, ?, 'completed')").run(uid, now - 3 * 3600e3, now - 3 * 3600e3 + 25 * 60e3);
+  // life tracker: two habits with history, a few reminders, a month of spending and a budget (all fictional)
+  [['Read 10 pages', 'daily', 0.8], ['Gym', 'weekdays', 0.6]].forEach(([name, sched, rate], hi) => {
+    const hid = Number(db.prepare('INSERT INTO habits (user_id, name, schedule, created_at) VALUES (?, ?, ?, ?)').run(uid, name, sched, now - 90 * dayMs).lastInsertRowid);
+    for (let i = 1; i <= 84; i++) { const d = addDays(today, -i), wday = new Date(d + 'T12:00:00Z').getUTCDay(); if (sched === 'weekdays' && (wday === 0 || wday === 6)) continue;
+      if (i <= 6 - hi * 3 || ((i * 7 + hi * 3) % 10) / 10 < rate) db.prepare('INSERT INTO habit_checks (habit_id, user_id, day, created_at) VALUES (?, ?, ?, ?)').run(hid, uid, d, now); }
+  });
+  [['Call mum', 19 * 60, 'none'], ['Take vitamins', 8 * 60, 'daily']].forEach(([text, mins, rep]) => { let t = Date.parse(today + 'T00:00:00+04:00') + mins * 60e3; if (t <= now) t += dayMs; db.prepare('INSERT INTO reminders (user_id, text, due_at, repeat, created_at) VALUES (?, ?, ?, ?, ?)').run(uid, text, t, rep, now); });
+  const month = today.slice(0, 7), dom = +today.slice(8, 10);
+  [[2500, 'food', 'Lunch with the study group'], [1800, 'transport', 'Careem to the interview'], [32000, 'groceries', 'Carrefour weekly shop'], [4500, 'food', 'Karak and shawarma'], [15000, 'bills', 'du mobile bill'], [9900, 'learning', 'SQL course'], [6000, 'fun', 'Cinema'], [700, 'transport', 'Metro top-up']].forEach(([fils, cat, note], i) => {
+    const day = month + '-' + String(Math.max(1, dom - i * 2)).padStart(2, '0');
+    db.prepare('INSERT INTO expenses (user_id, amount_fils, category, note, day, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(uid, fils, cat, note, day, now);
+  });
+  db.prepare("INSERT INTO budgets (user_id, category, monthly_fils) VALUES (?, 'total', 150000)").run(uid);
   db.prepare("UPDATE tasks SET estimate_min = 90 WHERE user_id = ? AND title = 'Prepare for the Junior Data Analyst interview'").run(uid);
   db.prepare('INSERT INTO notes (user_id, text, created_at) VALUES (?, ?, ?)').run(uid, 'Interview tips: prepare two stories about the data project (problem, action, result).', now);
   for (const m of ['I am a fresh graduate looking for data analyst roles in Dubai.', 'I prefer short, direct answers.', 'My study group meets on Wednesday evenings.'])

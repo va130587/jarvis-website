@@ -136,7 +136,22 @@ const MIGRATIONS = [
      planned_min INTEGER NOT NULL, started_at INTEGER NOT NULL, ended_at INTEGER, status TEXT NOT NULL, note TEXT);
    CREATE INDEX focus_user ON focus_sessions(user_id, started_at);
    CREATE TABLE day_plans (
-     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, day TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE (user_id, day));`
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, day TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE (user_id, day));`,
+  // 7: life tracker: timed reminders (delivered by the server), habits with daily check-ins, expenses with monthly budgets
+  `CREATE TABLE reminders (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, text TEXT NOT NULL, due_at INTEGER NOT NULL,
+     repeat TEXT NOT NULL DEFAULT 'none', status TEXT NOT NULL DEFAULT 'pending', sent_count INTEGER NOT NULL DEFAULT 0, last_sent_at INTEGER, created_at INTEGER NOT NULL);
+   CREATE INDEX reminders_due ON reminders(status, due_at);
+   CREATE TABLE habits (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, name TEXT NOT NULL, schedule TEXT NOT NULL DEFAULT 'daily',
+     archived INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL);
+   CREATE TABLE habit_checks (
+     habit_id INTEGER NOT NULL REFERENCES habits(id) ON DELETE CASCADE, user_id INTEGER NOT NULL, day TEXT NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (habit_id, day));
+   CREATE TABLE expenses (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, amount_fils INTEGER NOT NULL, category TEXT NOT NULL,
+     note TEXT, day TEXT NOT NULL, created_at INTEGER NOT NULL, deleted_at INTEGER);
+   CREATE INDEX expenses_user ON expenses(user_id, day);
+   CREATE TABLE budgets (user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, category TEXT NOT NULL, monthly_fils INTEGER NOT NULL, PRIMARY KEY (user_id, category));`
 ];
 
 function migrate(db) {

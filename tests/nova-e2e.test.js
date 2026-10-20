@@ -51,10 +51,10 @@ test('sign-in gate: nothing is shown until you sign in; the allow-list is enforc
   await ctx.close();
 });
 
-test('16 NOVA pages: all are live (nothing labelled Upcoming any more)', async () => {
+test('17 NOVA pages: all are live (nothing labelled Upcoming any more)', async () => {
   const { page, ctx, errors } = await open(); await signIn(page);
   const nav = await page.$$eval('.nav a[data-view]', as => as.map(a => [a.getAttribute('data-view'), a.textContent.trim()]));
-  const novaPages = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'focus', 'proofloop', 'insights', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security'];
+  const novaPages = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'focus', 'life', 'proofloop', 'insights', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security'];
   for (const v of novaPages) assert.ok(nav.some(n => n[0] === v), 'nav has ' + v);
   const live = novaPages, upcoming = [];
   for (const v of novaPages) {

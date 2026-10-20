@@ -3,6 +3,7 @@
 'use strict';
 const { tokens } = require('../memory');
 const { P } = require('../../intents');
+const { parseWhen, parseMoney, categorize } = require('../life');
 
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 function dubaiDate(ms) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms)); }
@@ -30,7 +31,25 @@ function bestMatch(rows, query, field) {
 function matchIntent(message, ctx) {
   const m0 = require('../../intents').clean(message);
   let m;
-  const title = t => { let due = null, s = t.trim().replace(/[.!]+$/, ''); const d = DUE_RX.exec(s); if (d) { due = parseDue(d[1], ctx.now()); s = s.slice(0, d.index).trim(); } return { title: s, due }; };
+  const title = t => { let due = null, s = t.trim().replace(/[.!]+$/, ''); const d = DUE_RX.exec(s) || /\s+(today|tomorrow)\s*$/i.exec(s); if (d) { due = parseDue(d[1], ctx.now()); s = s.slice(0, d.index).trim(); } return { title: s, due }; };
+  if ((m = P.remindAt[0].exec(m0)) || (m = P.remindAt[1].exec(m0))) {             // a clock time makes it a timed reminder (date only stays a task)
+    const first = P.remindAt[0].test(m0), when = first ? m[1] : m[2], text = (first ? m[2] : m[1]).trim().replace(/[.!]+$/, '');
+    const w = parseWhen(when, ctx.now());
+    if (!w) return { understood: 'Set a reminder: "' + text + '"', final: 'I could not understand the time "' + when + '". Try "at 6pm", "in 20 minutes", "tomorrow at 9" or "every weekday at 7:30". Nothing was changed.' };
+    return { understood: 'Remind you "' + text + '" ' + when, call: { name: 'reminders.create', input: { text, dueAt: w.dueAt, repeat: w.repeat } } };
+  }
+  if ((m = P.spent[0].exec(m0)) || (m = P.spent[1].exec(m0))) {
+    const fils = parseMoney(m[1]), note = m[2].trim().replace(/[.!]+$/, '');
+    if (!fils) return { understood: 'Record an expense', final: 'I could not read the amount "' + m[1] + '". Nothing was changed.' };
+    return { understood: 'Record ' + (fils / 100) + ' AED on ' + note, call: { name: 'expenses.add', input: { fils, category: categorize(note), note } } };
+  }
+  if (P.spending.test(m0)) return { understood: 'Summarise your spending this month', call: { name: 'expenses.summary', input: {} } };
+  if ((m = P.habit[0].exec(m0)) || (m = P.habit[1].exec(m0))) {
+    const all = ctx.db.prepare('SELECT id, name FROM habits WHERE user_id = ? AND archived = 0').all(ctx.user.id), q = m[1].toLowerCase().replace(/^my\s+/, '').trim();
+    const h = all.find(x => x.name.toLowerCase() === q) || all.find(x => x.name.toLowerCase().includes(q) || q.includes(x.name.toLowerCase()));
+    if (!h) return { understood: 'Check in a habit: "' + m[1] + '"', final: all.length ? 'I could not find a habit called "' + m[1] + '". Your habits: ' + all.map(x => x.name).join(', ') + '. Nothing was changed.' : 'You are not tracking any habits yet. Add one on the Life Tracker page. Nothing was changed.' };
+    return { understood: 'Check in "' + h.name + '" for today', call: { name: 'habits.check', input: { id: h.id } } };
+  }
   if ((m = P.create[0].exec(m0)) || (m = P.create[1].exec(m0))) {
     const t = title(m[1]); if (!t.title) return null;
     return { understood: 'Create a task "' + t.title + '"' + (t.due ? ' due ' + t.due : ''), call: { name: 'tasks.create', input: t.due ? { title: t.title, due: t.due } : { title: t.title } } };
