@@ -23,7 +23,7 @@ async function open(opts) {
   const o = await H.openApp(browser, Object.assign({ base: srv.base, hash: '', recognition: true }, opts || {}));
   await o.page.waitForFunction(() => window.NOVA && NOVA.mode !== 'unknown');
   await o.page.waitForSelector('#novaDevEmail'); await o.page.fill('#novaDevEmail', 'roshan@example.com'); await o.page.click('#novaDevForm button');
-  await o.page.waitForFunction(() => window.NOVA && NOVA.user && J.current() === 'dashboard');
+  await o.page.waitForFunction(() => window.NOVA && NOVA.user && window.J && J.current() === 'dashboard');
   await o.page.evaluate(() => { location.hash = 'voice'; }); await o.page.waitForSelector('#ptt');
   return o;
 }

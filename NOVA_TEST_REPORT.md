@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestones 1 (local model), 2 (ProofLoop) and 3 (voice): **267 tests: 266 passed, 0 failed, 1 skipped** (about 330 seconds). Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestones 1 to 4 (local model, ProofLoop, voice, daily use): **290 tests: 289 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -15,6 +15,8 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 | Voice helpers | `tests/speech.test.js` | 7 pass | voice ranking (Andrew > other natural > rest, never another language), honest voice report, spoken-approval parser (bare "yes", "approve and delete everything", mishearings do not approve), error explanations, provider support check |
 | Voice in the browser (mock speech engine) | `tests/nova-voice-e2e.test.js` | 16 pass (run 3 times, stable) | push to talk, editable live transcript, nothing sent until Send, spoken reply; slow chunked speech and repeats; noise (low confidence flagged); wrong words corrected; silence; permission denied; network and offline; no recogniser / no synthesis; Arabic language setting; Andrew voice picked and marked, Test voice, honest note; hold-to-talk and Space; spoken approve for low-risk, bare yes ignored, delete/forget refused, reject allowed, setting off; layout and axe at 3 widths |
 | Spoken approval on the server | `tests/server-agent.test.js` (1 added, now 15) | pass | `via: voice` allowed for write+undoable, 403 `voice_not_allowed` for destructive, edits by voice refused, invalid channel 400, audited |
+| Daily use on the server | `tests/server-daily.test.js` | 16 pass | Dubai clock and weekdays; scheduler with a **fake clock**: runs once at the time, repeated + concurrent ticks and a second scheduler instance never duplicate, retries with 1/5-minute back-off then success, 3 failures -> failed + one notice, server off for 3 days -> one merged run, crashed runs resumed, disabled jobs skipped; schedules API validation and isolation; briefing content, focus rules, quiet day, history; "brief me" / "check my email" without approval; notifications (dedupe, read, read-all, isolation); **ntfy against a stand-in** (headers, ASCII title, click link, failures recorded, topic never exposed); classifier (critical job deadline, phishing, mailing lists, promises, questions, hostile text); demo inbox, drafts never sent (403 + audit), phishing guard, ProofLoop tracking, isolation; **Gmail against a stand-in Google + Gmail** (needs NOVA_SECRET_KEY, read-only scope + PKCE, denied / expired / bad code / signed out / another user's state / missing scope refused, single-use state, tokens encrypted and never in API or export, metadata-only fetch, entity decoding, no refetch, refresh, job notifies once, revoked -> needs reconnect, disconnect revokes and deletes); token sealing; deletion of all new tables |
+| Daily use in the browser | `tests/nova-daily-e2e.test.js` | 7 pass (run 3 times, stable) | Daily Briefing page and dashboard strip, read aloud, saved copies; Smart Email demo inbox, filters, reasons, draft edit/save, send refused, phishing guard, tracking; Automation Centre switch/time/days/run now/history; bell, Escape, open from a notification, read all, browser pop-up; voice "brief me" / "any important emails"; Connected Apps rows; Gmail callback message; layout and axe at 1440/768/390 |
 | Classic tools (unchanged) | earlier files | 144 pass, 1 skipped | calendar, .ics, collector, matching, Jobs for you, voice commands, Smart mode (mocked), layout, axe |
 
 ## Not tested (and why)
@@ -58,6 +60,18 @@ Real Claude tool calling (paid API, not used); external tools (none exist yet, a
 ## Notes from Milestone 3
 
 The older reminder timer can post "Reminder: ..." into the voice log at any moment, which made two voice tests flaky; tests now ignore those lines. A bare `webkitSpeechRecognition` exists in headless Chromium, so the "no recogniser" test removes it explicitly.
+
+## Defects found and fixed while testing (Milestone 4)
+
+1. The scheduler skipped every tick after the first quiet one: when a pass had nothing to wait for, its "busy" flag was cleared before it was set. Found by the fake-clock tests; fixed by clearing the flag after the whole pass.
+2. The Daily Briefing and Automation pages redrew forever because each fetch carries a fresh timestamp; those fields are now ignored when deciding whether to redraw.
+3. Clicking a notification did nothing: the panel stopped the click from reaching NOVA's action handler.
+4. A decorative layer of the briefing banner extended off-screen at 768 px (layout check), and the run-history table could not be scrolled by keyboard at 390 px (axe). Both fixed.
+5. "Read it to me" claimed to be reading aloud when spoken replies were switched off; it now shows the text instead and says why.
+
+## Not tested (Milestone 4)
+
+Real Gmail (needs your Google OAuth client with the Gmail API and NOVA_SECRET_KEY), a real phone receiving ntfy pushes, the scheduler running for days in real time, and classification accuracy on your own mail. How to verify each: README "Daily use" and NOVA_FEATURE_STATUS.md.
 
 ## Not tested (Milestone 3)
 

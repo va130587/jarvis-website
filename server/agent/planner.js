@@ -65,6 +65,8 @@ function matchIntent(message, ctx) {
     if (!tb.none && !tb.ambiguous) return { understood: 'Complete task #' + tb.row.id + ' "' + tb.row.title + '"', call: { name: 'tasks.complete', input: { id: tb.row.id } } };
     return { understood: 'Confirm that "' + m[1] + '" is done', final: 'I could not find an open commitment or task matching "' + m[1] + '" (or more than one matched). Nothing was changed.' };
   }
+  if (P.briefing.test(m0)) return { understood: 'Read your daily briefing', call: { name: 'briefing.today', input: {} } };
+  if (P.email.test(m0)) return { understood: 'Check your e-mail', call: { name: 'email.list', input: { filter: /reply|replies|answer/i.test(m0) ? 'needs_reply' : /important|urgent/i.test(m0) ? 'important' : /^(?:check|read|show|list)/i.test(m0) || /new|unread/i.test(m0) ? 'all' : 'important' } } };
   if ((m = P.forget.exec(m0))) {
     const rows = ctx.db.prepare("SELECT id, text FROM memories WHERE user_id = ? AND status = 'active'").all(ctx.user.id), b = bestMatch(rows, m[1], 'text');
     if (b.none) return { understood: 'Forget: "' + m[1] + '"', final: 'I could not find a saved memory matching that. Nothing was changed.' };

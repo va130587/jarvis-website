@@ -33,6 +33,12 @@ function load(env, over) {
     },
     agent: { maxSteps: +env.NOVA_AGENT_MAX_STEPS || 5, toolTimeoutMs: +env.NOVA_TOOL_TIMEOUT_MS || 5000, runTimeoutMs: +env.NOVA_RUN_TIMEOUT_MS || 30000, approvalTtlMs: (+env.NOVA_APPROVAL_TTL_HOURS || 24) * 3600e3 },
     limits: { auth: { max: +env.NOVA_RATE_AUTH_MAX || 20, perMs: 60e3 }, api: { max: +env.NOVA_RATE_API_MAX || 240, perMs: 60e3 }, chat: { max: +env.NOVA_RATE_CHAT_MAX || 30, perMs: 60e3 } },
+    // Encrypts stored account tokens (Gmail). Any long random string; without it NOVA refuses to store tokens. Never commit it.
+    secretKey: env.NOVA_SECRET_KEY || '',
+    scheduler: { enabled: env.NOVA_SCHEDULER !== 'off', intervalMs: +env.NOVA_SCHEDULER_INTERVAL_MS || 30000 },
+    // Phone push through ntfy.sh (free; or your own ntfy server). The topic name is the only secret: anyone who knows it can read the messages.
+    ntfy: { url: (env.NOVA_NTFY_URL || 'https://ntfy.sh').replace(/\/$/, ''), topic: env.NOVA_NTFY_TOPIC || '', token: env.NOVA_NTFY_TOKEN || '' },
+    gmail: { apiUrl: (env.NOVA_GMAIL_API_URL || 'https://gmail.googleapis.com').replace(/\/$/, ''), revokeUrl: env.GOOGLE_REVOKE_URL || 'https://oauth2.googleapis.com/revoke', maxMessages: +env.NOVA_GMAIL_MAX || 30 },
     now: () => Date.now()
   };
   cfg.secureCookies = /^https:/i.test(cfg.baseUrl);

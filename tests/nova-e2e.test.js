@@ -51,12 +51,12 @@ test('sign-in gate: nothing is shown until you sign in; the allow-list is enforc
   await ctx.close();
 });
 
-test('13 NOVA pages: working ones are real, the rest are clearly labelled Upcoming', async () => {
+test('14 NOVA pages: working ones are real, the rest are clearly labelled Upcoming', async () => {
   const { page, ctx, errors } = await open(); await signIn(page);
   const nav = await page.$$eval('.nav a[data-view]', as => as.map(a => [a.getAttribute('data-view'), a.textContent.trim()]));
-  const novaPages = ['dashboard', 'chat', 'voice', 'email', 'hub', 'proofloop', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security'];
+  const novaPages = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'proofloop', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security'];
   for (const v of novaPages) assert.ok(nav.some(n => n[0] === v), 'nav has ' + v);
-  const live = ['dashboard', 'chat', 'voice', 'hub', 'proofloop', 'identity', 'memory', 'usage', 'connections', 'security'], upcoming = ['email', 'automation', 'knowledge'];
+  const live = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'automation', 'hub', 'proofloop', 'identity', 'memory', 'usage', 'connections', 'security'], upcoming = ['knowledge'];
   for (const v of novaPages) {
     await page.evaluate(h => { location.hash = h; }, v); await page.waitForTimeout(250);
     const t = await page.innerText('main');

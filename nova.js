@@ -76,10 +76,11 @@
     cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', loop: '<path d="M5 12a7 7 0 0 1 12-5l2-2v6h-6l2.2-2.2A4.5 4.5 0 0 0 7.5 12M19 12a7 7 0 0 1-12 5l-2 2v-6h6l-2.2 2.2A4.5 4.5 0 0 0 16.5 12"/>',
     auto: '<path d="M13 3 5 13h6l-1 8 8-10h-6z"/>', id: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', mem: '<path d="M12 3c-4 0-7 2-7 5v8c0 3 3 5 7 5s7-2 7-5V8c0-3-3-5-7-5z"/><path d="M5 8c0 3 3 5 7 5s7-2 7-5M5 14c0 3 3 5 7 5s7-2 7-5"/>',
     book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>', cost: '<path d="M4 19h16"/><path d="M7 16V9M12 16V5M17 16v-4"/>', plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', tool: '<circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.4"/>'
   };
-  var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail', 'Upcoming'], ['hub', 'Tasks and Calendar', 'cal'], ['proofloop', 'ProofLoop', 'loop'],
-    ['automation', 'Automation Centre', 'auto', 'Upcoming'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book', 'Upcoming'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock']];
+  var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['briefing', 'Daily Briefing', 'sun'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail'], ['hub', 'Tasks and Calendar', 'cal'], ['proofloop', 'ProofLoop', 'loop'],
+    ['automation', 'Automation Centre', 'auto'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book', 'Upcoming'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock']];
   var TOOLS_NAV = [['today', 'Today', 'tool'], ['tasks', 'Tasks', 'tool'], ['calendar', 'Calendar', 'cal'], ['notes', 'Notes', 'book'], ['matches', 'Jobs for you', 'tool'], ['jobs', 'Job finder', 'tool'], ['applications', 'Applications', 'tool'], ['growth', 'Growth', 'cost'], ['review', 'Weekly review', 'cost'], ['profile', 'Job profile', 'id'], ['settings', 'Tool settings', 'tool'], ['help', 'Voice commands', 'mic']];
   function link(v, label, ic, badge) { return '<a href="#' + v + '" data-view="' + v + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (IC[ic] || IC.tool) + '</svg><span>' + esc(label) + '</span>' + (badge ? '<em class="count soon" aria-hidden="true">Soon</em><span class="sr-only"> (upcoming, not built yet)</span>' : '') + '</a>'; }
   function buildNav() {
@@ -101,7 +102,7 @@
   function load(key, path) { return api('GET', path).then(function (d) { N.cache[key] = d; return d; }); }
   // Fetch fresh data for a screen and redraw it only if something actually changed (otherwise every redraw would trigger another fetch).
   function stale(screen, keys) {
-    var sig = function (k) { return JSON.stringify(N.cache[k[0]] || null, function (key, v) { return key === 'lastSeenAt' ? undefined : v; }); };   // lastSeenAt changes on every fetch, so it must not trigger a redraw
+    var sig = function (k) { return JSON.stringify(N.cache[k[0]] || null, function (key, v) { return key === 'lastSeenAt' || key === 'generatedAt' || key === 'now' ? undefined : v; }); };   // these change on every fetch, so they must not trigger a redraw
     var before = keys.map(sig);
     Promise.all(keys.map(function (k) { return load(k[0], k[1]); })).then(function () {
       var changed = keys.some(function (k, i) { return sig(k) !== before[i]; });
@@ -110,10 +111,11 @@
   }
   function tile(label, value, note, tone) { return '<div class="panel stat' + (tone ? ' ' + tone : '') + '"><span><span class="label">' + esc(label) + '</span><b class="num">' + esc(value) + '</b><small>' + esc(note) + '</small></span></div>'; }
   function name() { return N.user ? N.user.displayName : 'there'; }
+  N.h = { orb: orb, when: when, ago: ago, stale: stale, tile: tile, load: load, fail: fail, soon: soon, name: name, STATES: STATES };
 
   /* ================= screens ================= */
   var S = J.screens;
-  Object.assign(J.titles, { dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings' });
+  Object.assign(J.titles, { briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings' });
   S.dashboard = {
     render: function () {
       var m = N.cache.memories, u = N.cache.usage, a = N.cache.activity, convs = N.cache.conversations, ap = N.cache.approvals ? N.cache.approvals.approvals : null;
@@ -126,13 +128,14 @@
         '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'memories and actions' : 'nothing pending', proposed ? 'gold' : '') +
         tile('Replies without AI', rules, 'free rule-based, this month') + tile('Replies from a model', N.session && N.session.aiProvider !== 'local' ? model : 'off', N.session && N.session.aiProvider !== 'local' ? (N.session.aiProvider === 'ollama' ? 'local model, free' : 'this month') : 'no AI model configured') + '</div>' +
         (ap && ap.length ? '<article class="panel gold" id="approvalsPanel"><h2 class="label">Waiting for your approval <span class="n">' + ap.length + '</span></h2>' + ap.map(function (x) { return previewCard({ id: x.runId, pendingApproval: x }); }).join('') + '</article>' : '') +
+        (N.daily ? N.daily.dashboardStrip() : '') +
         '<div class="grid-2">' + plPanel() +
         '<article class="panel"><div class="panel-head"><h2 class="label">Recent activity (real)</h2><a class="btn small ghost" href="#chat">Chat</a></div>' +
           (a && a.activity.length ? '<ul class="mini-list">' + a.activity.slice(0, 5).map(function (x) { return '<li><span class="when">' + esc(ago(x.at)) + '</span><span class="what">' + esc(x.request) + '<small>' + esc(x.operation.replace(/_/g, ' ')) + ' · ' + esc(x.handler === 'rules' ? 'built-in rule' : x.handler) + ' · ' + esc(x.status.replace(/_/g, ' ')) + '</small></span></li>'; }).join('') + '</ul>' : J.empty(a ? 'No activity yet. Ask NOVA something in Chat.' : 'Loading…')) + '</article></div>' +
-        '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> ProofLoop commitments with evidence and receipts, sign-in, memories you approve, chat with built-in rules, tasks and notes that NOVA can create after you approve (with Undo where possible), activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Upcoming:</b> email, automations, a knowledge base.</li></ul></article>' +
+        '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> ProofLoop commitments with evidence and receipts, voice with push-to-talk, sign-in, memories you approve, chat with built-in rules, tasks and notes that NOVA can create after you approve (with Undo where possible), activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Daily use:</b> a daily briefing, scheduled jobs (Dubai time) with retries and history, notifications (in NOVA, browser, optional phone push), and Smart Email (Gmail read-only, or a labelled demo inbox).</li><li><b>Upcoming:</b> a knowledge base.</li></ul></article>' +
         (convs ? '' : '');
     },
-    after: function () { stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals'], ['pl', '/api/proofloop/summary']]); }
+    after: function () { stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals'], ['pl', '/api/proofloop/summary'], ['briefing', '/api/briefing']]); }
   };
 
   /* ---- chat ---- */
@@ -349,7 +352,7 @@
       .catch(function (e) { N.setState('error'); return e.code === 'voice_not_allowed' ? 'That needs a button press, not a spoken approval. Nothing was changed.' : e.message; });
   };
 
-  S.email = { render: function () { return J.head('Inbox', 'Smart Email', 'Not built yet.', '') + soon('Phase 4', 'Gmail intelligence', ['Read-only Gmail connection (official Google sign-in)', 'Priority: Critical, Important, Normal, Low Priority, Needs Review, always with a reason', 'Deadlines and requests found in messages, with a link to the original', 'Reply drafts you review and edit. Nothing is sent without separate permission and your approval']); } };
+  /* Smart Email, Daily Briefing and Automation Centre live in nova-daily.js */
   /* ---- ProofLoop ---- */
   var PL_LANES = [['Needs your attention', function (c) { return c.overdue || c.status === 'awaiting_approval'; }], ['In progress', function (c) { return ['request_detected', 'request_understood', 'task_prepared', 'executing'].indexOf(c.status) >= 0; }],
     ['Submitted, waiting for confirmation', function (c) { return c.status === 'submitted' || c.status === 'awaiting_confirmation'; }], ['Verified and completed', function (c) { return c.status === 'verified' || c.status === 'completed'; }], ['Failed or cancelled', function (c) { return c.status === 'failed' || c.status === 'cancelled'; }]];
@@ -424,7 +427,6 @@
     plDemoReset: function () { api('POST', '/api/demo/reset', {}).then(function () { J.toast('Demo reset.'); return plReload(); }).catch(fail); },
     plDemoRemove: function () { J.confirm('Remove all demo (fictional) commitments? Your real ones stay.', 'Remove demo data', 'Remove demo data?').then(function (ok) { if (ok) api('POST', '/api/demo/reset', { reload: false }).then(function () { J.toast('Demo data removed.'); return plReload(); }).catch(fail); }); }
   });
-  S.automation = { render: function () { return J.head('Automation', 'Automation Centre', 'Not built yet.', '') + soon('Phase 5', 'Scheduled work that runs with the browser closed', ['Daily briefing, deadline reminders, pending-reply reminders, follow-ups', 'Run now, enable, disable, history, next run, retries without duplicates']) + '<article class="panel"><h2 class="label">Running today (separate from NOVA)</h2><p class="small-text muted">The GitHub Action that collects jobs every 6 hours is the only scheduled automation. See Connected Apps.</p></article>'; } };
   S.knowledge = { render: function () { return J.head('Knowledge', 'Knowledge Base', 'Not built yet.', '') + soon('Phase 6', 'Your documents and notes, searchable with sources', ['Add notes and files you choose', 'Answers cite the source passage']); } };
 
   /* ---- tasks and calendar hub ---- */
@@ -524,10 +526,10 @@
         aiRow() +
         row('Google Calendar (browser)', 'Browser-side', 'dim', 'Read-only or two-way, set up in Tool settings. Not yet connected through the server.', ' <a class="btn small" href="#settings">Open</a>') +
         row('Outlook / Microsoft 365 calendar (browser)', 'Browser-side', 'dim', 'Set up in Tool settings.', ' <a class="btn small" href="#settings">Open</a>') +
-        row('Gmail', 'Upcoming', 'gold', 'Phase 4. Will start read-only.') +
+        (N.daily ? N.daily.connectionRows() : '') +
         row('Job collector (GitHub Action)', 'Separate', 'dim', 'Collects public job listings every 6 hours. See Jobs for you.', ' <a class="btn small" href="#matches">Open</a>') + '</ul></article>';
     },
-    after: function () { stale('connections', [['aistatus', '/api/ai/status']]); }
+    after: function () { stale('connections', [['aistatus', '/api/ai/status'], ['email', '/api/email'], ['notifs', '/api/notifications']]); }
   };
 
   /* ---- security and settings ---- */
@@ -594,7 +596,7 @@
         N.mode = 'server'; N.session = s; document.body.classList.add('nova-server');
         document.title = 'NOVA'; var bt = $('.brand-text b'); if (bt) bt.textContent = 'NOVA';
         if (!s.authenticated) { showLogin(); return; }
-        N.user = s.user; N.csrf = s.csrf; hideLogin(); buildNav(); observeVoice();
+        N.user = s.user; N.csrf = s.csrf; hideLogin(); buildNav(); observeVoice(); if (N.daily) N.daily.start();
         if (!location.hash || location.hash === '#today') location.hash = 'dashboard'; else J.render(true);
         N.setState('idle');
       })

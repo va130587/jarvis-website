@@ -1,0 +1,15 @@
+{
+  "note": "Fictional messages for the labelled demo inbox. Every name, address and organisation here is made up (example.* domains).",
+  "messages": [
+    { "id": "demo-1", "hoursAgo": 2, "fromName": "Sara Haddad (Talent team)", "fromAddr": "sara.haddad@talent.example.com", "subject": "Interview invitation: Junior Data Analyst", "snippet": "Thank you for your application. Could you confirm one of the interview slots below by tomorrow? We look forward to speaking with you." },
+    { "id": "demo-2", "hoursAgo": 5, "fromName": "Dr. Lina Mansour", "fromAddr": "l.mansour@university.example.edu", "subject": "Feedback on your project chapter", "snippet": "Good progress. Please submit the revised methodology section before Friday so I can review it over the weekend. Can you also add the sample size?" },
+    { "id": "demo-3", "hoursAgo": 7, "fromName": "Gulf Bank Security", "fromAddr": "gulfbank.secure.alerts@gmail.com", "subject": "URGENT: your account will be suspended", "snippet": "We detected unusual sign-in activity. Verify your account immediately at bit.ly/gb-verify or your card will be blocked today." },
+    { "id": "demo-4", "hoursAgo": 9, "fromName": "Omar Farouk", "fromAddr": "omar.farouk@example.org", "subject": "Re: team report", "snippet": "Thanks for the reminder. I will send the final figures for the team report by Thursday." },
+    { "id": "demo-5", "hoursAgo": 12, "fromName": "Careers Weekly", "fromAddr": "newsletter@careers.example.net", "subject": "10 tips for your first job in Dubai", "snippet": "This week: networking events, CV tips and new graduate programmes.", "unsubscribe": true },
+    { "id": "demo-6", "hoursAgo": 14, "fromName": "City Utilities", "fromAddr": "billing@utilities.example.ae", "subject": "Your bill for October is ready", "snippet": "Your bill of AED 412.50 is ready. Payment is due by 2026-10-28. Pay online or through the app.", "unsubscribe": false, "labels": ["CATEGORY_UPDATES"] },
+    { "id": "demo-7", "hoursAgo": 20, "fromName": "Aisha", "fromAddr": "aisha.k@example.com", "subject": "Photos from Saturday", "snippet": "Here are the photos from the beach day. It was so good to see everyone!" },
+    { "id": "demo-8", "hoursAgo": 26, "fromName": "Hiring at Nimbus Analytics", "fromAddr": "noreply@jobs.nimbus.example.com", "subject": "We received your application", "snippet": "Thank you for applying for the Graduate Analyst position. We will review your application and get back to you." },
+    { "id": "demo-9", "hoursAgo": 30, "fromName": "LinkUp", "fromAddr": "notifications@linkup.example.com", "subject": "You appeared in 12 searches this week", "snippet": "See who is looking at your profile.", "labels": ["CATEGORY_SOCIAL"] },
+    { "id": "demo-10", "hoursAgo": 33, "fromName": "Priya Nair", "fromAddr": "priya.nair@example.org", "subject": "Study group on Wednesday?", "snippet": "Are you available on Wednesday evening for the statistics study group? Let me know so I can book the room." }
+  ]
+}

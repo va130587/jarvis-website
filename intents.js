@@ -15,6 +15,8 @@
     oweMe: /^(.+?)\s+(?:owes me|promised me|will send me|is going to send me|has to send me)\s+(.+?)(?:\s+(?:by|before|on)\s+(today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|\d{4}-\d{2}-\d{2}))?$/i,
     iPromised: /^i\s+promised\s+(.+?)\s+to\s+(.+?)(?:\s+(?:by|before|on)\s+(today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|\d{4}-\d{2}-\d{2}))?$/i,
     commitList: /^(?:what\s+do\s+i\s+owe|what(?:'s| is)\s+owed\s+to\s+me|who\s+owes\s+me|what(?:'s| is)\s+overdue|(?:show|list)(?:\s+me)?(?:\s+my)?\s+(?:open\s+|overdue\s+)?commitments)\??$/i,
+    briefing: /^(?:(?:give me|read me|show me|read|show|what(?:'s| is))\s+)?(?:my\s+|the\s+|today's\s+)?(?:daily\s+|morning\s+)?briefing\??$|^brief me$|^what(?:'s| is)\s+(?:on\s+)?my\s+day(?:\s+look\s+like)?\??$|^how\s+does\s+my\s+day\s+look\??$/i,
+    email: /^(?:(?:check|read|show|list|summari[sz]e)(?:\s+me)?\s+)?(?:my\s+)?(?:important\s+|new\s+|urgent\s+|unread\s+)?(?:e-?mails?|inbox|mail)\??$|^(?:(?:do\s+i\s+have\s+)?any|are\s+there\s+any)\s+(?:important\s+|new\s+|urgent\s+)?e-?mails?\??$|^(?:which|what)\s+e-?mails?\s+(?:need|needs)\s+(?:a\s+)?(?:reply|replies|answer)\??$/i,
     confirm: /^(?:i(?:'ve| have)?\s+(?:sent|finished|delivered|submitted|handed in|completed)|confirm(?:\s+that)?(?:\s+commitment)?)\s+(.+)$/i
   };
   function clean(message) { return String(message).trim().replace(/^(?:hey |ok |okay |hi )?(?:nova|jarvis)[, ]+/i, '').replace(/^please\s+/i, ''); }
@@ -25,7 +27,7 @@
     if (P.list.test(m) || P.notes.test(m) || P.del.test(m) || P.search.test(m) || P.forget.test(m)) return true;
     var o = P.oweMe.exec(m);
     if (P.commitList.test(m) || (o && !/^(?:i|you|we)$/i.test(o[1].trim())) || P.iPromised.test(m)) return true;
-    if (P.confirm.test(m)) return true;
+    if (P.confirm.test(m) || P.briefing.test(m) || P.email.test(m)) return true;
     c = P.complete.exec(m); return !!c && !/^(?:note|memory)/i.test(c[1]);
   }
   return { P: P, clean: clean, matches: matches };

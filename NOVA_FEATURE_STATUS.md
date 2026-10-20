@@ -1,10 +1,10 @@
 # NOVA Feature Status
 
-Honest status after **Milestones 1 (local model), 2 (ProofLoop) and 3 (voice)**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
+Honest status after **Milestones 1 (local model), 2 (ProofLoop), 3 (voice) and 4 (daily use)**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
 
 | Feature | Status | Notes |
 |---|---|---|
-| NOVA brand, premium dark UI, 13-page navigation | WORKING AND TESTED | Live pages are real; Smart Email, ProofLoop, Automation Centre, Knowledge Base are labelled Soon/Upcoming. Layout at 390/768/1440 and axe (no serious issues) executed. 'Premium' look is a judgement, see screenshots. |
+| NOVA brand, premium dark UI, 14-page navigation | WORKING AND TESTED | Live pages are real; only Knowledge Base is labelled Soon/Upcoming. Layout at 390/768/1440 and axe (no serious issues) executed. "Premium" look is a judgement, see screenshots. |
 | NOVA orb: idle, listening, transcribing, understanding, waiting approval, speaking, completed, error | WORKING AND TESTED | Set by real events: chat request lifecycle, proposal awaiting approval, errors, and the voice engine's state. Each state has its own text label; animation stops with reduced motion. |
 | NOVA orb: planning, executing a tool | DEMO ONLY | Visuals exist; nothing triggers them until the agent and tools arrive in Phase 2. |
 | Sign-in with Google (OIDC, PKCE) | IMPLEMENTED BUT UNVERIFIED | Fully tested against a stand-in Google (state, nonce, audience, expiry, allow-list, replay). Real Google needs your Client ID and a person: REQUIRES CONFIGURATION. |
@@ -36,7 +36,7 @@ Honest status after **Milestones 1 (local model), 2 (ProofLoop) and 3 (voice)**.
 | Mission Control page, Dashboard panel, evidence chain, filters, manual add / move / evidence | WORKING AND TESTED | Browser tests incl. refusal to verify without proof, layout at 3 widths, axe, keyboard. |
 | Proof receipts (Markdown download, printable HTML) | WORKING AND TESTED | State exactly what the evidence does and does not prove; hostile text is escaped. |
 | ProofLoop demo mode (9 labelled fictional scenarios, Reset, Remove) | DEMO ONLY | Fictional data, but it runs through the real machine and database. |
-| Follow-up dates on commitments | IMPLEMENTED BUT UNVERIFIED | Stored (day before the deadline; +3 days for things owed to you). Nothing acts on them until the scheduler (Milestone 4). |
+| Follow-up dates on commitments | WORKING AND TESTED | Stored (day before the deadline; +3 days for things owed to you). The follow-up job nudges you once per follow-up date (fake-clock tested). NOVA never contacts anyone. |
 | Tool registry with JSON-schema validation (10 tools: tasks, notes, memory, time) | WORKING AND TESTED | Unknown tools and invalid input are refused; the model sees only these tools. |
 | Permissions and risk levels (read / write / destructive / external) | WORKING AND TESTED | Writes ask first unless you turn on auto-approve; destructive and external tools always ask (tested with a stand-in external tool). |
 | Human approvals with Future Preview (action, reason, target, what changes, consequences, undoable?) and Approve / Reject / Edit / Cancel | WORKING AND TESTED | Backend verifies owner, state, expiry and edits; double approval never runs twice. |
@@ -48,9 +48,15 @@ Honest status after **Milestones 1 (local model), 2 (ProofLoop) and 3 (voice)**.
 | Local model provider (Ollama, free): tool calling, clarifying questions, setup/health status, reply badge | REQUIRES CONFIGURATION | Needs Ollama on your machine. Tested end to end against a stand-in Ollama server (call parsing incl. JSON-in-text, malformed arguments, timeout, offline, cancel, injection, request shape, status). **Real-model accuracy is UNVERIFIED** until you run `node scripts/eval-nlu.js --provider ollama`. |
 | NLU eval set (65 phrasings, 11 categories incl. typos, Arabic-English mix, ambiguous, injection) and scorer | WORKING AND TESTED | Keyword-only baseline measured at 23% (15/65); an oracle stand-in scores 100% (harness check only, not a model accuracy claim). |
 | Model planner (Claude tool calling) | REQUIRES CONFIGURATION | Tested end to end with a stand-in client: one tool call at a time, results returned as untrusted data, no forced tool choice, usage and estimated cost per call, injection attempt cannot skip approval. Never run against the real API (paid).
-| Gmail, email classification, deadlines, drafts | NOT IMPLEMENTED | Phase 4 |
+| Smart Email: classification with reasons (Critical / Important / Normal / Low / Check first), deadlines, promises, phishing guard | WORKING AND TESTED | Rule-based, free. Unit-tested and run on a labelled demo inbox (fictional) and on stand-in Gmail data. Accuracy on YOUR real mail is UNVERIFIED: run it for a week and judge. |
+| Gmail read-only connection (OAuth + PKCE, gmail.readonly only, encrypted tokens, refresh, revoke, reconnect) | IMPLEMENTED BUT UNVERIFIED | Fully tested against a stand-in Google and Gmail API. Real Gmail needs your Google OAuth client, the Gmail API enabled and NOVA_SECRET_KEY: REQUIRES CONFIGURATION. Verify with the steps in README "Daily use". |
+| E-mail reply drafts | WORKING AND TESTED | Template-based (no AI), editable, stored in NOVA only. Sending is NOT IMPLEMENTED on purpose: the send endpoint always refuses (403) because NOVA has read-only access. |
+| Track an e-mail in ProofLoop | WORKING AND TESTED | Their promise -> owed to you; otherwise a reply you owe. Phishing messages cannot be tracked or drafted. |
 | Outlook / Microsoft Graph on the server | NOT IMPLEMENTED | Phase 6. Browser-side Outlook calendar from NOVA still exists (IMPLEMENTED BUT UNVERIFIED). |
-| Automation engine, scheduler, daily briefing | NOT IMPLEMENTED | Phase 5 |
+| Daily briefing (page, dashboard strip, "brief me", read aloud, saved history) | WORKING AND TESTED | Built from your data only; overdue, today, next three days, follow-ups, approvals, e-mail, phishing warning, "the one thing" with its reason. |
+| Scheduler (Dubai time): briefing, deadline check, follow-up nudges, e-mail check | WORKING AND TESTED (fake clock) | No duplicates (unique key + compare-and-set, tested with concurrent ticks and two scheduler instances), retries 1/5/15 min then failed + notification, missed runs merged, stuck runs resumed, disabled jobs never run, run history. Runs only while the NOVA server process runs (it is not a cloud service). Long-running real-time behaviour is UNVERIFIED: leave NOVA running overnight and check Automation Centre > Run history. |
+| Notifications: bell, browser pop-ups | WORKING AND TESTED | Bell, unread count, read / read all, pop-ups for new items when the browser allows them (tested with a stand-in Notification API). |
+| Phone push via ntfy | IMPLEMENTED BUT UNVERIFIED | Tested against a stand-in ntfy server (headers, body, click link, failures recorded, topic never exposed). A real phone needs NOVA_NTFY_TOPIC and the ntfy app: REQUIRES CONFIGURATION. Verify: Automation Centre > Send a test notification. |
 | Mission Autopilot, Skill Studio, Commitment Radar, LifeGraph, Screen Vision | NOT IMPLEMENTED | Phase 6 |
 | Tasks, notes, calendar (browser), jobs, applications, growth, NOVA voice commands | WORKING AND TESTED | Unchanged; 144 earlier tests still pass. Data is in the browser, not the NOVA database yet. |
 | Job collector (GitHub Action), ntfy alerts, Smart mode | REQUIRES CONFIGURATION | As before: fixture-tested, never run against the live internet. |

@@ -88,7 +88,38 @@ const MIGRATIONS = [
      id INTEGER PRIMARY KEY, commitment_id INTEGER NOT NULL REFERENCES commitments(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
      kind TEXT NOT NULL, description TEXT NOT NULL, ref_type TEXT, ref_id INTEGER, independent INTEGER NOT NULL DEFAULT 0, execution_id INTEGER, ts INTEGER NOT NULL);
    ALTER TABLE tool_executions ADD COLUMN commitment_id INTEGER;
-   ALTER TABLE approvals ADD COLUMN commitment_id INTEGER;`
+   ALTER TABLE approvals ADD COLUMN commitment_id INTEGER;`,
+  // 4: daily use: schedules and their run history, notifications, briefings, connected accounts (encrypted tokens), e-mail (read-only copies) and reply drafts
+  `CREATE TABLE schedules (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, kind TEXT NOT NULL,
+     hour INTEGER NOT NULL, minute INTEGER NOT NULL, days TEXT NOT NULL DEFAULT 'daily', enabled INTEGER NOT NULL DEFAULT 1,
+     next_run_at INTEGER, last_run_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, UNIQUE (user_id, kind));
+   CREATE TABLE schedule_runs (
+     id INTEGER PRIMARY KEY, schedule_id INTEGER NOT NULL REFERENCES schedules(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     kind TEXT NOT NULL, due_at INTEGER NOT NULL, trigger TEXT NOT NULL, status TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at INTEGER,
+     missed INTEGER NOT NULL DEFAULT 0, started_at INTEGER, finished_at INTEGER, error TEXT, summary TEXT, UNIQUE (schedule_id, due_at));
+   CREATE INDEX schedule_runs_user ON schedule_runs(user_id, id);
+   CREATE TABLE notifications (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL,
+     link TEXT, dedupe TEXT, push TEXT, created_at INTEGER NOT NULL, read_at INTEGER, UNIQUE (user_id, dedupe));
+   CREATE INDEX notifications_user ON notifications(user_id, id);
+   CREATE TABLE briefings (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, day TEXT NOT NULL, data TEXT NOT NULL, trigger TEXT NOT NULL, created_at INTEGER NOT NULL);
+   CREATE INDEX briefings_user ON briefings(user_id, id);
+   CREATE TABLE connections (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, provider TEXT NOT NULL, account TEXT, scope TEXT NOT NULL,
+     token_enc TEXT, status TEXT NOT NULL, last_sync_at INTEGER, last_error TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, UNIQUE (user_id, provider));
+   CREATE TABLE emails (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, provider_id TEXT NOT NULL, thread_id TEXT,
+     from_name TEXT, from_addr TEXT, subject TEXT, snippet TEXT, received_at INTEGER NOT NULL, labels TEXT, unsubscribe INTEGER NOT NULL DEFAULT 0,
+     priority TEXT NOT NULL, category TEXT NOT NULL, reasons TEXT NOT NULL, deadline TEXT, promise TEXT, is_demo INTEGER NOT NULL DEFAULT 0, commitment_id INTEGER,
+     created_at INTEGER NOT NULL, UNIQUE (user_id, provider_id));
+   CREATE INDEX emails_user ON emails(user_id, received_at);
+   CREATE TABLE email_drafts (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, email_id INTEGER NOT NULL REFERENCES emails(id) ON DELETE CASCADE,
+     body TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'draft', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+   ALTER TABLE oauth_states ADD COLUMN purpose TEXT;
+   ALTER TABLE oauth_states ADD COLUMN user_id INTEGER;`
 ];
 
 function migrate(db) {

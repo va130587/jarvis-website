@@ -128,3 +128,12 @@ Free rules answer common requests with zero tokens; only the top ≤5 relevant m
 ## 11. Future expansion
 
 Tool registry and approvals, ProofLoop, Gmail and Outlook, scheduler, speech provider abstraction (browser engine now, Azure optional), Skill Studio, LifeGraph, Screen Vision, Postgres behind `db.js` for multi-tenant scale.
+
+## Daily use (Milestone 4)
+
+- `server/daily/clock.js`: Dubai time (always UTC+4, no daylight saving) and next-run calculation.
+- `server/daily/scheduler.js`: per-person schedules (`schedules`) and runs (`schedule_runs`, unique on schedule + due time). Each hand-over is a compare-and-set UPDATE, so concurrent ticks or processes cannot run one occurrence twice. Retries: 3 attempts with 1/5/15-minute back-off; stuck runs (>10 min) are resumed; missed occurrences collapse into one run with a `missed` count. Jobs are plain functions and the clock is injected, so every rule is tested with a fake clock.
+- `server/daily/briefing.js`: builds the briefing from tasks, commitments, approvals and e-mail (no model). Stored copies in `briefings`.
+- `server/daily/notify.js`: `notifications` with a `dedupe` key (a retried job never notifies twice); optional ntfy push (topic from the environment only; never returned or logged).
+- `server/daily/email.js` + `classify.js`: Gmail read-only (OAuth code + PKCE, `gmail.readonly` only, state bound to the signed-in user, tokens sealed with AES-256-GCM in `connections.token_enc`, refresh, revoke on disconnect). Only headers and Gmail's snippet are stored (`emails`); classification is rule-based with reasons; drafts (`email_drafts`) are never sent (the send endpoint always answers 403). E-mail text is untrusted: it is matched, never obeyed, and reaches a model only as tool-result data.
+- Agent tools `briefing.today` and `email.list` are read-only, so "brief me" and "check my e-mail" need no approval.
