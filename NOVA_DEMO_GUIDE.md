@@ -58,6 +58,13 @@ Open **Knowledge Base**. The demo has three sample documents (labelled demo).
 - Say or type **"what do my notes say about the p-value"** in Chat or Voice.
 - Press **Ctrl+K** (Cmd+K on a Mac) anywhere: type "visa" to find documents, memories, tasks and e-mail in one list; type a page name to jump there; start with **>** to ask NOVA.
 
+## 5c. Plan my day, focus, and your week (1 minute)
+
+Open **Focus and Planner**: NOVA fits the overdue and due tasks and your promises into today's working hours, with the reason for each block, lunch kept free and short breaks after 90 minutes. Things that do not fit are listed with why. Change the end time to 11:00 to see it re-plan.
+- Press **Focus on this** on a block: the ring counts down, the orb turns violet ("Focusing") and a timer appears in the top bar on every page. At the end NOVA tells you; **Mark the task done** still goes through the normal approval.
+- Open **Weekly Insights**: the reliability score (promises kept on time, from ProofLoop), tasks done and focus time compared with last week, two charts (hover or Tab onto a bar; "Show as a table"), and plain sentences about what stands out.
+- Say **"plan my day"** or **"how was my week?"**.
+
 ## 6. Automation and notifications (1 minute)
 
 Open **Automation Centre**.

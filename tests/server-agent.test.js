@@ -33,14 +33,14 @@ test('browser and server agree on which phrases are NOVA actions (one shared int
   const I = require('../intents'); const ctx = { now: () => NOW, db: { prepare: () => ({ all: () => [] }) }, user: { id: 1 } };
   const phrases = ['add a task to call HR', 'NOVA, create a to-do: send CV', 'remind me to pay rent', 'what are my tasks', 'show my done tasks', 'list tasks', 'mark call HR done', 'complete the task call HR', 'finish report as done', 'delete task old report', 'remove the task cv',
     'add a note that x', 'save note: y', 'note that z', 'list my notes', 'search my memories for tea', 'find memory about visa', 'forget that I like tea', 'forget green tea',
-    'search my documents for visa renewal', 'what do my notes say about the interview?', 'according to my documents, when do I renew my visa?', 'brief me', 'give me my daily briefing', "what's my day look like", 'check my email', 'any important emails?', 'which emails need a reply', 'send an email to Bob', 'email Bob the report',
+    'plan my day', 'what should I do first', 'how was my week', 'how reliable am I', 'search my documents for visa renewal', 'what do my notes say about the interview?', 'according to my documents, when do I renew my visa?', 'brief me', 'give me my daily briefing', "what's my day look like", 'check my email', 'any important emails?', 'which emails need a reply', 'send an email to Bob', 'email Bob the report',
     'what time is it', 'tell me a joke', 'who am I', 'add milk', 'mark note as done', 'delete everything', 'open calendar', 'find internships in Dubai', 'remember that I like tea', 'hello'];
   for (const p of phrases) assert.equal(I.matches(p), matchIntent(p, ctx) !== null, p);
 });
 
 test('registry: every tool is complete; state-changing tools can verify; model tool list has strict schemas', async () => {
   const { s } = await setup(); const reg = s.app.registry;
-  assert.deepEqual(reg.list().map(t => t.name).sort(), ['ask.clarify', 'briefing.today', 'commitments.confirm', 'commitments.create', 'commitments.list', 'email.list', 'kb.search', 'memory.add', 'memory.delete', 'memory.search', 'notes.create', 'notes.list', 'tasks.complete', 'tasks.create', 'tasks.delete', 'tasks.list', 'time.now']);
+  assert.deepEqual(reg.list().map(t => t.name).sort(), ['ask.clarify', 'briefing.today', 'commitments.confirm', 'commitments.create', 'commitments.list', 'email.list', 'insights.week', 'kb.search', 'memory.add', 'memory.delete', 'memory.search', 'notes.create', 'notes.list', 'plan.today', 'tasks.complete', 'tasks.create', 'tasks.delete', 'tasks.list', 'time.now']);
   for (const t of reg.list()) { assert.ok(t.description && t.summarize && t.preview); if (t.risk !== 'read') assert.equal(typeof t.verify, 'function', t.name); }
   assert.throws(() => reg.register({ name: 'bad', risk: 'read', schema: { type: 'object' }, run() {}, preview() {}, summarize() {} }), /bad tool name/);
   assert.throws(() => reg.register({ name: 'x.y', risk: 'write', schema: { type: 'object' }, run() {}, preview() {}, summarize() {} }), /must verify/);

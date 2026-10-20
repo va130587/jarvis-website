@@ -143,3 +143,9 @@ Tool registry and approvals, ProofLoop, Gmail and Outlook, scheduler, speech pro
 - `server/kb.js`: `documents` and `chunks` (passages split at headings and paragraphs, about 700 characters) with an SQLite FTS5 index (`chunks_fts`, porter stemming, BM25 ranking, headings weighted double). Query words are quoted before matching, so search syntax in a question cannot change the query. Answers are extractive: the best passage plus its document, heading and position; below a minimum word match the answer is "found nothing". The `kb.search` tool is read-only.
 - `GET /api/search`: one per-user search across tasks, notes, memories, commitments, e-mail and documents (LIKE with escaped wildcards, plus FTS) for the Ctrl+K palette in `nova-plus.js`.
 - `manifest.webmanifest`, `icons/`, `sw.js`: installable app. The service worker is network-first for the app's own files and never handles `/api/` or `/auth/`.
+
+## Productivity (Milestone 7)
+
+- `server/productivity.js`: `plan()` orders overdue tasks, overdue promises, today's tasks and promises, the next two days, then the oldest undated tasks; it places them from now (or the start of the day) in 15-minute steps with 10-minute gaps, keeps lunch free, adds a short break after 90 minutes and lists what does not fit. Estimates come from `tasks.estimate_min` or a labelled guess from the wording. Saved plans live in `day_plans`.
+- `focus_sessions`: one running session per person; stopping early is "stopped", reaching the planned end is "completed"; a session left running more than an hour past its end is closed at its planned end.
+- `insights()`: Monday-to-Sunday weeks in Dubai time; reliability = promises with a deadline closed on time, divided by those closed or overdue in the last 28 days (shown only from 3). Tools `plan.today` and `insights.week` are read-only.

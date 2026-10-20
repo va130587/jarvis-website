@@ -80,8 +80,11 @@
   }
 
   /* ================= Command palette (Ctrl+K) ================= */
-  var PAGES = [['dashboard', 'Dashboard'], ['briefing', 'Daily Briefing'], ['chat', 'NOVA Chat'], ['voice', 'Voice Assistant'], ['email', 'Smart Email'], ['hub', 'Tasks and Calendar'], ['proofloop', 'ProofLoop'], ['automation', 'Automation Centre'], ['identity', 'Personal Identity'], ['memory', 'Memory Vault'], ['knowledge', 'Knowledge Base'], ['usage', 'AI Usage and Cost'], ['connections', 'Connected Apps'], ['security', 'Security and Settings']];
+  var PAGES = [['dashboard', 'Dashboard'], ['briefing', 'Daily Briefing'], ['chat', 'NOVA Chat'], ['voice', 'Voice Assistant'], ['email', 'Smart Email'], ['hub', 'Tasks and Calendar'], ['focus', 'Focus and Planner'], ['proofloop', 'ProofLoop'], ['insights', 'Weekly Insights'], ['automation', 'Automation Centre'], ['identity', 'Personal Identity'], ['memory', 'Memory Vault'], ['knowledge', 'Knowledge Base'], ['usage', 'AI Usage and Cost'], ['connections', 'Connected Apps'], ['security', 'Security and Settings']];
   var ACTIONS = [
+    { title: 'Plan my day', sub: 'Focus and Planner', run: function () { location.hash = 'focus'; } },
+    { title: 'Start a 25-minute focus session', sub: 'Focus and Planner', run: function () { if (N.focus) N.focus.start({ minutes: 25, title: 'Focus' }); location.hash = 'focus'; } },
+    { title: 'How was my week?', sub: 'Weekly Insights', run: function () { location.hash = 'insights'; } },
     { title: 'Read my briefing aloud', sub: 'Daily Briefing', run: function () { location.hash = 'briefing'; setTimeout(function () { if (J.actions.dSpeakBrief) J.actions.dSpeakBrief(); }, 600); } },
     { title: 'Start listening (push to talk)', sub: 'Voice', run: function () { location.hash = 'voice'; setTimeout(function () { var b = $('#ptt'); if (b && !b.disabled) b.click(); }, 500); } },
     { title: 'Send a test notification', sub: 'Automation Centre', run: function () { if (J.actions.dTestNotif) J.actions.dTestNotif(); } },

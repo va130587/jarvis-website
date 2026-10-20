@@ -128,7 +128,15 @@ const MIGRATIONS = [
    CREATE TABLE chunks (
      id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE, user_id INTEGER NOT NULL, seq INTEGER NOT NULL, heading TEXT, text TEXT NOT NULL);
    CREATE INDEX chunks_doc ON chunks(document_id, seq);
-   CREATE VIRTUAL TABLE chunks_fts USING fts5(text, heading, tokenize = 'porter unicode61');`
+   CREATE VIRTUAL TABLE chunks_fts USING fts5(text, heading, tokenize = 'porter unicode61');`,
+  // 6: productivity: estimates on tasks, focus sessions, accepted day plans
+  `ALTER TABLE tasks ADD COLUMN estimate_min INTEGER;
+   CREATE TABLE focus_sessions (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, task_id INTEGER, title TEXT NOT NULL,
+     planned_min INTEGER NOT NULL, started_at INTEGER NOT NULL, ended_at INTEGER, status TEXT NOT NULL, note TEXT);
+   CREATE INDEX focus_user ON focus_sessions(user_id, started_at);
+   CREATE TABLE day_plans (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, day TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE (user_id, day));`
 ];
 
 function migrate(db) {

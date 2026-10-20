@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestone 6 (knowledge, search, install) on top of the first five: **309 tests: 308 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestone 7 (plan my day, focus, weekly insights) on top of Milestones 1 to 6: **321 tests: 320 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -21,6 +21,8 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 | ACCEPTANCE | `tests/acceptance-e2e.test.js` | 2 pass (run twice) | the setup page in a browser (wrong code, success, .env content, axe, phone width) and **NOVA_DEMO_GUIDE.md followed step by step** on the demo data: briefing focus and sections, read aloud, "brief me", Future Preview + verified result + Undo, destructive deletion not undoable, ProofLoop evidence -> Verified -> Completed -> receipt text, owed-to-me by sentence, Smart Email reasons / draft / send refused / phishing / tracking / voice, Automation run now, bell, Security tools and download, Usage |
 | Knowledge, search, install (server) | `tests/server-kb.test.js` | 6 pass | passage splitting; add / ask / cited answer / "found nothing" / stemming / search-syntax injection / open / delete with index clean-up / size limit; isolation, samples, hostile document text shown not obeyed; chat phrases; global search across six kinds with literal wildcards; manifest, icons, service worker rules and offline shell completeness |
 | Knowledge, search, install (browser) | `tests/nova-plus-e2e.test.js` | 6 pass (run twice) | add by typing and by file, highlighted sources, honest not-found, open, delete, samples, voice; Ctrl+K palette with keyboard, pages, "> ask NOVA", Escape and outside click; service worker registers and NOVA opens offline; layout and axe at 3 widths |
+| Productivity (server) | `tests/server-productivity.test.js` | 6 pass | estimates; plan order, reasons, lunch, breaks, no overlaps, nothing changed; plan from now / tomorrow after hours / empty day / saved / estimate validation and isolation; focus one-at-a-time, stop, finish, auto-close, totals, isolation; insights numbers, on-time rate, focus trend, reliability, overdue, sentences, chat; deletion |
+| Productivity (browser) | `tests/nova-focus-e2e.test.js` | 6 pass | planner timeline, hours change re-plans, set an estimate, save, focus on a block (ring, orb, top-bar chip), stop; timer end tells you by toast, voice and pop-up and records completion, marking done goes through approval; insights tiles, charts with hover and keyboard tooltip, table view, read aloud, voice phrases; layout and axe at 3 widths |
 | Classic tools (unchanged) | earlier files | 144 pass, 1 skipped | calendar, .ics, collector, matching, Jobs for you, voice commands, Smart mode (mocked), layout, axe |
 
 ## Not tested (and why)
@@ -72,6 +74,15 @@ The older reminder timer can post "Reminder: ..." into the voice log at any mome
 3. Clicking a notification did nothing: the panel stopped the click from reaching NOVA's action handler.
 4. A decorative layer of the briefing banner extended off-screen at 768 px (layout check), and the run-history table could not be scrolled by keyboard at 390 px (axe). Both fixed.
 5. "Read it to me" claimed to be reading aloud when spoken replies were switched off; it now shows the text instead and says why.
+
+## Defects found and fixed while testing (Milestone 7)
+
+0. The orb could drop from "Focusing" to "Idle" when another event (such as voice) ended during a session; idle now means focusing while a session runs. The Focus page also redraws when a session is started or stopped in another tab or device.
+
+1. A global SVG style drew outlines on the charts' invisible hover areas and stroked the axis text; chart parts now set their own stroke.
+2. The empty reliability ring showed a stray dot (a zero-length rounded line); it is hidden when there is no score.
+3. The focus timer chip's accessible name did not contain its visible time (axe); it now reads "Focus, time left 12:34".
+4. With a focus session running the top bar overflowed at 768 px; the "Voice ready" chip gives way to the timer on narrower screens.
 
 ## Defects found and fixed while testing (Milestone 6)
 

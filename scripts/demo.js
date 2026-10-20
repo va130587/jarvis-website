@@ -22,6 +22,15 @@ function seed(app) {
   const task = (title, due, status) => db.prepare('INSERT INTO tasks (user_id, title, due, status, source, created_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uid, title, due, status || 'open', 'demo', now, status === 'done' ? now - 86400e3 : null);
   task('Update CV with the data project', addDays(today, -2)); task('Prepare for the Junior Data Analyst interview', today); task('Pay the utilities bill', addDays(today, 3));
   task('Book the study room for Wednesday', addDays(today, 1)); task('Send thank-you note to Dr. Mansour', null, 'done');
+  // a realistic week so far: tasks finished on earlier days, focus sessions, an estimate
+  const dayMs = 86400e3, wd = (new Date(now + 4 * 3600e3).getUTCDay() + 6) % 7;          // 0 = Monday (Dubai)
+  [['Submit the internship form', 0, 30], ['Email Dr. Mansour the outline', 1, 15], ['Revise statistics chapter 3', 1, 60], ['Update LinkedIn headline', 2, 15], ['Practise SQL joins', 3, 50]].forEach(([title, back, focus], i) => {
+    const t0 = now - (back + 1) * dayMs + i * 3600e3;
+    db.prepare("INSERT INTO tasks (user_id, title, due, status, source, created_at, completed_at) VALUES (?, ?, ?, 'done', 'demo', ?, ?)").run(uid, title, addDays(today, -back - 1), t0 - dayMs, t0);
+    db.prepare("INSERT INTO focus_sessions (user_id, title, planned_min, started_at, ended_at, status) VALUES (?, ?, ?, ?, ?, 'completed')").run(uid, title, focus, t0 - focus * 60e3, t0);
+  });
+  if (wd === 0) db.prepare("INSERT INTO focus_sessions (user_id, title, planned_min, started_at, ended_at, status) VALUES (?, 'Morning planning', 25, ?, ?, 'completed')").run(uid, now - 3 * 3600e3, now - 3 * 3600e3 + 25 * 60e3);
+  db.prepare("UPDATE tasks SET estimate_min = 90 WHERE user_id = ? AND title = 'Prepare for the Junior Data Analyst interview'").run(uid);
   db.prepare('INSERT INTO notes (user_id, text, created_at) VALUES (?, ?, ?)').run(uid, 'Interview tips: prepare two stories about the data project (problem, action, result).', now);
   for (const m of ['I am a fresh graduate looking for data analyst roles in Dubai.', 'I prefer short, direct answers.', 'My study group meets on Wednesday evenings.'])
     db.prepare("INSERT INTO memories (user_id, kind, text, source, status, sensitive, created_at, updated_at) VALUES (?, 'fact', ?, 'demo', 'active', 0, ?, ?)").run(uid, m, now, now);

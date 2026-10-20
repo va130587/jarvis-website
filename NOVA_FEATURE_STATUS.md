@@ -81,3 +81,11 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 | "What do my notes say about …" / "according to my documents …" by text or voice | WORKING AND TESTED | Read-only tool; hostile text inside a document is shown, never obeyed (tested). |
 | Ctrl+K command palette | WORKING AND TESTED | Searches tasks, notes, memories, commitments, e-mail and documents; pages and quick actions; "> ask NOVA"; keyboard-only, focus returns on Escape; axe and layout at 3 widths. |
 | Install as an app (manifest, icons, service worker, offline shell) | WORKING AND TESTED | Service worker registration and opening offline tested in Chromium. The browser's own install prompt cannot be clicked by a test: install it once yourself (Security and Settings explains how). |
+
+## Productivity (Milestone 7)
+
+| Feature | Status | Notes |
+|---|---|---|
+| Plan my day (time-blocked plan with reasons, lunch, breaks, what does not fit, your estimates or labelled guesses, saved plans) | WORKING AND TESTED | Fake-clock tests: order, reasons, no overlaps, lunch protected, after-hours plans tomorrow, short days, validation. It only suggests; it does not read your Google or Outlook calendar (those stay in the browser), so meetings are not taken into account yet. |
+| Focus sessions (timer, orb state, top-bar chip, end notice by toast / voice / pop-up, history) | WORKING AND TESTED | One at a time; stop early, finish, or auto-closed at the planned end if you walk away. The end notice needs a NOVA tab open (the server records the session either way). |
+| Weekly Insights (reliability score, done / on-time / focus vs last week, two charts with hover, keyboard and table views, sentences) | WORKING AND TESTED | Numbers checked against hand-built data. Reliability needs at least 3 promises in 4 weeks before it shows a score. |

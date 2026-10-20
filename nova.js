@@ -9,17 +9,18 @@
   /* ================= orb: ten states, each set by a real event ================= */
   var STATES = {
     idle: 'Idle', listening: 'Listening', transcribing: 'Transcribing', understanding: 'Understanding the request', planning: 'Planning',
-    executing: 'Executing a tool', waiting_approval: 'Waiting for your approval', speaking: 'Speaking', completed: 'Completed', error: 'Something went wrong'
+    executing: 'Executing a tool', waiting_approval: 'Waiting for your approval', speaking: 'Speaking', completed: 'Completed', error: 'Something went wrong', focusing: 'Focusing'
   };
   var resetTimer = 0;
   N.setState = function (s, hold) {
     if (!STATES[s]) return;
+    if (s === 'idle' && N.focusRunning) s = 'focusing';                    // a running focus session is the resting state
     N.state = s;
     $$('.nova-orb').forEach(function (o) { o.setAttribute('data-state', s); o.setAttribute('aria-label', 'NOVA status: ' + STATES[s]); });
     var t = $('#novaStatusText'); if (t) t.textContent = 'NOVA: ' + STATES[s];
     document.body.setAttribute('data-nova', s);
     clearTimeout(resetTimer);
-    if (s === 'completed' || (s === 'error' && !hold)) resetTimer = setTimeout(function () { if (N.state === s) N.setState(voiceState() || 'idle'); }, s === 'error' ? 4000 : 1800);
+    if (s === 'completed' || (s === 'error' && !hold)) resetTimer = setTimeout(function () { if (N.state === s) N.setState(voiceState() || (N.focusRunning ? 'focusing' : 'idle')); }, s === 'error' ? 4000 : 1800);
   };
   function voiceState() { var v = document.body.getAttribute('data-voice'); return v === 'listening' ? 'listening' : v === 'speaking' ? 'speaking' : v === 'thinking' ? 'understanding' : null; }
   function orb(size) { return '<div class="nova-orb ' + (size || '') + '" role="img" aria-label="NOVA status: ' + esc(STATES[N.state]) + '" data-state="' + N.state + '"><i class="o-glow"></i><i class="o-ring r1"></i><i class="o-ring r2"></i><i class="o-ring r3"></i><i class="o-core"></i></div>'; }
@@ -76,10 +77,11 @@
     cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', loop: '<path d="M5 12a7 7 0 0 1 12-5l2-2v6h-6l2.2-2.2A4.5 4.5 0 0 0 7.5 12M19 12a7 7 0 0 1-12 5l-2 2v-6h6l-2.2 2.2A4.5 4.5 0 0 0 16.5 12"/>',
     auto: '<path d="M13 3 5 13h6l-1 8 8-10h-6z"/>', id: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', mem: '<path d="M12 3c-4 0-7 2-7 5v8c0 3 3 5 7 5s7-2 7-5V8c0-3-3-5-7-5z"/><path d="M5 8c0 3 3 5 7 5s7-2 7-5M5 14c0 3 3 5 7 5s7-2 7-5"/>',
     book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>', cost: '<path d="M4 19h16"/><path d="M7 16V9M12 16V5M17 16v-4"/>', plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
+    clock: '<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M9.5 3h5"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', tool: '<circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.4"/>'
   };
-  var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['briefing', 'Daily Briefing', 'sun'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail'], ['hub', 'Tasks and Calendar', 'cal'], ['proofloop', 'ProofLoop', 'loop'],
+  var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['briefing', 'Daily Briefing', 'sun'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail'], ['hub', 'Tasks and Calendar', 'cal'], ['focus', 'Focus and Planner', 'clock'], ['proofloop', 'ProofLoop', 'loop'], ['insights', 'Weekly Insights', 'cost'],
     ['automation', 'Automation Centre', 'auto'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock']];
   var TOOLS_NAV = [['today', 'Today', 'tool'], ['tasks', 'Tasks', 'tool'], ['calendar', 'Calendar', 'cal'], ['notes', 'Notes', 'book'], ['matches', 'Jobs for you', 'tool'], ['jobs', 'Job finder', 'tool'], ['applications', 'Applications', 'tool'], ['growth', 'Growth', 'cost'], ['review', 'Weekly review', 'cost'], ['profile', 'Job profile', 'id'], ['settings', 'Tool settings', 'tool'], ['help', 'Voice commands', 'mic']];
   function link(v, label, ic, badge) { return '<a href="#' + v + '" data-view="' + v + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (IC[ic] || IC.tool) + '</svg><span>' + esc(label) + '</span>' + (badge ? '<em class="count soon" aria-hidden="true">Soon</em><span class="sr-only"> (upcoming, not built yet)</span>' : '') + '</a>'; }
@@ -115,7 +117,7 @@
 
   /* ================= screens ================= */
   var S = J.screens;
-  Object.assign(J.titles, { briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings' });
+  Object.assign(J.titles, { focus: 'Focus and Planner', insights: 'Weekly Insights', briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings' });
   S.dashboard = {
     render: function () {
       var m = N.cache.memories, u = N.cache.usage, a = N.cache.activity, convs = N.cache.conversations, ap = N.cache.approvals ? N.cache.approvals.approvals : null;

@@ -89,7 +89,7 @@ test('demo: seeds a separate database once (tasks, notes, memories, nine ProofLo
   const a = seed(app), b = seed(app);
   assert.equal(a.seeded, true); assert.equal(b.seeded, false, 'seeding again adds nothing');
   const n = t => app.db.prepare('SELECT COUNT(*) n FROM ' + t + ' WHERE user_id = ?').get(a.uid).n;
-  assert.equal(n('tasks'), 5); assert.equal(n('notes'), 2, 'one demo note plus the one a ProofLoop scenario creates'); assert.equal(n('memories'), 3); assert.equal(n('commitments'), 9); assert.equal(n('emails'), 10); assert.equal(n('briefings'), 1); assert.equal(n('schedules'), 4); assert.equal(n('notifications'), 1); assert.equal(n('documents'), 3);
+  assert.equal(n('tasks'), 10); assert.equal(n('notes'), 2, 'one demo note plus the one a ProofLoop scenario creates'); assert.equal(n('memories'), 3); assert.equal(n('commitments'), 9); assert.equal(n('emails'), 10); assert.equal(n('briefings'), 1); assert.equal(n('schedules'), 4); assert.equal(n('notifications'), 1); assert.equal(n('documents'), 3);
   assert.ok(app.db.prepare('SELECT COUNT(*) n FROM commitments WHERE is_demo = 1').get().n === 9 && app.db.prepare('SELECT COUNT(*) n FROM emails WHERE is_demo = 1').get().n === 10, 'all demo items are labelled demo');
   await app.close();
   // the demo script's own entry point
@@ -103,7 +103,7 @@ test('backup and restore: checked snapshot with manifest, pruning, safety copy, 
   db.prepare("INSERT INTO users (email, display_name, created_at) VALUES ('r@example.com', 'R', 1)").run();
   db.prepare("INSERT INTO tasks (user_id, title, status, created_at) VALUES (1, 'before backup', 'open', 1)").run();
   const b1 = backup({ db: live, dir: bdir, date: new Date('2026-10-20T03:00:00Z') });        // taken while the database is open (WAL)
-  assert.equal(b1.counts.tasks, 1); assert.equal(b1.schemaVersion, 5); assert.match(b1.sha256, /^[0-9a-f]{64}$/);
+  assert.equal(b1.counts.tasks, 1); assert.equal(b1.schemaVersion, 6); assert.match(b1.sha256, /^[0-9a-f]{64}$/);
   assert.equal(inspect(b1.path).integrity, 'ok'); assert.ok(fs.existsSync(b1.path.replace(/\.db$/, '.json')));
   assert.equal((fs.statSync(b1.path).mode & 0o777).toString(8), '600');
   assert.throws(() => backup({ db: live, dir: bdir, date: new Date('2026-10-20T03:00:00Z') }), /already exists/);
