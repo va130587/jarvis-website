@@ -26,9 +26,9 @@ const { createKb } = require('./kb');
 const { createProductivity } = require('./productivity');
 const { createLife } = require('./life');
 
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.md': 'text/plain; charset=utf-8' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
-const STATIC_OK = /^\/(index\.html|redirect\.html|manifest\.webmanifest|[a-z0-9-]+\.(?:js|css))$|^\/icons\/[a-z0-9-]+\.(?:png|svg)$|^\/(vendor|data|blueprint)\/[A-Za-z0-9._\/-]+$/;
+const STATIC_OK = /^\/(index\.html|redirect\.html|manifest\.webmanifest|[a-z0-9-]+\.(?:js|css))$|^\/icons\/[a-z0-9-]+\.(?:png|svg)$|^\/fonts\/[a-z0-9-]+\.woff2$|^\/(vendor|data|blueprint)\/[A-Za-z0-9._\/-]+$/;
 
 function createApp(over, deps) {
   const cfg = load(process.env, over);
@@ -67,6 +67,20 @@ function createApp(over, deps) {
     db.prepare("SELECT id, subject, from_name, from_addr, priority FROM emails WHERE user_id = ? AND (subject" + L + " OR from_name" + L + " OR snippet" + L + ") ORDER BY received_at DESC LIMIT 5").all(uid, like, like, like).forEach(r => out.push({ type: 'email', title: r.subject || '(no subject)', sub: 'E-mail from ' + (r.from_name || r.from_addr) + ' · ' + r.priority, link: '#email' }));
     kb.search(uid, q, 5).forEach(r => out.push({ type: 'document', title: r.title + (r.heading ? ' · ' + r.heading : ''), sub: r.snippet.replace(/\[\[|\]\]/g, ''), link: '#knowledge' }));
     return { status: 200, body: { query: q, results: out } };
+  });
+
+  // A button press (for example "Done" next to a task) starts the same run as typing the request: preview, approval, verification.
+  // Only these tools can be started this way, and only for the signed-in person's own records.
+  const BUTTON_TOOLS = { 'tasks.complete': id => db.prepare("SELECT title FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL AND status = 'open'"), 'tasks.delete': id => db.prepare('SELECT title FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL') };
+  router.post('/api/actions', { group: 'chat' }, async ctx => {
+    const tool = ctx.body.tool, id = ctx.body.id;
+    if (!BUTTON_TOOLS[tool]) throw new HttpError(400, 'That action cannot be started from a button.', 'invalid');
+    if (!Number.isInteger(id) || id < 1) throw new HttpError(400, 'id must be a positive whole number.', 'invalid');
+    const row = BUTTON_TOOLS[tool]().get(id, ctx.auth.user.id);
+    if (!row) throw new HttpError(404, 'Task not found (or already done).', 'not_found');
+    const verb = tool === 'tasks.complete' ? 'Mark task' : 'Delete task';
+    const run = await agent.start(ctx.auth, verb + ' "' + row.title + '"' + (tool === 'tasks.complete' ? ' as done' : ''), { call: { name: tool, input: { id } }, understood: verb + ' #' + id + ' "' + row.title + '" (your button)' });
+    return { status: 200, body: { run } };
   });
 
   router.get('/api/briefing', ctx => ({ status: 200, body: { briefing: briefing.latest(ctx.auth.user.id), preview: briefing.build(ctx.auth.user), history: briefing.history(ctx.auth.user.id) } }));

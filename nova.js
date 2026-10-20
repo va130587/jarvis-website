@@ -26,15 +26,25 @@
   function orb(size) { return '<div class="nova-orb ' + (size || '') + '" role="img" aria-label="NOVA status: ' + esc(STATES[N.state]) + '" data-state="' + N.state + '"><i class="o-glow"></i><i class="o-ring r1"></i><i class="o-ring r2"></i><i class="o-ring r3"></i><i class="o-core"></i></div>'; }
 
   /* ================= API ================= */
+  var pending = 0;   // requests on their way (N.pending(): the page is quiet when it is 0)
+  N.pending = function () { return pending; };
   function api(method, path, body) {
     var o = { method: method, credentials: 'same-origin', headers: {} };
     if (N.csrf) o.headers['X-NOVA-CSRF'] = N.csrf;
     if (body !== undefined) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
-    return fetch(path, o).then(function (r) {
+    var change = method !== 'GET';
+    if (change) changed();
+    pending++;
+    return fetch(path, o).finally(function () { pending--; if (change) changed(); }).catch(function () {
+      var e = new Error(navigator.onLine === false ? 'You are offline. NOVA will reload this when your connection is back.' : 'NOVA could not reach its server. Check that it is running, then try again.'); e.code = 'offline'; e.status = 0; throw e;
+    }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (r.ok) return j;
         if (r.status === 401 && N.user) { N.user = null; showLogin('Your session ended. Please sign in again.'); }
-        var e = new Error((j.error && j.error.message) || 'Request failed (' + r.status + ').'); e.status = r.status; e.code = j.error && j.error.code; throw e;
+        var msg = (j.error && j.error.message) || '';
+        if (r.status === 429) msg = 'NOVA is receiving too many requests. Wait ' + (r.headers.get('Retry-After') || '30') + ' seconds, then try again.';
+        else if (r.status >= 500 && !msg) msg = 'Something went wrong on the server. Nothing was changed. Try again in a moment.';
+        var e = new Error(msg || 'Request failed (' + r.status + ').'); e.status = r.status; e.code = (j.error && j.error.code) || (r.status === 429 ? 'rate_limited' : r.status >= 500 ? 'server_error' : 'error'); throw e;
       });
     });
   }
@@ -102,18 +112,52 @@
     return '<article class="panel upcoming"><p class="tag gold">Upcoming: ' + esc(phase) + '</p><h2 class="label">' + esc(what) + '</h2><p class="muted">This feature is not built yet, so nothing on this page is live. It is listed so you can see what is planned.</p>' +
       (list ? '<ul class="plain">' + list.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + '</article>';
   }
-  function load(key, path) { return api('GET', path).then(function (d) { N.cache[key] = d; return d; }); }
+  // One request per URL at a time: a redraw while a page is still loading shares the request already on its way.
+  // Data fetched in the last 2 seconds counts as fresh, so the redraw that shows new data does not immediately ask for it again.
+  var inflight = {}, fetchedAt = {}, shownGen = {}, gen = 0;
+  // Any change (a POST, PATCH or DELETE) can alter what other pages show, so after it nothing counts as fresh and no
+  // request that started earlier is shared or trusted. The data already shown stays on screen until the refetch arrives.
+  function changed() { gen++; inflight = {}; fetchedAt = {}; }
+  function load(key, path) {
+    if (!inflight[path]) { var g = gen, box = inflight; box[path] = api('GET', path).then(function (d) { delete box[path]; if (g === gen) fetchedAt[path] = Date.now(); return { d: d, g: g }; }, function (e) { delete box[path]; throw e; }); }
+    return inflight[path].then(function (r) { if (r.g >= (shownGen[key] || 0)) { N.cache[key] = r.d; shownGen[key] = r.g; } return N.cache[key]; });   // an older answer never replaces a newer one
+  }
+  function fresh(key, path) { return N.cache[key] && fetchedAt[path] && Date.now() - fetchedAt[path] < 2000; }
   // Fetch fresh data for a screen and redraw it only if something actually changed (otherwise every redraw would trigger another fetch).
   function stale(screen, keys) {
     var sig = function (k) { return JSON.stringify(N.cache[k[0]] || null, function (key, v) { return key === 'lastSeenAt' || key === 'generatedAt' || key === 'now' ? undefined : v; }); };   // these change on every fetch, so they must not trigger a redraw
     var before = keys.map(sig);
+    if (keys.every(function (k) { return fresh(k[0], k[1]); }) && !N.loadErrors[screen]) return;
     Promise.all(keys.map(function (k) { return load(k[0], k[1]); })).then(function () {
-      var changed = keys.some(function (k, i) { return sig(k) !== before[i]; });
-      if (changed && J.current() === screen) J.render(false);
-    }).catch(fail);
+      var changed = keys.some(function (k, i) { return sig(k) !== before[i]; }), hadError = !!N.loadErrors[screen];
+      delete N.loadErrors[screen];
+      if ((changed || hadError) && J.current() === screen) J.render(false);
+    }).catch(function (e) { loadFailed(screen, e); });
   }
+  // A page whose data could not be loaded shows a clear message with "Try again" instead of staying on "Loading…".
+  // A page that already shows data keeps it and only tells you once.
+  N.loadErrors = {};
+  function loadFailed(screen, e) {
+    if (e && e.status === 401) return;                                     // the sign-in screen is already shown
+    N.loadErrors[screen] = e;
+    if (J.current() !== screen) return;
+    var holders = $$('#main .empty').filter(function (el) { return /^(Loading|Planning)/.test(el.textContent.trim()); });
+    if (holders.length) holders.forEach(function (el) { el.outerHTML = errorBox(e); });
+    else {                                                                  // part of the page loaded: the message goes on top and stays until it loads
+      var old = $('#main > .load-error.top'); if (old) old.remove();
+      var main = $('#main'), head = main && main.querySelector('.view-head');
+      if (main) (head || main.firstChild) ? (head ? head.insertAdjacentHTML('afterend', errorBox(e, 'top')) : main.insertAdjacentHTML('afterbegin', errorBox(e, 'top'))) : null;
+    }
+  }
+  function errorBox(e, where) {
+    var off = e && e.code === 'offline';
+    return '<div class="load-error' + (where ? ' ' + where : '') + '" role="alert"><b>' + esc(off ? 'No connection' : e && e.status === 429 ? 'Too many requests' : 'This page could not load') + '</b><p>' + esc(e && e.message ? e.message : 'Try again in a moment.') + '</p>' +
+      '<button type="button" class="btn small" data-act="novaRetry">Try again</button></div>';
+  }
+  window.addEventListener('online', function () { if (N.user) { J.toast('Back online.'); J.render(false); } });
   function tile(label, value, note, tone) { return '<div class="panel stat' + (tone ? ' ' + tone : '') + '"><span><span class="label">' + esc(label) + '</span><b class="num">' + esc(value) + '</b><small>' + esc(note) + '</small></span></div>'; }
   function name() { return N.user ? N.user.displayName : 'there'; }
+  J.actions.novaRetry = function () { J.render(false); };
   N.h = { orb: orb, when: when, ago: ago, stale: stale, tile: tile, load: load, fail: fail, soon: soon, name: name, STATES: STATES };
 
   /* ================= screens ================= */
@@ -205,7 +249,7 @@
       J.render(false);
       var ta = $('#novaMsg'); if (ta) ta.focus();            // keep the keyboard where the person was typing
       return r;
-    }).catch(function (e) { c.busy = false; c.msgs.push({ role: 'assistant', text: e.message, steps: [], handler: 'error' }); N.setState('error'); J.render(false); });
+    }).catch(function (e) { c.busy = false; c.draft = text; c.msgs.push({ role: 'assistant', text: e.message + ' Your message is back in the box below, so you can send it again.', steps: [], handler: 'error' }); N.setState('error'); J.render(false); });
   };
   function setProposal(id, status) { N.chat.msgs.forEach(function (m) { if (m.proposal && m.proposal.id === id) m.proposal.status = status; }); }
   Object.assign(J.actions, {
@@ -219,7 +263,7 @@
   });
 
   function afterRun(run, ok) {
-    N.runs[run.id] = run; N.voicePending = null; N.cache.approvals = null; N.cache.tasks = null; N.cache.activity = null; N.cache.usage = null;
+    N.runs[run.id] = run; if (N.hubRun && N.hubRun.id === run.id) N.hubRun = run; N.voicePending = null; N.cache.approvals = null; N.cache.tasks = null; N.cache.activity = null; N.cache.usage = null;
     N.setState(run.status === 'failed' ? 'error' : run.status === 'awaiting_approval' ? 'waiting_approval' : run.status === 'cancelled' ? 'idle' : 'completed');
     J.render(false);
   }
@@ -228,7 +272,17 @@
     return api('POST', '/api/approvals/' + id + '/approve', edited ? { editedInput: edited } : {}).then(afterRun).catch(function (e) { N.setState('error'); fail(e); });
   }
   function approvalById(id) { var list = []; Object.keys(N.runs).forEach(function (k) { if (N.runs[k].pendingApproval) list.push(N.runs[k].pendingApproval); }); ((N.cache.approvals || {}).approvals || []).forEach(function (a) { list.push(a); }); return list.filter(function (a) { return a.id === +id; })[0]; }
+  // Task buttons on Tasks and Calendar: the same approval flow as chat, shown on the page
+  function runBlockFor(run) {
+    if (run.pendingApproval) return previewCard(run);
+    return '<p class="tag ' + (run.status === 'completed' ? '' : 'gold') + '">' + esc(run.status === 'completed' ? 'Done and checked' : run.status.replace(/_/g, ' ')) + '</p><p class="small-text">' + esc(run.result || '') + '</p>';
+  }
+  function taskAction(tool, id) {
+    api('POST', '/api/actions', { tool: tool, id: +id }).then(function (r) { N.runs[r.run.id] = r.run; N.hubRun = r.run; N.setState(r.run.status === 'awaiting_approval' ? 'waiting_approval' : 'completed'); J.render(false); var p = $('#hubPreview'); if (p) p.scrollIntoView({ block: 'nearest' }); }).catch(fail);
+  }
   Object.assign(J.actions, {
+    novaTaskDone: function (id) { taskAction('tasks.complete', id); },
+    novaTaskDelete: function (id) { taskAction('tasks.delete', id); },
     novaApproveRun: function (id) { approveRun(id); },
     novaRejectRun: function (id) { api('POST', '/api/approvals/' + id + '/reject', {}).then(afterRun).catch(fail); },
     novaCancelRun: function (id) { api('POST', '/api/runs/' + id + '/cancel', {}).then(afterRun).catch(fail); },
@@ -438,11 +492,11 @@
       var t = J.today(), over = J.overdue().length, due = J.dueToday().length, week = J.dueWeek().length, nt = N.cache.tasks ? N.cache.tasks.tasks : null;
       return J.head('Planner', 'Tasks and Calendar', 'NOVA tasks live in the server database. The Classic tools below still keep their own tasks in this browser.', '<a class="btn primary" href="#chat">Ask NOVA to add a task</a>') +
         '<article class="panel"><h2 class="label">NOVA tasks (server) ' + (nt ? '<span class="n">' + nt.length + '</span>' : '') + '</h2>' +
-          (!nt ? J.empty('Loading…') : nt.length ? '<ul class="items">' + nt.map(function (x) { return '<li class="item' + (x.status === 'done' ? ' done' : '') + '"><div class="item-main"><p class="item-title">' + esc(x.title) + '</p><p class="item-meta"><span>' + (x.status === 'done' ? 'Done' : 'Open') + '</span><span>' + (x.due ? 'due ' + esc(x.due) : 'no due date') + '</span><span>' + esc(x.source || '') + '</span></p></div></li>'; }).join('') + '</ul>' : J.empty('No NOVA tasks yet. In Chat, say <q>add a task to call HR by Friday</q>. You approve it first.')) +
-          '<p class="small-text muted">To complete or delete one, ask NOVA in Chat (for example <q>mark call HR as done</q>). Each change shows a preview and can usually be undone.</p></article>' +
+          (!nt ? J.empty('Loading…') : nt.length ? '<ul class="items">' + nt.map(function (x) { return '<li class="item' + (x.status === 'done' ? ' done' : '') + '"><div class="item-main"><p class="item-title">' + esc(x.title) + '</p><p class="item-meta"><span>' + (x.status === 'done' ? 'Done' : 'Open') + '</span><span>' + (x.due ? 'due ' + esc(x.due) : 'no due date') + '</span><span>' + esc(x.source || '') + '</span></p></div><div class="item-actions">' + (x.status === 'done' ? '' : '<button type="button" class="btn small" data-act="novaTaskDone" data-id="' + x.id + '" aria-label="Mark ' + esc(x.title) + ' as done">Done</button>') + '<button type="button" class="btn small ghost" data-act="novaTaskDelete" data-id="' + x.id + '" aria-label="Delete ' + esc(x.title) + '">Delete</button></div></li>'; }).join('') + '</ul>' + (N.hubRun ? '<div id="hubPreview">' + runBlockFor(N.hubRun) + '</div>' : '') : J.empty('No NOVA tasks yet. In Chat, say <q>add a task to call HR by Friday</q>. You approve it first.')) +
+          '<p class="small-text muted">Done and Delete show a preview first; nothing changes until you approve. You can also ask in Chat, for example <q>mark call HR as done</q>.</p></article>' +
         '<h2 class="section-title">Classic tools (this browser)</h2><div class="stats">' + tile('Overdue', over, 'tasks', over ? 'red' : '') + tile('Due today', due, J.fmt ? J.fmt(t) : t) + tile('This week', week, 'after today') + tile('Storage', 'Browser', 'moves to the server later') + '</div>' +
         '<div class="btn-row"><a class="btn" href="#tasks">Open Tasks</a><a class="btn" href="#calendar">Open Calendar</a><a class="btn" href="#notes">Notes</a></div>' +
-        '<p class="small-text muted">Google and Outlook calendars connect from the browser (Tool settings). Gmail and server-side calendars are upcoming.</p>';
+        '<p class="small-text muted">Google and Outlook calendars connect from the browser (Tool settings). Gmail connects on the Smart Email page.</p>';
     },
     after: function () { stale('hub', [['tasks', '/api/tasks']]); }
   };

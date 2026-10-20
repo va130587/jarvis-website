@@ -63,6 +63,7 @@ test('focus timer end: told by toast, voice and pop-up; recorded as completed; m
   const opt = await page.$$eval('#fTask option', o => o.filter(x => x.value).map(x => ({ v: x.value, t: x.textContent })));
   await page.selectOption('#fTask', opt[0].v); await page.check('input[name="fMin"][value="15"]', { force: true });
   await page.click('button[data-act="fStart"]'); await page.waitForSelector('.focus-card.running');
+  await page.waitForFunction(() => NOVA.pending() === 0);                                                    // no refresh on its way that would undo the jump below
   await page.evaluate(() => { window.__notes.length = 0; window.__said.length = 0; NOVA.focus.state.running.endsAt = Date.now() - 1; });   // jump to the end of the session
   await page.waitForSelector('.focus-last:has-text("Well done")');
   assert.ok((await page.evaluate(() => window.__notes)).some(n => /NOVA focus finished/.test(n)));

@@ -291,3 +291,21 @@ test('spoken approval (via: voice) is accepted only for low-risk undoable change
   assert.match(acts, /voice_approval_refused/); assert.match(acts, /voice_approval/);
   await s.close();
 });
+
+test('buttons start the same approved run as chat: only allowed tools, only your own open tasks, nothing changes before approval', async () => {
+  const { s, c } = await setup({}, { now: () => NOW });
+  let r = await chat(c, 'add a task to call HR'); await c.post('/api/approvals/' + r.run.pendingApproval.id + '/approve');
+  const id = (await tasks(c))[0].id;
+  r = (await c.post('/api/actions', { tool: 'tasks.complete', id })).json.run;
+  assert.equal(r.status, 'awaiting_approval'); assert.match(r.pendingApproval.preview.changes[0], /"call HR": open → done/);
+  assert.ok(r.steps.some(x => /your button/.test(x.summary)));
+  assert.equal((await tasks(c))[0].status, 'open', 'nothing changed before approval');
+  const a = (await c.post('/api/approvals/' + r.pendingApproval.id + '/approve')).json; assert.match(a.result, /Read back from the database: task #\d+ is done/);
+  assert.equal((await c.post('/api/actions', { tool: 'tasks.complete', id })).status, 404, 'already done');
+  for (const bad of [{ tool: 'memory.delete', id: 1 }, { tool: 'tasks.complete', id: 'x' }, { tool: 'tasks.complete', id: 0 }, { tool: 'time.now', id: 1 }]) assert.equal((await c.post('/api/actions', bad)).status, 400, JSON.stringify(bad));
+  const m = s.client(); await m.login('mallory@example.com');
+  assert.equal((await m.post('/api/actions', { tool: 'tasks.delete', id })).status, 404, 'not someone else\'s task');
+  r = (await c.post('/api/actions', { tool: 'tasks.delete', id })).json.run; assert.equal(r.pendingApproval.voiceOk, false, 'deleting needs a button press');
+  await c.post('/api/approvals/' + r.pendingApproval.id + '/reject'); assert.equal((await tasks(c)).length, 1);
+  await s.close();
+});

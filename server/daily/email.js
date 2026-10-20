@@ -103,7 +103,9 @@ function createEmail(cfg, db, deps) {
 
   function loadDemo(userId) {
     const t = now();
-    const msgs = DEMO.messages.map(m => ({ id: m.id, fromName: m.fromName, fromAddr: m.fromAddr, subject: m.subject, snippet: m.snippet, labels: m.labels || [], unsubscribe: !!m.unsubscribe, receivedAt: t - m.hoursAgo * 3600e3 }));
+    const today = dubaiDate(t), MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const fill = text => text.replace(/\{\{date\+(\d+)\}\}/g, (_, n) => { const d = new Date(today + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + +n); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; });
+    const msgs = DEMO.messages.map(m => ({ id: m.id, fromName: m.fromName, fromAddr: m.fromAddr, subject: m.subject, snippet: fill(m.snippet), labels: m.labels || [], unsubscribe: !!m.unsubscribe, receivedAt: t - m.hoursAgo * 3600e3 }));
     return store(userId, msgs, true);
   }
 

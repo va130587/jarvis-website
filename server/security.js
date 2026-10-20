@@ -4,8 +4,8 @@
 const CSP = [
   "default-src 'self'",
   "script-src 'self' https://accounts.google.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",   // unsafe-inline: the UI sets style="" attributes; scripts stay strict
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",   // unsafe-inline: the UI sets style="" attributes; scripts stay strict
+  "font-src 'self'",
   "img-src 'self' data: https://lh3.googleusercontent.com",
   "connect-src 'self' https://www.googleapis.com https://accounts.google.com https://graph.microsoft.com https://login.microsoftonline.com https://boards-api.greenhouse.io https://boards-api.eu.greenhouse.io https://api.lever.co https://api.ashbyhq.com https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://raw.githubusercontent.com",
   "frame-src https://accounts.google.com https://login.microsoftonline.com",

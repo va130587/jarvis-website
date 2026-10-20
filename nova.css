@@ -272,3 +272,17 @@ kbd { font: 500 10px/1.4 var(--mono); padding: 0 4px; border: 1px solid var(--ed
 .budget-set { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; } .budget-set input { width: 110px; }
 @media (max-width: 520px) { .life-grid { grid-template-columns: 1fr; } .rem-form, .exp-form { grid-template-columns: 1fr; } .rem-list li { grid-template-columns: 1fr auto; } .rem-time { grid-column: 1 / -1; } .exp-list li { grid-template-columns: 1fr auto; } .exp-list li > span:first-child { grid-column: 1 / -1; } .cat-bars li { grid-template-columns: 76px 1fr auto; } }
 @media (prefers-reduced-motion: reduce) { .hab-check { transition: none; } }
+
+/* ---- Phase 1 fixes ---- */
+/* the floating voice orb never covers the end of a page */
+body.nova-server #main { padding-bottom: 110px; }
+/* Knowledge Base: fields shrink with the column; one column below 1100 px */
+.kb-side input, .kb-side textarea, .kb-side select { width: 100%; min-width: 0; max-width: 100%; }
+.kb-docs li .link-btn { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 1100px) { .kb-grid { grid-template-columns: 1fr; } }
+/* text people type (any language, including Arabic) keeps its own direction */
+.msg .text, .item-title, .subj, .why, .mail-top .from, .kb-answer-text, .kb-passage p, .rem-text, .hab-name b, .blk-body b, .brief-list b, .focus-title, .notif-item b, .notif-item span, .pt, .snippet, .exp-list li > span { unicode-bidi: plaintext; }
+/* a page whose data could not load */
+.load-error { display: grid; gap: 6px; justify-items: start; padding: 14px 16px; border: 1px solid rgba(255, 100, 100, .45); border-left-width: 3px; background: var(--red-soft); }
+.load-error p { margin: 0; color: var(--text); } .load-error b { color: #ffd0d0; }
+#hubPreview { margin-top: 12px; }

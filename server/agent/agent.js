@@ -229,7 +229,7 @@ function createAgent(cfg, db, registry, provider, pl) {
   async function start(auth, message, opts) {
     opts = opts || {};
     const user = userRow(auth.user.id);
-    const intent = matchIntent(message, { db, user, now });
+    const intent = opts.call ? { understood: opts.understood || 'Your button: ' + opts.call.name, call: opts.call } : matchIntent(message, { db, user, now });
     const planner = intent ? 'rules' : provider.available() && provider.plan ? 'model' : null;
     if (!planner) return null;
     const state = { planner, iter: 0, history: [], intent: intent || null, messages: [], memoryText: '' };
@@ -358,7 +358,7 @@ function createAgent(cfg, db, registry, provider, pl) {
     router.get('/api/runs/:id', ctx => ({ status: 200, body: snapshot(+ctx.params.id, ctx.auth.user.id) }));
     router.post('/api/runs/:id/cancel', ctx => ({ status: 200, body: cancel({ user: ctx.auth.user, ip: ctx.req.socket.remoteAddress }, +ctx.params.id) }));
     router.post('/api/executions/:id/undo', ctx => ({ status: 200, body: undo({ user: ctx.auth.user, ip: ctx.req.socket.remoteAddress }, +ctx.params.id) }));
-    router.get('/api/tasks', ctx => ({ status: 200, body: { tasks: db.prepare('SELECT id, title, due, status, source, created_at FROM tasks WHERE user_id = ? AND deleted_at IS NULL ORDER BY (status = \'done\'), (due IS NULL), due, id DESC LIMIT 100').all(ctx.auth.user.id).map(t => ({ id: t.id, title: t.title, due: t.due, status: t.status, source: t.source, createdAt: t.created_at })) } }));
+    router.get('/api/tasks', ctx => ({ status: 200, body: { tasks: db.prepare('SELECT id, title, due, status, source, created_at FROM tasks WHERE user_id = ? AND deleted_at IS NULL ORDER BY (status = \'done\'), (due IS NULL), due, id DESC LIMIT 1000').all(ctx.auth.user.id).map(t => ({ id: t.id, title: t.title, due: t.due, status: t.status, source: t.source, createdAt: t.created_at })) } }));
     router.get('/api/notes', ctx => ({ status: 200, body: { notes: db.prepare('SELECT id, text, created_at FROM notes WHERE user_id = ? AND deleted_at IS NULL ORDER BY id DESC LIMIT 100').all(ctx.auth.user.id).map(n => ({ id: n.id, text: n.text, createdAt: n.created_at })) } }));
   }
   return { start, approve, reject, cancel, undo, snapshot, register, planContext, STABLE };

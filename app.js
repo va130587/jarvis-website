@@ -150,8 +150,12 @@
   function render(animate) {
     var scr = J.screens[current];
     if (!scr) return;
-    var active = document.activeElement, activeId = active && main.contains(active) ? active.id : '', caret = null;
+    var active = document.activeElement, activeId = active && main.contains(active) ? active.id : '', caret = null, activeSel = null;
     if (activeId) { try { caret = active.selectionStart; } catch (e) { caret = null; } }
+    else if (active && main.contains(active) && active.getAttribute('data-act')) {   // a button without an id: find it again by what it does
+      activeSel = '[data-act="' + active.getAttribute('data-act') + '"]' + (active.hasAttribute('data-id') ? '[data-id="' + CSS.escape(active.getAttribute('data-id')) + '"]' : '');
+      activeSel = { sel: activeSel, n: $$(activeSel, main).indexOf(active) };
+    }
     main.innerHTML = scr.render();
     main.classList.remove('enter');
     if (animate && !J.calm()) { void main.offsetWidth; main.classList.add('enter'); }
@@ -163,6 +167,10 @@
     if (animate) decode();
     badges();
     $('#sampleBanner').hidden = !J.hasSample();
+    if (!animate && activeSel && document.activeElement === document.body) {
+      var same = $$(activeSel.sel, main)[activeSel.n];
+      if (same) same.focus({ preventScroll: true });
+    }
     if (!animate && activeId) {
       var again = document.getElementById(activeId);
       if (again && again !== document.activeElement) {
@@ -711,7 +719,7 @@
   function checkReminders() {
     var now = Date.now(), fired = [], changed = false;
     J.data.tasks.forEach(function (x) {
-      if (x.status === 'done' || !x.due || !x.time || x.reminded) return;
+      if (x.status === 'done' || !x.due || !x.time || x.reminded || (x.sample && document.body.classList.contains('nova-server'))) return;   // sample data never nags in NOVA server mode
       var at = J.stamp(x.due, x.time);
       if (at > now) return;
       x.reminded = true; changed = true;
@@ -757,9 +765,11 @@
     document.addEventListener('click', function (e) {
       var el = e.target.closest('[data-act]');
       if (!el || el.tagName === 'INPUT') return;
-      var fn = J.actions[el.getAttribute('data-act')];
+      var act = el.getAttribute('data-act'), fn = J.actions[act];
       if (!fn) return;
       e.preventDefault();
+      // NOVA actions talk to the server: a second click within 800 ms (a double click) is ignored so nothing is sent twice
+      if (/^(nova|life|kb|hab|rem|exp|bud|pl|d[A-Z]|f[A-Z]|i[A-Z])/.test(act)) { if (el.getAttribute('data-busy')) return; el.setAttribute('data-busy', '1'); setTimeout(function () { el.removeAttribute('data-busy'); }, 800); }
       fn(el.getAttribute('data-id'), el);
     });
     document.addEventListener('submit', function (e) {
