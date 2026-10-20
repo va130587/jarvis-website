@@ -1,6 +1,6 @@
 # NOVA Feature Status
 
-Honest status after **Milestones 1 (local model), 2 (ProofLoop), 3 (voice) and 4 (daily use)**. Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
+Honest status after **all five milestones** (local model, ProofLoop, voice, daily use, delivery). Statuses: WORKING AND TESTED, IMPLEMENTED BUT UNVERIFIED, DEMO ONLY, REQUIRES CONFIGURATION, NOT IMPLEMENTED, BLOCKED. "Tested" means an automated test was run and passed in this repository (see NOVA_TEST_REPORT.md).
 
 | Feature | Status | Notes |
 |---|---|---|
@@ -23,7 +23,7 @@ Honest status after **Milestones 1 (local model), 2 (ProofLoop), 3 (voice) and 4
 | AI usage ledger and Usage page | WORKING AND TESTED | Real counts; cost is an estimate from a price table, only for known models. Spending cap tested with a stand-in model. |
 | Security page: sessions, audit log, export, delete memories, delete account | WORKING AND TESTED | Typed confirmation required. |
 | CSP, security headers, rate limiting, input validation, audit redaction, static allow-list | WORKING AND TESTED | Browser tests run under the strict CSP with zero violations. |
-| Automatic data-retention schedule, backup automation | NOT IMPLEMENTED | Manual export and deletion exist; backup guidance is in ARCHITECTURE.md. |
+| Backup and restore (`npm run backup`, `npm run restore`) | WORKING AND TESTED | Consistent snapshot while running (VACUUM INTO), integrity check, manifest with SHA-256, pruning (`--keep`), safety copy before restore, damaged / changed / foreign files refused. Scheduling it daily is up to you (cron line in DEPLOYMENT.md). Automatic data-retention rules: NOT IMPLEMENTED. |
 | Voice requests reach NOVA (typed path) | WORKING AND TESTED | Task, note, forget and memory-search phrases, and anything the Classic tools do not know, go to the server; changes show an approval request. In server mode these phrases no longer edit the browser-only NOVA tasks. |
 | Voice page: push-to-talk (click or hold/Space), live editable transcript, confidence note, English UK/US and Arabic (UAE) selector, permission-denied / offline / network / no-speech / unsupported messages with a typing fallback | WORKING AND TESTED (mock engine) | 16 browser tests drive a controllable fake speech engine: normal, slow chunked, noisy (low confidence, never auto-sent), silence, denied, offline, wrong words corrected, repeated commands, no-recogniser and no-synthesis fallbacks, layout at 390/768/1440 and axe. |
 | Voice: natural voice picker (prefers "Microsoft Andrew Online (Natural)" in Edge, then other natural voices; honest list; Test button) | WORKING AND TESTED (mock voices) | Ranking unit-tested. Whether your browser actually offers Andrew, and how it sounds, is UNVERIFIED until you run step 1-2 of NOVA_VOICE_TEST_SCRIPT.md. No "Andrew HD" voice exists in browsers today; NOVA says so rather than pretending. Free: the voices are part of Edge/Windows. |
@@ -61,3 +61,14 @@ Honest status after **Milestones 1 (local model), 2 (ProofLoop), 3 (voice) and 4
 | Tasks, notes, calendar (browser), jobs, applications, growth, NOVA voice commands | WORKING AND TESTED | Unchanged; 144 earlier tests still pass. Data is in the browser, not the NOVA database yet. |
 | Job collector (GitHub Action), ntfy alerts, Smart mode | REQUIRES CONFIGURATION | As before: fixture-tested, never run against the live internet. |
 | CI running the tests | NOT IMPLEMENTED |  |
+
+## Delivery (Milestone 5)
+
+| Feature | Status | Notes |
+|---|---|---|
+| `npm start` with a first-run setup page | WORKING AND TESTED | Loopback only, one-time code from the terminal, refuses cross-site posts, writes a private `.env` (mode 600, random NOVA_SECRET_KEY) once, then NOVA starts on the same address. Tested end to end in a child process and in a browser (axe, phone width). |
+| Demo mode (`npm run demo`, `npm run demo:reset`) | WORKING AND TESTED | Separate database, fictional labelled data (tasks, notes, memories, 9 ProofLoop scenarios, 10 e-mails, a briefing). |
+| NOVA_DEMO_GUIDE.md | WORKING AND TESTED | Every on-screen claim in the guide is checked by `tests/acceptance-e2e.test.js` on the demo data. The microphone part needs a person. |
+| Dockerfile | WORKING AND TESTED (manually) | Built and run in this environment: health check endpoint answers, runs as user `node`, data in `/data`, image contains no tests, `.env` or database, development sign-in refused. Not part of `npm test`. |
+| CI workflow (`.github/workflows/ci.yml`) | IMPLEMENTED BUT UNVERIFIED | Runs `npm test` on GitHub on every push and pull request. Verified only once GitHub runs it: see the Actions tab. |
+| DEPLOYMENT.md (home, always-on, Docker, free VM with HTTPS) | DOCUMENTATION | Steps are standard; only the local and Docker paths were executed here. |

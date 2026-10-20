@@ -1,0 +1,12 @@
+# Never copy secrets, local data, tests or dependencies into the image.
+.git
+.github
+.env
+.env.*
+!.env.example
+.nova
+backups
+node_modules
+tests
+*.db
+*.db-*

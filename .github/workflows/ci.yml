@@ -1,0 +1,42 @@
+# Runs NOVA's tests on every push and pull request. Free for public repositories; no secrets are used.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['data/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install test tools (axe-core, Playwright)
+        run: npm ci
+      - name: Install Chromium for the browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Check that every server file parses
+        run: for f in server/*.js server/*/*.js scripts/*.js; do node --check "$f"; done
+      - name: Run all tests
+        run: npm test
+      - name: Keep screenshots when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: tests/screenshots/
+          retention-days: 7

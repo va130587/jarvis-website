@@ -213,16 +213,36 @@ function createApp(over, deps) {
   };
 }
 
+// `npm start`: reads .env from the NOVA folder (or NOVA_ENV_FILE). Values already set in the shell win, except empty ones.
+// Without OWNER_EMAILS it serves the first-run setup page on the same address, then starts NOVA there.
+function applyEnvFile(file) {
+  if (!fs.existsSync(file)) return false;
+  const vars = require('util').parseEnv(fs.readFileSync(file, 'utf8'));
+  for (const [k, v] of Object.entries(vars)) if (process.env[k] === undefined || process.env[k] === '') process.env[k] = v;
+  return true;
+}
+function startNova(source) {
+  const app = createApp();
+  if (!app.cfg.ownerEmails.length) { console.error('Set OWNER_EMAILS (comma-separated e-mail addresses that may sign in). See .env.example.'); process.exit(1); }
+  return app.listen().then(p => {
+    app.scheduler.start();
+    console.log('NOVA is running at http://' + app.cfg.host + ':' + p + '  (auth: ' + app.cfg.authMode + ', AI: ' + app.cfg.ai.provider + ')');
+    console.log('Settings: ' + source + '. Scheduler: ' + (app.cfg.scheduler.enabled ? 'on (daily briefing, deadline check, follow-ups, e-mail check; Dubai time)' : 'off (NOVA_SCHEDULER=off)') + '. Phone push: ' + (app.cfg.ntfy.topic ? 'ntfy on' : 'off') + '.');
+    if (app.cfg.authMode === 'dev') console.log('Development sign-in is ON (loopback only). Do not expose this server to a network.');
+    const stop = () => { app.close().then(() => process.exit(0)); setTimeout(() => process.exit(0), 3000).unref(); };
+    process.on('SIGINT', stop); process.on('SIGTERM', stop);
+  });
+}
 if (require.main === module) {
+  const envFile = process.env.NOVA_ENV_FILE || path.join(__dirname, '..', '.env');
+  const had = applyEnvFile(envFile);
+  const fail = e => { console.error(e && e.message || e); process.exit(1); };
   try {
-    const app = createApp();
-    if (!app.cfg.ownerEmails.length) { console.error('Set OWNER_EMAILS (comma-separated e-mail addresses that may sign in). See .env.example.'); process.exit(1); }
-    app.listen().then(p => {
-      app.scheduler.start();
-      console.log('Scheduler: ' + (app.cfg.scheduler.enabled ? 'on (daily briefing, deadline check, follow-ups, e-mail check; Dubai time)' : 'off (NOVA_SCHEDULER=off)') + '. Phone push: ' + (app.cfg.ntfy.topic ? 'ntfy on' : 'off'));
-      console.log('NOVA is running at http://' + app.cfg.host + ':' + p + '  (auth: ' + app.cfg.authMode + ', AI: ' + app.cfg.ai.provider + ')');
-      if (app.cfg.authMode === 'dev') console.log('Development sign-in is ON (loopback only). Do not expose this server to a network.');
-    });
-  } catch (e) { console.error(e.message); process.exit(1); }
+    if (process.env.OWNER_EMAILS) startNova(had ? envFile : 'environment variables').catch(fail);
+    else {
+      require('./setup').runSetup({ root: path.join(__dirname, '..'), envPath: envFile, host: process.env.HOST || '127.0.0.1', port: process.env.PORT === undefined || process.env.PORT === '' ? 8787 : +process.env.PORT })
+        .then(s => s.finished).then(() => { applyEnvFile(envFile); return startNova(envFile); }).catch(fail);
+    }
+  } catch (e) { fail(e); }
 }
 module.exports = { createApp };

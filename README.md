@@ -12,10 +12,21 @@ See `NOVA_AUDIT.md` (what was found), `NOVA_IMPLEMENTATION_PLAN.md` (the phases)
 You need **Node.js 22.13 or newer**. There are no packages to install to run it.
 
 ```
-OWNER_EMAILS=you@gmail.com AUTH_MODE=dev node server/index.js
+npm start
 ```
 
-Open http://127.0.0.1:8787, type the same e-mail, and you are in. `AUTH_MODE=dev` is the local development sign-in: it only works on this computer (the server refuses to start in dev mode on any other address). Your data is stored in `.nova/nova.db` (ignored by git).
+The first time, NOVA opens a **setup page** (the address and a one-time setup code are printed in the terminal): enter your e-mail, choose built-in rules or a free local AI model, and optionally phone notifications. NOVA writes a private `.env` (with a fresh random `NOVA_SECRET_KEY`) and starts on the same address. Sign in with the same e-mail (development sign-in, this computer only). Your data is stored in `.nova/nova.db` (ignored by git). Next time `npm start` goes straight in.
+
+| Command | What it does |
+|---|---|
+| `npm start` | Runs NOVA (first run: the setup page) |
+| `npm run demo` | A separate demo on http://127.0.0.1:8788 with fictional data (sign in as `demo@nova.local`). See `NOVA_DEMO_GUIDE.md`. |
+| `npm run demo:reset` | Starts the demo over |
+| `npm run backup` | A checked snapshot in `backups/` (works while NOVA runs) |
+| `npm run restore -- backups/<file>.db` | Restores it (stop NOVA first; your current database is kept as a safety copy) |
+| `npm test` | All tests (needs `npm install` once for the test tools) |
+
+Always-on at home, Docker, or a free cloud VM with HTTPS: see `DEPLOYMENT.md`. You can still start NOVA without the setup page by setting the variables yourself: `OWNER_EMAILS=you@gmail.com AUTH_MODE=dev node server/index.js`.
 
 **Real Google sign-in (free):** in Google Cloud Console create an OAuth client of type *Web application* with the redirect address `http://127.0.0.1:8787/auth/google/callback`, then start the server with `AUTH_MODE=google GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... OWNER_EMAILS=you@gmail.com`. See `.env.example` for every setting. Never put these values in a file that is committed.
 
@@ -31,9 +42,16 @@ NOVA tries its fixed rules first, then the local model with the approved tools. 
 
 **ProofLoop (the signature feature):** NOVA does not treat "I made a draft" or "the send call returned OK" as done. A request with a deadline becomes a *commitment* that moves through Request Detected → … → Submitted → Awaiting Confirmation → Verified → Completed, and the evidence behind every step is kept. Try `remind me to send the proposal to the client by Friday` in Chat (you approve, NOVA creates the task, and the commitment waits in *Awaiting Confirmation* because NOVA cannot see whether you did it), then `I sent the proposal` to confirm. Open **ProofLoop** for Mission Control, **Load demo scenarios** for nine labelled fictional examples, and **Export proof receipt** for a Markdown or printable record of what is and is not proven.
 
-**What works today:** sign-in and sessions, an agent that can create tasks and notes, complete or delete tasks and forget memories **only after you approve each change** (you see a preview first, NOVA re-reads the result to verify it, and most changes have Undo), the Memory Vault (you approve every memory; secrets are refused; sensitive details need confirmation), chat with plain-English "what NOVA did" steps, the NOVA orb, activity and usage pages, data export and deletion, voice requests that reach NOVA. In server mode, voice or typed phrases like "add a task to call HR by Friday" go to NOVA (server tasks, with approval) instead of the browser-only NOVA task list. **Upcoming and clearly labelled in the app:** Smart Email, ProofLoop, Automation Centre, Knowledge Base.
+**What works today:** sign-in and sessions, an agent that can create tasks and notes, complete or delete tasks and forget memories **only after you approve each change** (you see a preview first, NOVA re-reads the result to verify it, and most changes have Undo), the Memory Vault (you approve every memory; secrets are refused; sensitive details need confirmation), chat with plain-English "what NOVA did" steps, the NOVA orb, activity and usage pages, data export and deletion, voice requests that reach NOVA. In server mode, voice or typed phrases like "add a task to call HR by Friday" go to NOVA (server tasks, with approval) instead of the browser-only NOVA task list. **Upcoming and clearly labelled in the app:** Knowledge Base.
 
 **Voice (NOVA > Voice):** push-to-talk (click, or hold the button / Space), a live transcript you can edit before sending, English UK/US or Arabic (UAE), and plain messages if the microphone is blocked, you are offline, or nothing was heard (typing always works). NOVA prefers a natural voice such as "Microsoft Andrew Online (Natural)" when your browser (Edge) has it; this is free and comes from the browser, and no "Andrew HD" voice exists there today. You can approve **small, undoable** changes by saying "approve" (a bare "yes" is ignored); deleting, forgetting and anything external need a button. Voice never proves who you are. Test it on a real microphone with `NOVA_VOICE_TEST_SCRIPT.md`.
+
+**Daily use (free, no AI needed):**
+- **Daily Briefing** (and a strip on the Dashboard): overdue items, what is due today and in the next three days, follow-ups from ProofLoop, approvals waiting, important e-mail, possible phishing, and "the one thing" that matters most with the reason. "Read it to me" speaks it; say **"brief me"** to NOVA by voice or text.
+- **Automation Centre:** four jobs that run on the server at a Dubai time even with the browser closed: daily briefing (07:30), deadline check (17:00), follow-up nudges (10:00, Mon-Fri), e-mail check (08:00). Change the time or days, switch off, **Run now**, and see every run with its result and attempts. Failed runs are retried (1, 5, 15 minutes) and never duplicated; if NOVA was off, missed runs are merged into one.
+- **Notifications:** the bell in the top bar (always), browser pop-ups while NOVA is open (if you allow them), and optional free phone push through ntfy (`NOVA_NTFY_TOPIC`).
+- **Smart Email:** connect Gmail **read-only** (`gmail.readonly`; tokens encrypted with `NOVA_SECRET_KEY`), or press **Try the demo inbox** (fictional messages). Every message gets a priority (Critical, Important, Normal, Low, or Check first = possible phishing) **with the reasons**, deadlines and promises found in the text, draft replies you edit (they stay in NOVA; **NOVA cannot send**), and one-click tracking in ProofLoop ("they promised" = owed to you, "reply to them" = you owe). Say **"any important emails?"**.
+- Setup for real Gmail: in Google Cloud enable the Gmail API, add `http://127.0.0.1:8787/auth/gmail/callback` as a redirect URI on the same OAuth client used for sign-in, set `NOVA_SECRET_KEY`, restart, then Smart Email > Connect Gmail.
 
 **Static mode:** if you open the same pages from GitHub Pages (no server), NOVA's server features are simply absent and the Classic tools work as before.
 

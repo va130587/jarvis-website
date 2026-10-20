@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOVA setup</title>
+<link rel="stylesheet" href="/setup.css">
+</head>
+<body>
+<main class="card" id="main">
+  <p class="eyebrow">First-run setup · this computer only</p>
+  <h1>NOVA</h1>
+  <p class="lead">From Request to Verified Result. Three answers and you are in. Everything here is free.</p>
+  <ul class="checks" id="checks" aria-label="System checks"><li>Checking this computer…</li></ul>
+  <form id="setupForm" novalidate>
+    <div class="field"><label for="token">Setup code <small>(printed in the terminal where you ran <code>npm start</code>)</small></label>
+      <input id="token" name="token" autocomplete="off" required spellcheck="false"></div>
+    <div class="field"><label for="email">Your e-mail <small>(only this address can sign in)</small></label>
+      <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@gmail.com"></div>
+    <fieldset class="field"><legend>How should NOVA understand you?</legend>
+      <label class="opt"><input type="radio" name="ai" value="local" checked><span><b>Built-in rules</b> <small>Works now, no download. Understands fixed phrases such as "add a task to call HR by Friday".</small></span></label>
+      <label class="opt"><input type="radio" name="ai" value="ollama"><span><b>Free local AI model (Ollama)</b> <small>Understands everyday phrasing. Needs Ollama installed and about 5 GB for qwen2.5:7b. Nothing leaves your computer.</small></span></label>
+    </fieldset>
+    <label class="opt"><input type="checkbox" name="ntfy" id="ntfy"><span><b>Phone notifications (ntfy, free)</b> <small>NOVA creates a secret topic name; you subscribe to it in the ntfy app.</small></span></label>
+    <p class="err" id="err" role="alert" hidden></p>
+    <button type="submit" class="go">Save and start NOVA</button>
+    <p class="small">NOVA writes these answers to a private <code>.env</code> file in the NOVA folder, with a new random key that encrypts your account tokens. You can edit it later.</p>
+  </form>
+  <section id="doneBox" hidden aria-live="polite">
+    <h2>NOVA is starting…</h2>
+    <p id="doneText"></p>
+    <p id="ntfyBox" hidden>Phone notifications: install the free <b>ntfy</b> app and subscribe to <code id="ntfyTopic"></code>. Keep this name private: anyone who knows it can read your notifications.</p>
+    <p><a class="go" id="openNova" href="/">Open NOVA</a></p>
+  </section>
+</main>
+<script src="/setup-page.js"></script>
+</body>
+</html>

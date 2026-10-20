@@ -4,3 +4,4 @@ tests/screenshots/
 .env
 .env.*
 !.env.example
+backups/

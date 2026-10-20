@@ -1,10 +1,14 @@
 {
   "name": "nova",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "private": true,
   "description": "NOVA: personal AI assistant. Node 22 server (built-in SQLite, no dependencies) plus a plain HTML/CSS/JS front end. Devdependencies only run the tests.",
   "scripts": {
     "start": "node server/index.js",
+    "demo": "node scripts/demo.js",
+    "demo:reset": "node scripts/demo.js --reset",
+    "backup": "node scripts/backup.js",
+    "restore": "node scripts/backup.js restore",
     "test": "node tests/run.js",
     "serve": "python3 -m http.server 8000",
     "eval:nlu": "node scripts/eval-nlu.js"
