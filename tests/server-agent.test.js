@@ -264,3 +264,29 @@ test('isolation: tasks, notes, runs, executions and approvals belong to one user
   for (const tb of ['tasks', 'notes', 'runs', 'run_steps', 'approvals', 'tool_executions']) assert.equal(s.app.db.prepare('SELECT COUNT(*) n FROM ' + tb + ' WHERE user_id = 1').get().n, 0, tb);
   await s.close();
 });
+
+test('spoken approval (via: voice) is accepted only for low-risk undoable changes; everything else needs a button', async () => {
+  const { s, c } = await setup({}, { now: () => NOW });
+  // invalid channel
+  let r = await chat(c, 'add a task to call HR');
+  assert.equal(r.run.pendingApproval.voiceOk, true);
+  assert.equal((await c.post('/api/approvals/' + r.run.pendingApproval.id + '/approve', { via: 'telepathy' })).status, 400);
+  // edits cannot be spoken
+  assert.equal((await c.post('/api/approvals/' + r.run.pendingApproval.id + '/approve', { via: 'voice', editedInput: { title: 'other' } })).status, 400);
+  assert.deepEqual(await tasks(c), []);
+  // the plain spoken approval works
+  const ok = await c.post('/api/approvals/' + r.run.pendingApproval.id + '/approve', { via: 'voice' });
+  assert.equal(ok.json.status, 'completed'); assert.equal((await tasks(c)).length, 1);
+  // a destructive change cannot be approved by voice, and stays pending
+  r = await chat(c, 'delete task call HR');
+  assert.equal(r.status, 'awaiting_approval'); assert.equal(r.run.pendingApproval.voiceOk, false);
+  const no = await c.post('/api/approvals/' + r.run.pendingApproval.id + '/approve', { via: 'voice' });
+  assert.equal(no.status, 403); assert.equal(no.json.error.code, 'voice_not_allowed');
+  assert.equal((await tasks(c)).length, 1);
+  const btn = await c.post('/api/approvals/' + r.run.pendingApproval.id + '/approve', { via: 'button' });
+  assert.equal(btn.json.status, 'completed'); assert.equal((await tasks(c)).length, 0);
+  const audit = (await c.get('/api/audit')).json;
+  const acts = JSON.stringify(audit);
+  assert.match(acts, /voice_approval_refused/); assert.match(acts, /voice_approval/);
+  await s.close();
+});

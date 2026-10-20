@@ -152,7 +152,7 @@ function graphApi(state) {
 /* ---------- Speech mocks (the test browser has no microphone or speakers) ---------- */
 const FAKE_SPEECH = `
   window.__said = [];
-  const synth = { speaking: false, paused: false, q: [], getVoices: () => [{ name: 'Google UK English Male', lang: 'en-GB', voiceURI: 'm' }], addEventListener() {},
+  const synth = { speaking: false, paused: false, q: [], getVoices: () => window.__voices || [{ name: 'Google UK English Male', lang: 'en-GB', voiceURI: 'm' }], addEventListener() {},
     cancel() { const q = this.q; this.q = []; clearTimeout(this.t); this.speaking = false; q.forEach(u => u.onend && u.onend()); }, resume() {},
     speak(u) { window.__said.push(u.text); this.q.push(u); if (this.q.length === 1) this.run(); },
     run() { const u = this.q[0]; if (!u) { this.speaking = false; return; } this.speaking = true; u.onstart && u.onstart(); this.t = setTimeout(() => { this.q.shift(); u.onend && u.onend(); this.run(); }, 30); } };
@@ -161,6 +161,28 @@ const FAKE_SPEECH = `
   window.__notes = [];
   window.Notification = function (title, o) { window.__notes.push(title + ': ' + (o && o.body)); };
   window.Notification.permission = 'granted'; window.Notification.requestPermission = () => Promise.resolve('granted');`;
+
+// Opt-in controllable SpeechRecognition (opts.recognition). Tests drive it via window.__rec.
+const FAKE_RECOGNITION = `
+  window.__rec = { instances: [], deny: false, errorOnStart: null };
+  function FakeRec() { this.lang = ''; this.continuous = false; this.interimResults = false; this.active = false; window.__rec.instances.push(this); }
+  FakeRec.prototype.start = function () {
+    const me = this, cfg = window.__rec;
+    if (cfg.deny) { setTimeout(() => me.onerror && me.onerror({ error: 'not-allowed' }), 5); setTimeout(() => me.onend && me.onend(), 10); return; }
+    if (cfg.errorOnStart) { const e = cfg.errorOnStart; setTimeout(() => me.onerror && me.onerror({ error: e }), 5); setTimeout(() => me.onend && me.onend(), 10); return; }
+    this.active = true; setTimeout(() => me.onstart && me.onstart(), 1);
+  };
+  FakeRec.prototype.stop = function () { const me = this; if (!this.active) return; this.active = false; setTimeout(() => me.onend && me.onend(), 5); };
+  FakeRec.prototype.abort = FakeRec.prototype.stop;
+  // results: array of {t, final, c}; emits a SpeechRecognitionEvent-like object
+  window.__rec.say = function (parts) {
+    const me = window.__rec.instances[window.__rec.instances.length - 1]; if (!me || !me.onresult) return false;
+    const results = parts.map(p => { const alt = { transcript: p.t, confidence: p.c == null ? 0.9 : p.c }; const r = [alt]; r.isFinal = !!p.final; r.item = i => r[i]; return r; });
+    me.onresult({ resultIndex: 0, results });
+    return true;
+  };
+  window.__rec.end = function () { const me = window.__rec.instances[window.__rec.instances.length - 1]; if (me && me.active) me.stop(); };
+  window.SpeechRecognition = FakeRec; window.webkitSpeechRecognition = FakeRec;`;
 
 /**
  * Opens NOVA in a fresh browser context with mocks. Returns { page, ctx, errors, google, graph }.
@@ -184,6 +206,7 @@ async function openApp(browser, opts) {
   }, { data: opts.data || null, now: opts.now || null });
   // The mocks are plain scripts (not eval), so they also work on pages that send a strict Content-Security-Policy.
   await ctx.addInitScript({ content: FAKE_SPEECH });
+  if (opts.recognition) await ctx.addInitScript({ content: FAKE_RECOGNITION });
   if (!opts.realGis) await ctx.addInitScript({ content: FAKE_GIS });
   if (opts.init) await ctx.addInitScript({ content: opts.init });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());

@@ -213,7 +213,7 @@
   });
 
   function afterRun(run, ok) {
-    N.runs[run.id] = run; N.cache.approvals = null; N.cache.tasks = null; N.cache.activity = null; N.cache.usage = null;
+    N.runs[run.id] = run; N.voicePending = null; N.cache.approvals = null; N.cache.tasks = null; N.cache.activity = null; N.cache.usage = null;
     N.setState(run.status === 'failed' ? 'error' : run.status === 'awaiting_approval' ? 'waiting_approval' : run.status === 'cancelled' ? 'idle' : 'completed');
     J.render(false);
   }
@@ -234,17 +234,121 @@
     }
   });
 
-  /* ---- voice ---- */
+  /* ---- voice: push-to-talk, editable transcript, language, natural voices, spoken approvals ---- */
+  N.voice = { mode: 'toggle', listening: false, transcript: '', interim: '', conf: null, error: null, ctl: null, onlineNote: '' };
+  N.voiceLog = [];
+  var provider = null;
+  function speechProvider() { return provider || (provider = NovaSpeech.createBrowserProvider(window)); }
+  function vLang() { return J.data.settings.voiceLang || 'en-GB'; }
+  function vSet(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+  function vPatch() {
+    var v = N.voice, t = document.getElementById('vTranscript'), btn = document.getElementById('ptt');
+    if (t && document.activeElement !== t) t.value = v.listening ? v.interim : v.transcript;
+    if (btn) { btn.setAttribute('aria-pressed', String(v.listening)); btn.textContent = v.listening ? (v.mode === 'hold' ? 'Release to stop' : 'Stop listening') : (v.mode === 'hold' ? 'Hold to talk' : 'Start listening'); btn.classList.toggle('listening', v.listening); }
+    vSet('vLive', v.listening ? 'Listening… speak now.' : v.transcript ? 'Check the words below, fix anything wrong, then press Send.' : '');
+    var c = document.getElementById('vConf'); if (c) { c.hidden = v.listening || v.conf === null || !v.transcript; c.textContent = v.conf === null ? '' : 'The browser is ' + Math.round(v.conf * 100) + '% sure of these words' + (v.conf < 0.6 ? '. That is low: please read them carefully before sending.' : '. Speech recognition is never perfect, so always check.'); c.className = 'small-text ' + (v.conf !== null && v.conf < 0.6 ? 'red-text' : 'muted'); }
+    var er = document.getElementById('vError'); if (er) { er.hidden = !v.error; er.innerHTML = v.error ? '<b>' + esc(v.error.title) + '</b>' + (v.error.steps.length ? '<ul class="plain">' + v.error.steps.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') : ''; }
+  }
+  function vFail(code) { N.voice.error = NovaSpeech.explain(code, { lang: vLang(), firefox: /firefox/i.test(navigator.userAgent) }); }
+  function vStart() {
+    var v = N.voice; if (v.listening) return;
+    v.error = null; v.transcript = ''; v.interim = ''; v.conf = null;
+    var p = speechProvider();
+    if (!p.supported) { vFail('unsupported'); vPatch(); return; }
+    if (navigator.onLine === false) { vFail('offline'); vPatch(); return; }
+    if (J.voice) { J.voice.stop(); if (J.voice.isWake()) J.voice.pauseWake(); }          // never listen to NOVA's own voice or run two recognisers
+    v.listening = true; N.setState('listening'); vPatch();
+    v.ctl = p.start({ lang: vLang(),
+      onStart: function () { N.setState('listening'); },
+      onInterim: function (t) { v.interim = t; if (t && N.state === 'listening') N.setState('transcribing'); vPatch(); },
+      onFinal: function (t, c) { v.transcript = t; v.conf = c; },
+      onError: function (code) { vFail(code); },
+      onEnd: function (t, c) {
+        v.listening = false; v.ctl = null; if (t) { v.transcript = t; v.conf = c; } else if (v.interim && !v.error) v.transcript = v.interim;
+        if (!v.transcript && !v.error) vFail('no-speech');
+        if (N.state === 'listening' || N.state === 'transcribing') N.setState('idle');
+        vPatch(); if (J.voice && J.voice.isWake()) setTimeout(function () { J.voice.resumeWake(); }, 500);
+        var tx = document.getElementById('vTranscript'); if (tx && v.transcript) tx.focus();
+      } });
+  }
+  function vStop() { if (N.voice.ctl) N.voice.ctl.stop(); }
+  function vSend() {
+    var t = document.getElementById('vTranscript'), text = (t ? t.value : N.voice.transcript).trim();
+    if (!text) { J.toast('Say or type something first.'); return; }
+    N.voice.transcript = ''; N.voice.interim = ''; N.voice.conf = null; N.voice.error = null; vPatch();
+    if (J.voice) J.voice.run(text); else J.toast('Voice is not available.');
+  }
+  document.addEventListener('nova:voicemsg', function (e) {
+    N.voiceLog.push({ who: e.detail.who === 'you' ? 'you' : 'nova', text: e.detail.text }); if (N.voiceLog.length > 40) N.voiceLog.shift();
+    var box = document.getElementById('vLog'); if (box) { box.innerHTML = vLogHTML(); box.scrollTop = box.scrollHeight; }
+  });
+  function vLogHTML() { return N.voiceLog.length ? N.voiceLog.map(function (m) { return '<div class="msg ' + (m.who === 'you' ? 'me' : 'bot') + '"><p class="who mono">' + (m.who === 'you' ? esc(name()) : 'NOVA') + '</p><p class="text">' + esc(m.text) + '</p></div>'; }).join('') : J.empty('Your conversation will appear here. Press the button and speak, or type below.'); }
+  function voiceReport() {
+    var vs = J.voice ? J.voice.voices() : [], r = NovaSpeech.report(vs);
+    return !J.voice || !J.voice.supported.speak ? 'This browser cannot speak replies. Text replies still work.' :
+      'This browser offers ' + r.total + ' voice' + (r.total === 1 ? '' : 's') + (r.natural.length ? ', ' + r.natural.length + ' of them natural-sounding (' + esc(r.natural.slice(0, 3).join(', ')) + (r.natural.length > 3 ? ', …' : '') + ').' : ', none of them natural-sounding.') +
+      (r.hasAndrew ? (r.hasHD ? ' An Andrew HD voice is available.' : ' "Andrew" is available (not an HD variant).') : ' No "Andrew" voice here. Microsoft Edge usually offers "Microsoft Andrew Online (Natural)" (needs internet, free).');
+  }
   S.voice = {
     render: function () {
-      var sr = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-      return J.head('Voice', 'Voice Assistant', 'Push to talk, see the words, hear the answer.', '<button type="button" class="btn primary" data-act="talk">' + (sr ? 'Push to talk' : 'Voice not supported here') + '</button>') +
-        '<div class="grid-2"><article class="panel center">' + orb('big') + '<p id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p><p class="live" id="liveLine" aria-live="polite"></p></article>' +
-        '<article class="panel"><h2 class="label">How it works today</h2><ul class="plain small-text"><li>Press <b>Push to talk</b> or <kbd>J</kbd>, speak, and the transcript appears in the chat panel.</li><li>Commands that NOVA\'s built-in tools know (tasks, calendar, jobs) run as before. Anything else is sent to NOVA\'s chat on the server, so "who am I?" works by voice.</li><li>Speech recognition is done by your browser\'s own service (Chrome and Edge send audio to their vendor; Firefox cannot listen). Recognition is never perfect: check the transcript.</li><li>Voice is <b>never</b> used to prove who you are. Only the signed-in account does that.</li></ul>' +
-          '<p class="tag gold">Upcoming: Phase 5</p><p class="small-text muted">Editing the transcript before sending, language choice, and a dedicated speech provider.</p>' +
-          (sr ? '' : '<p class="login-msg">This browser cannot listen. You can still type in NOVA Chat.</p>') + '</article></div>';
+      var v = N.voice, sr = speechProvider().supported, vs = J.voice ? J.voice.voices() : [], cur = J.voice && J.voice.chosenVoice(), st = J.data.settings;
+      var opts = vs.filter(function (x) { return /^(en|ar)/i.test(x.lang); }).map(function (x) { return '<option value="' + esc(x.voiceURI) + '"' + (x.voiceURI === st.voiceURI ? ' selected' : '') + '>' + (NovaSpeech.isNatural(x) ? '★ ' : '') + esc(x.name) + ' (' + esc(x.lang) + ')</option>'; }).join('');
+      var vp = N.voicePending;
+      return J.head('Voice', 'Voice Assistant', 'Push to talk, check the words, send, and hear the answer. Typing always works too.', '') +
+        '<div class="grid-2"><article class="panel center">' + orb('big') + '<p id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p>' +
+          '<button type="button" class="btn primary ptt" id="ptt" aria-pressed="false"' + (sr ? '' : ' disabled') + '>' + (v.mode === 'hold' ? 'Hold to talk' : 'Start listening') + '</button>' +
+          '<fieldset class="seg-field"><legend class="sr-only">Push-to-talk style</legend><label class="check-chip"><input type="radio" name="vMode" value="toggle"' + (v.mode === 'toggle' ? ' checked' : '') + '>Click to start and stop</label><label class="check-chip"><input type="radio" name="vMode" value="hold"' + (v.mode === 'hold' ? ' checked' : '') + '>Hold to talk (also Space)</label></fieldset>' +
+          '<p class="live" id="vLive" aria-live="polite"></p>' + (sr ? '' : '<p class="login-msg" role="alert">This browser cannot listen. Type your request below instead.</p>') + '</article>' +
+        '<article class="panel"><h2 class="label">Language and voice</h2>' +
+          '<div class="field"><label for="vLang">I am speaking</label><select id="vLang">' + NovaSpeech.LANGS.map(function (l) { return '<option value="' + l[0] + '"' + (vLang() === l[0] ? ' selected' : '') + '>' + esc(l[1]) + '</option>'; }).join('') + '</select></div>' +
+          '<div class="field"><label for="vVoice">NOVA\'s voice</label><select id="vVoice"><option value="">Automatic (a natural voice if this browser has one)</option>' + opts + '</select></div>' +
+          '<p class="small-text muted" id="vVoiceNote">' + voiceReport() + (cur ? ' Using: ' + esc(cur.name) + '.' : '') + '</p>' +
+          '<div class="btn-row"><button type="button" class="btn small" data-act="vTest">Test voice</button><button type="button" class="btn small ghost" data-act="vStopSpeak">Stop speaking</button></div>' +
+          '<div class="field" style="margin-top:12px"><label for="rate">Speaking speed: <span class="mono" id="rateOut">' + (+st.rate || 1).toFixed(2) + '×</span></label><input id="rate" type="range" min="0.7" max="1.4" step="0.05" value="' + esc(st.rate || 1) + '" data-setting="rate"></div>' +
+          '<label class="switch"><span class="txt"><b>Spoken replies</b><small>NOVA reads its answers aloud.</small></span><input type="checkbox" data-setting="voice"' + (st.voice !== false ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label>' +
+          '<label class="switch"><span class="txt"><b>Approve low-risk changes by voice</b><small>Say "approve" or "reject". Only for small, undoable changes. Deleting, forgetting and anything external always needs a button press.</small></span><input type="checkbox" data-setting="spokenApproval"' + (st.spokenApproval !== false ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label></article></div>' +
+        '<article class="panel"><h2 class="label">What I heard</h2><div class="field"><label for="vTranscript">Your words (edit them if the browser misheard)</label><textarea id="vTranscript" rows="3" maxlength="2000" placeholder="Press the button and speak, or type here"></textarea></div>' +
+          '<p id="vConf" class="small-text muted" hidden></p><div id="vError" class="login-msg" role="alert" hidden></div>' +
+          '<div class="btn-row"><button type="button" class="btn primary" data-act="vSend">Send to NOVA</button><button type="button" class="btn ghost" data-act="vClear">Clear</button></div></article>' +
+        (vp ? '<article class="panel gold" id="vPending"><h2 class="label">Waiting for your approval</h2>' + previewCard({ id: vp.runId, pendingApproval: { id: vp.approvalId, tool: vp.tool, preview: vp.preview } }) + '<p class="small-text muted">' + (vp.voiceOk && st.spokenApproval !== false ? 'You can say "approve" or "reject", or use the buttons.' : 'This one needs a button press.') + '</p></article>' : '') +
+        '<article class="panel"><h2 class="label">Conversation</h2><div class="chat-log" id="vLog" tabindex="0" aria-live="polite">' + vLogHTML() + '</div></article>' +
+        '<article class="panel"><h2 class="label">What to know</h2><ul class="plain small-text"><li>Recognition is done by your browser\'s own service. Chrome and Edge send the audio to their vendor, so they need the internet; Firefox cannot listen. No paid speech service is used.</li><li>It is never perfect. That is why the words appear first, you can correct them, and nothing is sent until you press Send.</li><li>Voice is <b>never</b> used to prove who you are: only your signed-in account does that.</li><li>Wake word ("Hey NOVA") is experimental and is paused while you use push-to-talk.</li></ul></article>';
+    },
+    after: function () {
+      var v = N.voice, ptt = document.getElementById('ptt'), tx = document.getElementById('vTranscript');
+      vPatch(); var log = document.getElementById('vLog'); if (log) log.scrollTop = log.scrollHeight;
+      if (ptt) {
+        ptt.addEventListener('click', function (e) { if (v.mode === 'toggle' && e.detail !== 0 || (v.mode === 'toggle' && e.detail === 0 && !ptt.dataset.kd)) { v.listening ? vStop() : vStart(); } });
+        ptt.addEventListener('pointerdown', function () { if (v.mode === 'hold') vStart(); });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { ptt.addEventListener(ev, function () { if (v.mode === 'hold' && v.listening) vStop(); }); });
+        ptt.addEventListener('keydown', function (e) { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); ptt.dataset.kd = '1'; if (v.mode === 'hold') vStart(); else (v.listening ? vStop() : vStart()); } });
+        ptt.addEventListener('keyup', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); delete ptt.dataset.kd; if (v.mode === 'hold' && v.listening) vStop(); } });
+      }
+      $$('input[name="vMode"]').forEach(function (r) { r.addEventListener('change', function () { v.mode = r.value; vPatch(); }); });
+      if (tx) { tx.addEventListener('input', function () { v.transcript = tx.value; });
+        tx.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); vSend(); } }); }
+      var lang = document.getElementById('vLang'); if (lang) lang.addEventListener('change', function () { J.data.settings.voiceLang = lang.value; J.persist(); if (J.voice) { J.voice.reloadVoices(); } J.render(false); });
+      var vs = document.getElementById('vVoice'); if (vs) vs.addEventListener('change', function () { J.data.settings.voiceURI = vs.value; J.persist(); if (J.voice) J.voice.settingsChanged('voiceURI'); J.render(false); });
+      if (J.voice && !J.voice.voices().length) setTimeout(function () { if (J.current() === 'voice') { J.voice.reloadVoices(); } }, 600);   // some browsers load their voice list late
     }
   };
+  Object.assign(J.actions, {
+    vSend: vSend, vClear: function () { N.voice.transcript = ''; N.voice.interim = ''; N.voice.conf = null; N.voice.error = null; vPatch(); var t = document.getElementById('vTranscript'); if (t) { t.value = ''; t.focus(); } },
+    vTest: function () { if (J.voice) J.voice.speak('This is how I sound. If you can hear this, speech output is working.'); },
+    vStopSpeak: function () { if (J.voice) J.voice.stop(); }
+  });
+  // Spoken approval: only for a waiting low-risk, undoable action (the server refuses anything else, even if this code were wrong).
+  J.novaVoiceApproval = function (text) {
+    if (N.mode !== 'server' || !N.user || !N.voicePending || !window.NovaSpeech) return null;
+    var d = NovaSpeech.parseApproval(text); if (!d) return null;
+    var p = N.voicePending;
+    if (d === 'reject') return api('POST', '/api/approvals/' + p.approvalId + '/reject', {}).then(function (run) { afterRun(run); return 'Okay, I did not do it. Nothing was changed.'; }).catch(function (e) { return e.message; });
+    if (!p.voiceOk || J.data.settings.spokenApproval === false) return Promise.resolve('I cannot approve that by voice. ' + (p.voiceOk ? 'Spoken approval is switched off in the Voice settings.' : 'It is not a small, undoable change, so it needs a button press in NOVA Chat or on the Dashboard.'));
+    N.setState('executing');
+    return api('POST', '/api/approvals/' + p.approvalId + '/approve', { via: 'voice' }).then(function (run) { afterRun(run); return run.result || 'Done.'; })
+      .catch(function (e) { N.setState('error'); return e.code === 'voice_not_allowed' ? 'That needs a button press, not a spoken approval. Nothing was changed.' : e.message; });
+  };
+
   S.email = { render: function () { return J.head('Inbox', 'Smart Email', 'Not built yet.', '') + soon('Phase 4', 'Gmail intelligence', ['Read-only Gmail connection (official Google sign-in)', 'Priority: Critical, Important, Normal, Low Priority, Needs Review, always with a reason', 'Deadlines and requests found in messages, with a link to the original', 'Reply drafts you review and edit. Nothing is sent without separate permission and your approval']); } };
   /* ---- ProofLoop ---- */
   var PL_LANES = [['Needs your attention', function (c) { return c.overdue || c.status === 'awaiting_approval'; }], ['In progress', function (c) { return ['request_detected', 'request_understood', 'task_prepared', 'executing'].indexOf(c.status) >= 0; }],
@@ -457,11 +561,20 @@
   // Anything the built-in NOVA commands do not understand goes to NOVA's server chat (real request, real answer).
   // In server mode, phrases NOVA's built-in actions understand (tasks, notes, forget, memory search) go to the server, where changes need approval.
   J.novaIntent = function (text) { return N.mode === 'server' && !!N.user && !!window.NovaIntents && NovaIntents.matches(text); };
+  function speakPreview(a, ok) {
+    var p = a.preview, first = (p.changes && p.changes[0]) || '';
+    return 'I would ' + String(p.action).toLowerCase() + '. ' + first.replace(/^New (?:task|note|memory|commitment): /, '') + '. ' + (p.undoable ? 'You can undo it.' : 'It cannot be undone.') + ' ' +
+      (ok && J.data.settings.spokenApproval !== false ? 'Say approve or reject.' : 'This one needs a button press for safety: open NOVA Chat or the Dashboard.');
+  }
   J.novaAsk = function (text) {
     if (N.mode !== 'server' || !N.user) return null;
     N.setState('understanding');
     return api('POST', '/api/chat', { message: text, conversationId: N.chat.cid }).then(function (r) {
-      N.chat.cid = r.conversationId; N.setState(r.status === 'awaiting_approval' ? 'waiting_approval' : r.status === 'failed' ? 'error' : 'completed');
+      N.chat.cid = r.conversationId; if (r.run) N.runs[r.run.id] = r.run;
+      N.setState(r.status === 'awaiting_approval' ? 'waiting_approval' : r.status === 'failed' ? 'error' : 'completed');
+      N.cache.activity = null; N.cache.approvals = null; N.cache.tasks = null; N.cache.pl = null; N.cache.commitments = null;
+      var a = r.run && r.run.pendingApproval; N.voicePending = a ? { approvalId: a.id, runId: r.run.id, tool: a.tool, voiceOk: !!(r.run.approvals.filter(function (x) { return x.id === a.id; })[0] || {}).voiceOk, preview: a.preview } : null;
+      if (N.voicePending) return r.reply + ' ' + speakPreview(a, N.voicePending.voiceOk);
       return r.reply + (r.proposal && r.proposal.status === 'proposed' ? ' Open NOVA Chat or the Memory Vault to approve it.' : '');
     }).catch(function (e) { N.setState('error'); return e.message; });
   };

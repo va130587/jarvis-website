@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestone 1 (local model) and Milestone 2 (ProofLoop): **243 tests: 242 passed, 0 failed, 1 skipped** (about 290 seconds). Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestones 1 (local model), 2 (ProofLoop) and 3 (voice): **267 tests: 266 passed, 0 failed, 1 skipped** (about 330 seconds). Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -12,6 +12,9 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 | Agent layer | `tests/server-agent.test.js` | 14 pass | schema validator; free planner and Dubai dates; browser/server intent parity; registry completeness; read tools run alone, changes wait for approval with a full preview and change nothing until approved; stranger/double/expired/edited approvals; risk levels with auto-approve (destructive and external still ask); verification, undo (only reversible, only once); failures reported (errors, invalid input, unverifiable results, secret redaction); no automatic retry of changes, tool timeout, step limit; cancellation incl. aborting an in-flight model call; model tool-calling loop with stand-in Claude (results returned as untrusted data, usage and cost per call); **prompt injection through a hostile task title** cannot delete anything; account isolation and deletion |
 | Agent in the browser | `tests/nova-agent-e2e.test.js` | 10 pass | Future Preview card, Approve/Reject/Edit/Cancel, verified result text, Undo, orb states (executing, completed), irreversible deletion wording, auto-approve switch, Dashboard approvals panel, Security tools table, voice request gets an approval, layout at 3 widths, axe, keyboard-only approve |
 | NOVA in the browser | `tests/nova-e2e.test.js` | 22 pass | sign-in gate under the strict CSP with **zero violations**; 13 pages (live vs Soon/Upcoming); orb states from real events and reduced motion; chat flow with approve/reject; Memory Vault UI incl. new browser (restart) and a second user; identity edits and personalisation; usage and security pages, real file download, session-ended handling; voice request reaching NOVA; layout at 1440/768/390 px (no overlap, no sideways scroll); keyboard-only chat; axe-core on login and 8 pages (no serious or critical issues) |
+| Voice helpers | `tests/speech.test.js` | 7 pass | voice ranking (Andrew > other natural > rest, never another language), honest voice report, spoken-approval parser (bare "yes", "approve and delete everything", mishearings do not approve), error explanations, provider support check |
+| Voice in the browser (mock speech engine) | `tests/nova-voice-e2e.test.js` | 16 pass (run 3 times, stable) | push to talk, editable live transcript, nothing sent until Send, spoken reply; slow chunked speech and repeats; noise (low confidence flagged); wrong words corrected; silence; permission denied; network and offline; no recogniser / no synthesis; Arabic language setting; Andrew voice picked and marked, Test voice, honest note; hold-to-talk and Space; spoken approve for low-risk, bare yes ignored, delete/forget refused, reject allowed, setting off; layout and axe at 3 widths |
+| Spoken approval on the server | `tests/server-agent.test.js` (1 added, now 15) | pass | `via: voice` allowed for write+undoable, 403 `voice_not_allowed` for destructive, edits by voice refused, invalid channel 400, audited |
 | Classic tools (unchanged) | earlier files | 144 pass, 1 skipped | calendar, .ics, collector, matching, Jobs for you, voice commands, Smart mode (mocked), layout, axe |
 
 ## Not tested (and why)
@@ -51,6 +54,14 @@ Real Claude tool calling (paid API, not used); external tools (none exist yet, a
 2. A "sentence -> approve -> done" path for a model-planned run showed only the model's own words; NOVA now always appends its own verification ("Checked by NOVA: Read back from the database...").
 3. The commitment dialog used a nested form (invalid HTML, so the button vanished): replaced by a plain control with a button action.
 4. Two older tests were timing-sensitive (a calendar toggle and the job-source list re-drawing once at start-up): they now wait for the state they check. No application behaviour changed.
+
+## Notes from Milestone 3
+
+The older reminder timer can post "Reminder: ..." into the voice log at any moment, which made two voice tests flaky; tests now ignore those lines. A bare `webkitSpeechRecognition` exists in headless Chromium, so the "no recogniser" test removes it explicitly.
+
+## Not tested (Milestone 3)
+
+Real microphone accuracy, whether your browser offers "Andrew", Arabic recognition quality: run `NOVA_VOICE_TEST_SCRIPT.md` (10 minutes).
 
 ## Not tested (Milestones 1 and 2)
 

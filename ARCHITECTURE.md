@@ -63,6 +63,7 @@ POST /api/chat
 - **Authorisation:** every personal table has `user_id`; every query is scoped by the session's user id; foreign ids return 404 (tests cover read, change, delete and continue-chat attempts across users).
 - **CSRF:** state-changing calls need `X-NOVA-CSRF` (value from `/api/session`) and a same-host `Origin` when present.
 - Voice is never used for authentication.
+- Spoken approval (`via: "voice"` on the approve call) is accepted only for risk `write` and undoable previews, never with edits; the server refuses anything else (403 `voice_not_allowed`) and audits both outcomes. `speech.js` holds voice ranking, approval parsing and a swappable recogniser provider (browser Web Speech today).
 
 ## 4. Database design (SQLite, migration 1)
 

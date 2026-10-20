@@ -33,6 +33,8 @@ NOVA tries its fixed rules first, then the local model with the approved tools. 
 
 **What works today:** sign-in and sessions, an agent that can create tasks and notes, complete or delete tasks and forget memories **only after you approve each change** (you see a preview first, NOVA re-reads the result to verify it, and most changes have Undo), the Memory Vault (you approve every memory; secrets are refused; sensitive details need confirmation), chat with plain-English "what NOVA did" steps, the NOVA orb, activity and usage pages, data export and deletion, voice requests that reach NOVA. In server mode, voice or typed phrases like "add a task to call HR by Friday" go to NOVA (server tasks, with approval) instead of the browser-only NOVA task list. **Upcoming and clearly labelled in the app:** Smart Email, ProofLoop, Automation Centre, Knowledge Base.
 
+**Voice (NOVA > Voice):** push-to-talk (click, or hold the button / Space), a live transcript you can edit before sending, English UK/US or Arabic (UAE), and plain messages if the microphone is blocked, you are offline, or nothing was heard (typing always works). NOVA prefers a natural voice such as "Microsoft Andrew Online (Natural)" when your browser (Edge) has it; this is free and comes from the browser, and no "Andrew HD" voice exists there today. You can approve **small, undoable** changes by saying "approve" (a bare "yes" is ignored); deleting, forgetting and anything external need a button. Voice never proves who you are. Test it on a real microphone with `NOVA_VOICE_TEST_SCRIPT.md`.
+
 **Static mode:** if you open the same pages from GitHub Pages (no server), NOVA's server features are simply absent and the Classic tools work as before.
 
 ---

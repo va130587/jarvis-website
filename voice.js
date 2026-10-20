@@ -182,6 +182,7 @@
     var saved = J.data.settings.voiceURI;
     if (saved) chosen = voices.filter(function (v) { return v.voiceURI === saved; })[0] || null;
     if (chosen) return;
+    if (window.NovaSpeech) { chosen = NovaSpeech.pick(voices, J.data.settings.voiceLang || 'en-GB'); if (chosen) return; }
     var gb = voices.filter(function (v) { return /en[-_]GB/i.test(v.lang); });
     for (var i = 0; i < PREFERRED.length && !chosen; i++) {
       var nm = PREFERRED[i];
@@ -194,9 +195,9 @@
     var sel = $('#voiceSelect');
     if (sel) {
       var saved = J.data.settings.voiceURI;
-      var en = voices.filter(function (v) { return /^en/i.test(v.lang); });
-      sel.innerHTML = '<option value="">Automatic (calm British English male)</option>' + en.map(function (v) {
-        var o = document.createElement('option'); o.value = v.voiceURI; o.textContent = v.name + ' (' + v.lang + ')';
+      var en = voices.filter(function (v) { return /^(en|ar)/i.test(v.lang); });
+      sel.innerHTML = '<option value="">Automatic (natural voice if the browser has one)</option>' + en.map(function (v) {
+        var o = document.createElement('option'); o.value = v.voiceURI; o.textContent = (window.NovaSpeech && NovaSpeech.isNatural(v) ? '★ ' : '') + v.name + ' (' + v.lang + ')';
         if (v.voiceURI === saved) o.selected = true;
         return o.outerHTML;
       }).join('');
@@ -220,7 +221,7 @@
     var rate = +J.data.settings.rate || 1;
     parts.forEach(function (p, i) {
       var u = new SpeechSynthesisUtterance(p);
-      if (chosen) { u.voice = chosen; u.lang = chosen.lang; } else u.lang = 'en-GB';
+      if (chosen) { u.voice = chosen; u.lang = chosen.lang; } else u.lang = J.data.settings.voiceLang || 'en-GB';
       u.rate = rate; u.pitch = 0.92;
       u.onstart = function () { if (id === speakId && vstate !== 'speaking') setState('speaking'); };
       u.onboundary = function () { orb.pulse = 1; };
@@ -256,7 +257,7 @@
     pauseWake();
     var finalText = '', err = '';
     var r = new SR();
-    r.lang = 'en-GB'; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+    r.lang = J.data.settings.voiceLang || 'en-GB'; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
     r.onstart = function () { setState('listening'); setLive('Listening…'); beep('start'); };
     r.onresult = function (e) {
       var interim = '';
@@ -381,6 +382,7 @@
   /* ================= chat panel ================= */
   var chat = $('#chat'), log = $('#chatLog'), mini = $('#miniCore');
   function addMsg(who, text, chips) {
+    try { document.dispatchEvent(new CustomEvent('nova:voicemsg', { detail: { who: who, text: text } })); } catch (e) { /* old browser */ }
     var li = document.createElement('li');
     li.className = 'msg ' + who;
     var w = document.createElement('span'); w.className = 'who'; w.textContent = who === 'you' ? 'You' : 'NOVA';
@@ -524,6 +526,9 @@
       if (pd.type === 'askFn') return wrapCal(pd.answer(orig, t));
       if (pd.type === 'askWin') { var w = J.addWin(orig); return 'Logged: ' + w.win.text + '. Well done.'; }
     }
+
+    /* ---- spoken approval / rejection of a waiting NOVA action (low-risk only; the server enforces it) ---- */
+    if (J.novaVoiceApproval) { var va = J.novaVoiceApproval(orig); if (va) return va; }
 
     /* ---- NOVA server actions (tasks, notes, forget, memory search) ---- */
     if (J.novaIntent && J.novaIntent(orig)) return J.novaAsk(orig);
@@ -757,6 +762,7 @@
   J.voice = {
     listen: listen, coreTap: coreTap, run: function (text) { handle(text); }, command: command, speak: speak, stop: stopSpeaking,
     announce: announce, open: openChat, close: closeChat, state: function () { return vstate; },
+    pauseWake: function () { pauseWake(); }, resumeWake: function () { resumeWake(); }, voices: function () { return voices.slice(); }, chosenVoice: function () { return chosen; }, reloadVoices: function () { loadVoices(); }, isWake: function () { return !!wake.on; },
     supported: { listen: !!SR, speak: !!synth },
     settingsChanged: function (k) {
       if (k === 'voiceURI') { pickVoice(); fillVoiceSelect(); if (J.data.settings.voice) speak('This is how I sound.'); }

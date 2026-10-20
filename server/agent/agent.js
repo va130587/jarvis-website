@@ -16,6 +16,8 @@ const STABLE = [
   'Call at most one tool at a time. If a tool result is an error, tell the owner plainly. If you do not know something, say so. Do not describe your internal reasoning.'
 ].join('\n');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Only low-risk, undoable changes may be approved by VOICE (speech recognition can mishear). Destructive, irreversible and external actions need a button press.
+const voiceApprovable = (tool, preview) => !!tool && tool.risk === 'write' && !!(preview && preview.undoable);
 const needsApproval = (tool, user) => tool.risk !== 'read' && !(tool.risk === 'write' && user.auto_low_risk);
 
 function createAgent(cfg, db, registry, provider, pl) {
@@ -327,7 +329,7 @@ function createAgent(cfg, db, registry, provider, pl) {
   function snapshot(runId, userId) {
     const r = own('runs', userId, runId);
     const steps = db.prepare('SELECT seq, kind, summary, detail, ts FROM run_steps WHERE run_id = ? ORDER BY seq').all(runId).map(s => ({ seq: s.seq, kind: s.kind, summary: s.summary, detail: parse(s.detail), at: s.ts }));
-    const approvals = db.prepare('SELECT * FROM approvals WHERE run_id = ? ORDER BY id').all(runId).map(a => ({ id: a.id, tool: a.tool, status: a.status, edited: !!a.edited, input: parse(a.input), preview: parse(a.preview), createdAt: a.created_at, expiresAt: a.expires_at, decidedAt: a.decided_at }));
+    const approvals = db.prepare('SELECT * FROM approvals WHERE run_id = ? ORDER BY id').all(runId).map(a => ({ id: a.id, tool: a.tool, voiceOk: voiceApprovable(registry.get(a.tool), parse(a.preview)), status: a.status, edited: !!a.edited, input: parse(a.input), preview: parse(a.preview), createdAt: a.created_at, expiresAt: a.expires_at, decidedAt: a.decided_at }));
     const executions = db.prepare('SELECT * FROM tool_executions WHERE run_id = ? ORDER BY id').all(runId).map(e => ({ id: e.id, tool: e.tool, status: e.status, evidence: e.evidence, error: e.error, undoable: !!e.undoable && !e.undone_at, undone: !!e.undone_at, attempts: e.attempts }));
     return { id: r.id, status: r.status, planner: r.planner, clarify: steps.some(x => x.kind === 'clarify'), badge: r.planner === 'rules' ? 'built-in rule' : (provider.kind === 'local' ? 'local model' : 'cloud'), request: r.request, result: r.result, failure: r.failure, steps, approvals, executions, pendingApproval: approvals.find(a => a.status === 'pending') || null };
   }
@@ -338,9 +340,19 @@ function createAgent(cfg, db, registry, provider, pl) {
       const st = ctx.url.searchParams.get('status') || 'pending';
       db.prepare("UPDATE approvals SET status = 'expired', decided_at = ? WHERE user_id = ? AND status = 'pending' AND expires_at < ?").run(now(), ctx.auth.user.id, now());
       const rows = db.prepare('SELECT * FROM approvals WHERE user_id = ? AND status = ? ORDER BY id DESC LIMIT 50').all(ctx.auth.user.id, st);
-      return { status: 200, body: { approvals: rows.map(a => ({ id: a.id, runId: a.run_id, tool: a.tool, status: a.status, input: parse(a.input), preview: parse(a.preview), createdAt: a.created_at, expiresAt: a.expires_at })) } };
+      return { status: 200, body: { approvals: rows.map(a => ({ id: a.id, runId: a.run_id, tool: a.tool, voiceOk: voiceApprovable(registry.get(a.tool), parse(a.preview)), status: a.status, input: parse(a.input), preview: parse(a.preview), createdAt: a.created_at, expiresAt: a.expires_at })) } };
     });
-    router.post('/api/approvals/:id/approve', { group: 'chat' }, async ctx => ({ status: 200, body: await approve({ user: ctx.auth.user, ip: ctx.req.socket.remoteAddress }, +ctx.params.id, ctx.body.editedInput) }));
+    router.post('/api/approvals/:id/approve', { group: 'chat' }, async ctx => {
+      const via = ctx.body.via;
+      if (via !== undefined && via !== 'voice' && via !== 'button') throw new HttpError(400, 'via must be "voice" or "button".', 'invalid');
+      if (via === 'voice') {   // a spoken "approve" is only accepted for low-risk, undoable changes, never with edits
+        const a = own('approvals', ctx.auth.user.id, +ctx.params.id);
+        if (!voiceApprovable(registry.get(a.tool), parse(a.preview))) { audit(db, now, ctx.auth.user.id, 'voice_approval_refused', a.tool + ' #' + a.id, ctx.req.socket.remoteAddress); throw new HttpError(403, 'This action needs a button press, not a spoken approval, because it is not a low-risk, undoable change.', 'voice_not_allowed'); }
+        if (ctx.body.editedInput !== undefined) throw new HttpError(400, 'Edits cannot be made by voice.', 'invalid');
+        audit(db, now, ctx.auth.user.id, 'voice_approval', a.tool + ' #' + a.id, ctx.req.socket.remoteAddress);
+      }
+      return { status: 200, body: await approve({ user: ctx.auth.user, ip: ctx.req.socket.remoteAddress }, +ctx.params.id, ctx.body.editedInput) };
+    });
     router.post('/api/approvals/:id/reject', ctx => ({ status: 200, body: reject({ user: ctx.auth.user, ip: ctx.req.socket.remoteAddress }, +ctx.params.id) }));
     router.get('/api/runs', ctx => ({ status: 200, body: { runs: db.prepare('SELECT id, request, status, planner, created_at FROM runs WHERE user_id = ? ORDER BY id DESC LIMIT 30').all(ctx.auth.user.id).map(r => ({ id: r.id, request: r.request, status: r.status, planner: r.planner, at: r.created_at })) } }));
     router.get('/api/runs/:id', ctx => ({ status: 200, body: snapshot(+ctx.params.id, ctx.auth.user.id) }));
