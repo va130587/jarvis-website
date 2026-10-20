@@ -334,6 +334,6 @@ main.enter > *:nth-child(n+5) { animation-delay: 60ms; }
 .item, .mail-btn, .preview, .focus, .load-error, .brief-sec li a, .sched-row { border-radius: var(--r-sm); }
 .sched-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 @media (min-width: 1180px) { .sched-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }   /* four jobs: two even rows, not three and one */
-.center { align-content: center; }   /* a taller neighbour must not stretch the rows (it made "Start listening" 70 px tall) */
+.center { align-content: start; }   /* a taller neighbour must not stretch the rows (it made "Start listening" 70 px tall), and nothing moves when it grows */
 .ptt { min-width: 200px; min-height: 48px; margin-top: var(--s3); border-radius: var(--r-full); }
 .center .seg-field { justify-content: center; gap: var(--s2); margin-top: var(--s3); }
