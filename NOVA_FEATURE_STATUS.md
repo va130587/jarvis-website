@@ -70,7 +70,7 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 | Demo mode (`npm run demo`, `npm run demo:reset`) | WORKING AND TESTED | Separate database, fictional labelled data (tasks, notes, memories, 9 ProofLoop scenarios, 10 e-mails, a briefing). |
 | NOVA_DEMO_GUIDE.md | WORKING AND TESTED | Every on-screen claim in the guide is checked by `tests/acceptance-e2e.test.js` on the demo data. The microphone part needs a person. |
 | Dockerfile | WORKING AND TESTED (manually) | Built and run in this environment: health check endpoint answers, runs as user `node`, data in `/data`, image contains no tests, `.env` or database, development sign-in refused. Not part of `npm test`. |
-| CI workflow (`.github/workflows/ci.yml`) | WORKING, ONE FLAKE FIXED | First GitHub run: 295 of 297 passed in 4.5 minutes; one older calendar test checked the screen a moment before it redrew on the slower runner. The test now waits for the text. Check the latest run in the Actions tab. |
+| CI workflow (`.github/workflows/ci.yml`) | WORKING AND TESTED | Runs every test on GitHub for every push and pull request. Run 1 found one timing-sensitive older test (fixed); run 2 passed on GitHub's runner. See the Actions tab for the latest run. |
 | DEPLOYMENT.md (home, always-on, Docker, free VM with HTTPS) | DOCUMENTATION | Steps are standard; only the local and Docker paths were executed here. |
 
 ## Knowledge, search and install (Milestone 6)
