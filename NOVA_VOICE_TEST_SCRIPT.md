@@ -22,6 +22,11 @@ The automated tests use a **mock** speech engine, so they prove NOVA's behaviour
 | 14 | Switch the language to **Arabic (UAE)**, say a short Arabic sentence. | Arabic text appears (accuracy depends on your browser). | |
 | 15 | Switch the radio to **Hold to talk**; hold the button (or Space) while speaking. | Listening only while held. | |
 | 16 | Turn off Wi-Fi, press Start. | "You appear to be offline", typing still works. | |
+| 17 | Read the sentence under the status on the Voice page. | One plain sentence about *your* browser: Chrome and Edge "can both listen and speak" (and where the audio goes), Safari "works only partly", Firefox "cannot listen". It ends with what to do. | |
+| 18 | Press **Test my microphone** and talk for 10 seconds. | The level bar moves with your voice, the words "Speak now. Level NN% · N s left" count down, and it ends with "Your microphone works." Nothing is recorded or played back. | |
+| 19 | Press **Test my microphone**, stay silent, or mute the microphone first. | "NOVA heard almost nothing", with what to check. Run it again after unmuting. | |
+| 20 | Block the microphone for the site, then press **Test my microphone**. | "Microphone access is blocked" with the steps; the microphone light does not stay on after any test. | |
+| 21 | In **Firefox** (no speech recognition), open the Voice page. | The talk button is off, the first box says **Type or paste your request**; typing `add a task to call HR`, Send, then `approve` works for the small change; for `delete the task call HR`, typing `approve` is refused (button press needed). | |
 
 **Accuracy score (fill in).** Say these 10 phrases once each, normal speed, quiet room, and count how many appear with no errors: "what are my tasks", "add a task to call HR by Friday", "add a note that the lab is closed", "list my notes", "mark call HR done", "delete task call HR", "search my memories for tea", "what time is it", "show my approvals", "who am I".
 

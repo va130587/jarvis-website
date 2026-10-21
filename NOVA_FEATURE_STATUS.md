@@ -4,7 +4,7 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 
 | Feature | Status | Notes |
 |---|---|---|
-| NOVA brand, 17-page navigation in five groups (Today, Work, Life, Knowledge, System), phone bottom bar | WORKING AND TESTED | All 17 pages are live. Smoke walk at 390/768/1024/1440 in Deep Space and 390/1440 in Daylight: layout, console, requests and axe clean. How it *looks* is a judgement: see `docs/screenshots/after/`. |
+| NOVA brand, 19-page navigation in five groups (Today, Work, Life, Knowledge, System), phone bottom bar | WORKING AND TESTED | All 19 pages are live. Smoke walk at 390/768/1024/1440 in Deep Space and 390/1440 in Daylight: layout, console, requests and axe clean. How it *looks* is a judgement: see `docs/screenshots/after/`. |
 | NOVA orb: idle, listening, transcribing, understanding, waiting approval, speaking, completed, error | WORKING AND TESTED | Set by real events: chat request lifecycle, proposal awaiting approval, errors, and the voice engine's state. Each state has its own text label; animation stops with reduced motion. |
 | NOVA orb: planning, executing a tool, focusing | WORKING AND TESTED | Set by agent runs and focus sessions. All 11 states glide from one to the next (colour transition); reduced motion stops the movement. |
 | Sign-in with Google (OIDC, PKCE) | IMPLEMENTED BUT UNVERIFIED | Fully tested against a stand-in Google (state, nonce, audience, expiry, allow-list, replay). Real Google needs your Client ID and a person: REQUIRES CONFIGURATION. |
@@ -60,7 +60,7 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 | Mission Autopilot, Skill Studio, Commitment Radar, LifeGraph, Screen Vision | NOT IMPLEMENTED | Phase 6 |
 | Tasks, notes, calendar (browser), jobs, applications, growth, NOVA voice commands | WORKING AND TESTED | Unchanged; 144 earlier tests still pass. Data is in the browser, not the NOVA database yet. |
 | Job collector (GitHub Action), ntfy alerts, Smart mode | REQUIRES CONFIGURATION | As before: fixture-tested, never run against the live internet. |
-| CI running the tests | NOT IMPLEMENTED |  |
+| CI running the tests | WORKING AND TESTED | GitHub Actions runs `npm test` and the speed and size guard on every push and pull request. |
 
 ## Delivery (Milestone 5)
 
@@ -109,3 +109,18 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 | Life Radar (five measures, this week vs last, rules written under the chart) | WORKING AND TESTED | `tests/server-radar.test.js`, `tests/radar-e2e.test.js`. A measure with no data is "not enough data yet". The 5-hour focus goal and the 10-points-per-overdue-item cost are fixed rules, stated on the page, not personal targets. |
 | Proof receipt fingerprint, QR code, public check page (/verify) | WORKING AND TESTED | `tests/qr.test.js` (decoded with an independent reader), `tests/server-verify.test.js`, `tests/verify-e2e.test.js`. A match proves NOVA issued exactly that text; it does not prove the real-world action. **Scanning the QR with a real phone camera: UNVERIFIED** (see NOVA_TEST_REPORT.md). The check only knows receipts issued by this NOVA after this update. |
 | "What happens if": Effects row in every approval preview | WORKING AND TESTED | `tests/server-effects.test.js`, `tests/effects-e2e.test.js`. Facts from your own data only; tools without effects say "No other effects found."; if the lookup fails the card says so. |
+
+## The ten improvements (Parts 1 to 10)
+
+| Feature | Status | Notes |
+|---|---|---|
+| Help page and Check my setup | WORKING AND TESTED | Read-only `GET /api/check`: Node, data, daily jobs, notifications, Gmail, AI model; each OK, Needs attention (exact next step) or Not set up (why that is fine). No paths, secrets or addresses are returned. A test fails if any error message contains a code, "undefined", "[object", "Error:" or a file path (found and fixed 17 developer-style messages). |
+| First-run tour | WORKING AND TESTED | Six steps in a real `<dialog>`; remembered per account in the database (migration 9; people who already had an account are marked done); Esc skips; focus returns; "Show the tour again". |
+| Readable export and safe import | WORKING AND TESTED | Markdown copy; import is preview (counts, duplicates, refused items, notes) then Approve, in one transaction, into your account only; never sessions, tokens, e-mail, other accounts' ids or proof evidence; "verified" commitments return as "awaiting confirmation" because proof is not imported. Limits: 6 MB, 5,000 items. |
+| Automatic backups | WORKING AND TESTED | Backup job 03:30 Dubai, once a day, keeps 14; checked copies with a fingerprint; "Test my latest backup" restores into a temporary place and counts only your own items; the live database is not touched; dashboard warning after 7 days. The copy is on the same computer: copy the folder elsewhere. |
+| Undo list | WORKING AND TESTED | Your last 20 changes with plain reasons where undoing is impossible; Undo needs a preview and approval; "What happens if" facts for the undo; double-click safe; only your own changes. The older one-click Undo button on a chat result still exists. |
+| Calendar-aware planner | WORKING AND TESTED with an imported .ics file and fake events; REAL GOOGLE / OUTLOOK ACCOUNTS UNVERIFIED | Only the planned day's events are sent with the request; they become fixed blocks; free gaps between meetings are used; all-day events are only mentioned; nothing is stored (a saved plan keeps "Busy (calendar)" without titles); NOVA never writes to a calendar. |
+| Voice on more browsers | WORKING AND TESTED with browser profiles and a fake audio source; REAL MICROPHONES, SAFARI AND FIREFOX UNVERIFIED | A plain sentence per browser, Type or paste where it cannot listen (same approval rules), 10-second microphone test (level meter, nothing recorded, microphone released). |
+| Livelier demo and guided demo | WORKING AND TESTED | 14 days of fictional activity at different hours, a verified receipt, a budget near 80%, habits with streaks 9 and 3, all labelled demo; seeding twice changes nothing; correct at any time of day or month (tested at four clocks). Five-step banner remembered per account. |
+| gzip, ETag and the speed and size guard | WORKING AND TESTED | `server/static.js` (zlib only); `/api/` and `/auth/` are never compressed or cached; `npm run perf` and a CI step fail on slow first content, layout shift, a 100 ms task, a first page more than 15% above its saved size, or a new file over 200 KB. |
+| Accessibility options and pass | WORKING AND TESTED with axe and keyboard checks; SCREEN READERS UNVERIFIED | One h1 and no skipped levels on all 19 pages, skip links (also on the public pages), focus on the page title after each page change with a polite announcement, High contrast (7:1 text), Larger text 125% / 150%, no broken layout from 390 to 1440 px. See `docs/ACCESSIBILITY_CHECKLIST.md`. |

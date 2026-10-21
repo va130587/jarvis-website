@@ -38,16 +38,19 @@ Run `npm start`. The first time, the terminal prints a setup address and a one-t
 | Life Tracker | Timed reminders, habits with streaks, spending in AED |
 | ProofLoop | Promises with evidence, from "request" to "verified"; proof receipts |
 | Weekly Insights | Reliability score, tasks done, focus time, charts, and the **Life Radar** (five measures, this week against last) |
-| Day Replay | What NOVA did on any day, in order, with a time slider; read-only |
+| Day Replay | What NOVA did on any day, in order, with a time slider; below it the **Undo list** (your last 20 changes, each with a preview before it is undone) |
 | Automation Centre | Jobs that run by themselves at Dubai times; run history |
 | Personal Identity | Your name and personalisation switch |
 | Memory Vault | Memories you approved |
 | Knowledge Base | Your notes and files; answers with the exact passage |
 | AI Usage and Cost | What was answered by built-in rules or a model (free by default) |
 | Connected Apps | What is connected and what is missing |
-| Security and Settings | Sessions, audit log, export, delete, light/dark theme |
+| Security and Settings | Sessions, audit log, export and import, delete, light/dark theme, **High contrast** and **Larger text**, show the tour again |
+| Help | How to start, what each page is for, common problems, and **Check my setup** |
 
 Press **Ctrl+K** (Cmd+K on a Mac) anywhere to search everything.
+
+The first time you sign in, a short **tour** (six steps) shows you around; **Esc** skips it. In the demo, a **Guided demo** box on the Dashboard lists five things to try and ticks each one when you have done it. If anything seems wrong, open **Help** and press **Check my setup**.
 
 Also worth trying: every **approval preview** now has an **Effects** line (what else it touches, such as other items due that day), and a ProofLoop **proof receipt** ends with a fingerprint you can check at **/verify** (the printable version has a QR code).
 

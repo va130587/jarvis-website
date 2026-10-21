@@ -68,6 +68,13 @@ Scale (ratio 1.25): `--fs-12` · `--fs-14` · `--fs-16` · `--fs-20` · `--fs-25
 - **Effects** (`.preview .fx`): a row in the Future Preview card.
 - Tokens added: `--chart-1` to `--chart-6` (the categorical order, one per variable).
 
+## Display options (accessibility)
+
+- **Larger text:** `html[data-text="125"]` and `[data-text="150"]` redefine the seven `--fs-*` tokens (12 to 39 px) at 125% and 150%. Because every size is a token, the whole page follows; grid columns that held a time or a label use `calc(var(--fs-14) * n)` so they grow too. Rows (`.item`, `.sources li`) wrap under these options.
+- **High contrast:** `html[data-contrast="high"]` sets pure white (Deep Space) or black (Daylight) text, near-solid panels, full-strength edges, brighter or darker accents, a 3 px focus ring, and turns the ambient effects off. Text reaches 7:1 (checked by axe `color-contrast-enhanced` on every page in both themes).
+- Both are chosen in Security and Settings next to the theme, remembered in `localStorage` (`nova.contrast`, `nova.text`) and applied by `boot.js` before the first paint. They combine with either theme.
+- New components: the tour (`.tour-*`), import preview (`.imp-*`), backups (`.bk-*`), undo list (`.un-*`), mic meter (`.mic-*`), guided demo (`.demo-*`), help (`.hp-*`). All use the tokens.
+
 ## Components (all in app.css / nova.css)
 
 Panel (`.panel`, glass, `--r-md`, `--e1`, edge glow on hover) · Button (`.btn`, `.primary`, `.gold`, `.ghost`, `.danger`, `.danger-solid`, `.small`) · Field (`.field`, inputs, select, textarea) · Chip and tag · Stat tile (`.stat`) · List item (`.item`) · Empty state (`.empty`) · Error state (`.load-error`) · Toast · Dialog · Preview card (`.preview`) · Orb (`.nova-orb`, 11 states) · Chart (`.chart`).

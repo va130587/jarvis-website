@@ -11,6 +11,19 @@ See `NOVA_AUDIT.md` (what was found), `NOVA_IMPLEMENTATION_PLAN.md` (the phases)
 
 **Never used a terminal?** Install Node.js LTS, unzip the project and double-click `Start NOVA demo.bat` (Windows) or `Start NOVA demo.command` (Mac). See `START_HERE.md`.
 
+**Newest improvements (all free, all tested; where to click):**
+- **Help** (System group): how to start, what each page is for, the five common problems, and **Check my setup** (Node, data, daily jobs, notifications, Gmail, AI model: OK / Needs attention / Not set up).
+- **First-run tour:** six short steps the first time you sign in; **Security and Settings → Show the tour again**.
+- **Take your data with you:** **Security and Settings** → a readable Markdown copy, and **Import a NOVA export** (preview with counts, nothing changes until you press Approve, no duplicates).
+- **Automatic backups:** the **Backup** job (03:30 Dubai, keeps 14) in the Automation Centre; **Test my latest backup** restores it in a temporary place; a dashboard warning after 7 days without one. Keep `NOVA_SECRET_KEY` safe.
+- **Undo list:** under **Day Replay** and in the bell menu: your last 20 changes, each with an Undo that shows a preview first.
+- **Calendar-aware plan:** **Focus and Planner** works around the events of your connected or imported calendar (read-only, never stored).
+- **Voice on more browsers:** a plain sentence about what your browser can do, **Type or paste** where it cannot listen, and a 10-second **microphone test**.
+- **Guided demo:** five numbered steps on the dashboard in `npm run demo`, ticked as you do them; the demo data now covers 14 days.
+- **Faster and checked:** gzip and ETag for web files, and `npm run perf` (also in CI) fails if the page gets slow or heavy.
+- **Accessibility:** skip links, focus on the page title, **High contrast** and **Larger text (125%, 150%)** in Security and Settings.
+Screenshots: `docs/screenshots/after/improvements/`. Checklist for a real screen reader: `docs/ACCESSIBILITY_CHECKLIST.md`.
+
 You need **Node.js 22.13 or newer**. There are no packages to install to run it.
 
 ```
@@ -27,6 +40,7 @@ The first time, NOVA opens a **setup page** (the address and a one-time setup co
 | `npm run backup` | A checked snapshot in `backups/` (works while NOVA runs) |
 | `npm run restore -- backups/<file>.db` | Restores it (stop NOVA first; your current database is kept as a safety copy) |
 | `npm test` | All tests (needs `npm install` once for the test tools) |
+| `npm run perf` | The speed and size guard (first content under 1 s, no layout shift, no 100 ms task, first page within 15% of its saved size, no new file over 200 KB) |
 
 Always-on at home, Docker, or a free cloud VM with HTTPS: see `DEPLOYMENT.md`. You can still start NOVA without the setup page by setting the variables yourself: `OWNER_EMAILS=you@gmail.com AUTH_MODE=dev node server/index.js`.
 
@@ -461,6 +475,7 @@ NOVA itself is checked end to end as well (see `NOVA_TEST_REPORT.md` for the ful
 - **Races:** double-clicked Approve runs once, two approvals at the same moment, 40 fast page switches, focus timer, keyboard focus kept through background redraws.
 - **Performance:** first content, layout shift, long tasks and frame cost at 390 and 1440 px.
 - **Feature matrix:** every page, API route, phrase and scheduled job must have a test.
+- **The ten improvements:** Help and Check my setup, the tour, export and import, backups, the Undo list, the calendar-aware planner, voice on more browsers, the guided demo and its lived-in data, gzip and the speed guard, and the accessibility options each have server tests and browser tests at four widths in both themes with axe; an accessibility suite checks headings, landmarks, skip links, focus, 7:1 contrast and 125% / 150% text on every page; a message test fails if any error text shows a code, a path, "undefined" or "Error:".
 - **The five newest features:** Promise Orbit, Day Replay, Life Radar, receipts with QR and the check page, and Effects each have server tests and browser tests at four widths in both themes with axe; the QR encoder is decoded by an independent reader.
 
 To run them, install Node.js, then in this folder:

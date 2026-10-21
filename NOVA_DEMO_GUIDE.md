@@ -1,4 +1,4 @@
-# NOVA demo guide (about 10 minutes)
+# NOVA demo guide (about 13 minutes)
 
 A script for showing NOVA to someone. It uses a **separate demo database with fictional data**, so your own NOVA is never touched. Everything below was run by the automated tests; anything that needs real accounts or a real microphone is marked.
 
@@ -100,6 +100,19 @@ Open **Voice Assistant**.
 - **Life Radar** (Weekly Insights): five measures from 0 to 100, this week (solid) against last week (dashed). Hover or Tab to a point for the exact numbers; **Show as a table**. A measure with no data says "not enough data yet" instead of a number.
 - **Proof receipt check**: in ProofLoop open a commitment, **Export proof receipt**. It ends with a fingerprint. Open **/verify** (or **Check a receipt** in ProofLoop), paste the receipt: **Matches**. Change one letter: **Does not match**. The printable receipt has a QR code. Nothing from your paste is shown back.
 - **What happens if**: in Chat type `add a task to call HR by friday`. The preview now has an **Effects** row (what else is due that day, the ProofLoop tracking NOVA will add). A request with nothing else affected says "No other effects found." Reject it.
+
+## 9a. The ten improvements (3 minutes)
+
+- **Guided demo** (Dashboard, demo only): five numbered steps; each ticks when you do it and is remembered. **Hide this guide** puts it away.
+- **Lived-in data:** **Day Replay → Previous day**: every one of the last 14 days has sign-ins, requests, approvals, focus sessions and a morning briefing at different times. The Life Radar has real shapes; the budget is near 80%; **Life Tracker** shows two habits with different streaks (9 days and 3 weekdays).
+- **First-run tour:** sign in as a *new* e-mail on a server with `OWNER_EMAILS` listing it; six steps. **Security and Settings → Show the tour again** repeats it.
+- **Help:** open **Help** (System), press **Check my setup**. Each line says OK, Needs attention (with the exact step) or Not set up (and why that is fine).
+- **Undo:** in Chat add a task with a date and approve it. Open **Day Replay**: the Undo list shows it. Press **Undo**: a preview lists what changes and what else it touches (for example the ProofLoop commitment that will be cancelled). Nothing is undone until you press **Approve undo**. The bell menu links here too.
+- **Export and import:** **Security and Settings → Download a readable copy (Markdown)**; **Import a NOVA export**, choose a JSON you downloaded: a preview with counts, "already there" and "left out"; nothing is added until **Approve import**.
+- **Backups:** **Automation Centre → Backups**: press **Run now** on the **Backup** job, then **Test my latest backup**: it rebuilds the copy in a temporary place and says your live data was not touched.
+- **Calendar-aware plan:** in **Tasks and Calendar** import an `.ics` file (or connect a calendar), then open **Focus and Planner**: events are fixed blocks and tasks are planned around them. NOVA never adds or changes calendar events.
+- **Voice:** the sentence under the status says what your browser can do; **Test my microphone** (needs a microphone) shows a level for 10 seconds and records nothing.
+- **Accessibility:** **Security and Settings → Contrast and text size**: **High contrast**, **Larger (150%)**. Press **Tab** on any page: **Skip to content** appears.
 
 ## 9b. Look and feel (30 seconds)
 

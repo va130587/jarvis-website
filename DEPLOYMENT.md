@@ -88,7 +88,16 @@ With `BASE_URL` on https, cookies are marked Secure automatically.
 
 Every proof receipt ends with a fingerprint, and NOVA remembers the fingerprints it issued (never the receipt text). Anyone can check a receipt at `https://your-address/verify`; it needs no sign-in and is rate limited. Set `BASE_URL` (as above) so the QR code on the printable receipt opens that check page; without it the QR code holds just the fingerprint. The check only knows receipts issued by this NOVA, so keep the database (and its backups) for as long as you want old receipts to stay checkable.
 
-## Backups (do this)
+## Automatic backups (on by default)
+
+NOVA makes a checked backup by itself every night at 03:30 Dubai time (the **Backup** job in the Automation Centre; it needs NOVA to be running, with the scheduler on) and keeps the newest 14 (`NOVA_BACKUP_KEEP`) in `backups/` (`NOVA_BACKUP_DIR`). **Automation Centre → Backups** shows the latest one, its size and health, and **Test my latest backup** rebuilds it in a temporary place and reports your item counts without touching your live data. The dashboard warns if there is no backup for 7 days. The folder is on the same computer: copy it now and then to a USB stick or a private cloud drive. **Keep `NOVA_SECRET_KEY` safe** (a password manager is ideal): it unlocks your saved Gmail connection. A backup restores your data without it, but you would have to connect Gmail again. Never share it or put it online.
+
+## Speed and size
+
+NOVA compresses its text files (gzip, Node's own zlib) and answers "304 Not Modified" for unchanged files; nothing under `/api/` or `/auth/` is ever cached. Behind a proxy (nginx, Caddy), let NOVA do the compression and pass `Accept-Encoding` and `If-None-Match` through. `npm run perf` (also run by GitHub Actions) checks that the first page stays under its saved size plus 15%, that first content is under 1 second, and that no file over 200 KB is added outside `docs/` and `fonts/`.
+
+## Backups by hand
+
 
 ```bash
 npm run backup              # backups/nova-YYYYMMDD-HHMMSS.db + .json manifest, checked after writing

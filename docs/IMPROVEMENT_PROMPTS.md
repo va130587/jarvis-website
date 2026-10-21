@@ -1,5 +1,7 @@
 # Improvement prompts
 
+> **Status:** all ten prompts below were done in one combined job (Parts 1 to 10) and are in NOVA now: 1 guided tour, 2 Help and Check my setup, 3 export and import, 4 calendar-aware planner, 5 automatic backups, 6 livelier demo, 7 voice on more browsers, 8 speed and size guard, 9 accessibility, 10 Undo list. The prompts are kept as a record, and as a pattern for the next ones. See `NOVA_FEATURE_STATUS.md`, `NOVA_TEST_REPORT.md` and `docs/screenshots/after/improvements/`.
+
 Copy one prompt at a time into Claude Code, opened in your project folder. Each is self-contained, keeps NOVA free and honest, and ends with a clear way for you to see the result. Do them in this order: the first two make NOVA easier to start and to trust; the rest add value.
 
 Every prompt starts with the same rules block. Paste the block first, then the prompt.
