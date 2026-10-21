@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after Milestone 8 (life tracker) on top of Milestones 1 to 7: **332 tests: 331 passed, 0 failed, 1 skipped** (about 6 minutes). Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after the hardening and redesign (Phases 0 to 6) on top of Milestones 1 to 8: **364 tests: 363 passed, 0 failed, 1 skipped** (about 8 minutes). Three runs in a row, plus CI on GitHub Actions. Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -25,7 +25,35 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 | Productivity (browser) | `tests/nova-focus-e2e.test.js` | 6 pass | planner timeline, hours change re-plans, set an estimate, save, focus on a block (ring, orb, top-bar chip), stop; timer end tells you by toast, voice and pop-up and records completion, marking done goes through approval; insights tiles, charts with hover and keyboard tooltip, table view, read aloud, voice phrases; layout and axe at 3 widths |
 | Life tracker (server) | `tests/server-life.test.js` | 5 pass | time phrases and refusals; money and categories; reminders by sentence with approval, delivered once by the scheduler (concurrent ticks), weekday repeats Friday to Monday, late notice, cancel, snooze, isolation; habits streaks with an open today, weekday habits across weekends, 6-day window, Monday-first grid, unknown habit help, archive; money by sentence and form, summary vs last month, budget alerts once at 80% and 100%, delete, isolation, deletion |
 | Life tracker (browser) | `tests/nova-life-e2e.test.js` | 6 pass | capture bar preview / approve / reject / question; reminder form, bad time message, cancel; habit add, check in, streak, heatmap, uncheck; expense with automatic category, budget, delete; voice phrase; a due reminder reaches the bell and a browser pop-up; layout and axe at 3 widths |
+| Smoke walk | `tests/smoke-walk-e2e.test.js` | 6 pass | all 17 pages after their main interaction (bell, refresh briefing, chat, test voice, open a message, task Done preview + Reject, plan, life question, ProofLoop dialog, chart tooltip, KB answer, palette...) at 390/768/1024/1440 px in Deep Space and 390/1440 px in Daylight: layout check, console errors, failed requests, axe WCAG 2.1 AA serious/critical |
+| Error states | `tests/error-states-e2e.test.js` | 9 pass | 500 then 429 (with Retry-After) then Try again recovers, on Dashboard, Smart Email, Knowledge Base, Life Tracker, Automation; offline: pages say "No connection", Chat keeps the typed message, everything reloads on `online`; 401 shows "Your session ended" and signing in again works; slow server (3 s): loading state, then the page, one request only; Chat 500 keeps the message |
+| Stress | `tests/stress-e2e.test.js` | 2 pass | 200 tasks (Arabic, emoji, long titles), 200 e-mails, 100 documents, 100 notifications at 390 and 1440 px: each page shown within 2 s, layout clean, Arabic keeps right-to-left direction, bell shows the newest 40, palette search, no console errors |
+| Races | `tests/race-e2e.test.js` | 5 pass | double-clicked Approve runs once; two approvals at the same moment give one execution; 40 page switches 15 ms apart end on the right page with no stale content; a second focus session is refused and the timer chip stays single; a background redraw keeps keyboard focus on a button without an id |
+| Themes | `tests/theme-e2e.test.js` | 1 pass | Deep Space by default; Daylight by keyboard from Security and Settings; tokens change; theme-color meta; remembered after reload; back to Deep Space |
+| Signature look | `tests/signature-e2e.test.js` | 4 pass | five sidebar groups and the phone bar; one greeting on the dashboard and the day's headline in the hero; count-ups end on the real number; skeleton loading with words kept; page change within 250 ms; orb colour transition; ambient layer paused when hidden and still with reduced motion (tokens 0 ms) |
+| Performance | `tests/perf-e2e.test.js` | 2 pass | at 390 and 1440 px with 200 tasks: first contentful paint under 1 s (measured 160 to 270 ms), cumulative layout shift under 0.1 (measured 0.000), no long task over 100 ms while opening 8 pages (none), frame cost median under 8 ms and 95th percentile under 16.7 ms (about 2.5 and 8 ms), measured with the frame-rate cap off |
+| Feature matrix | `tests/feature-matrix.test.js` | 1 pass | every page, API route (93), phrase and scheduled job is exercised by at least one test file (`FEATURE_MATRIX.md`) |
 | Classic tools (unchanged) | earlier files | 144 pass, 1 skipped | calendar, .ics, collector, matching, Jobs for you, voice commands, Smart mode (mocked), layout, axe |
+
+## Defects found and fixed during the hardening and redesign (Phases 0 to 6)
+
+- The demo inbox had fixed dates and weekday words, so counts and tests changed with the calendar (failed after midnight Dubai time). Dates are now relative to today.
+- A page whose first load failed could stay on "Loading…"; a dashboard with one failed part lost its error after Try again.
+- Right after approving in Chat, ProofLoop could show the old state (data fetched in the last 2 s was reused). Any change now makes all data stale, an older answer never replaces a newer one, and opening a page always refetches.
+- A background redraw dropped keyboard focus from buttons without an id (an intermittent failure of the keyboard-only test).
+- The NOVA task list stopped at 100 tasks.
+- Google Fonts loaded at runtime (console CSP errors and an outside request); fonts are now self-hosted.
+- Knowledge Base overflowed at 1024 px; the floating orb covered the end of pages; Arabic lost its direction inside mixed lists.
+- **Smart mode could start downloading its model while the consent question was still open** if switched on within 600 ms of the page opening. Fixed, with a regression test that fails without the fix.
+- The top bar's clock went off-screen at 768 px on some classic pages (CI failure on Phase 1).
+- The first load shifted the layout (0.398) when NOVA replaced the static sidebar and top bar; now 0.000.
+- Phase 4 centring made the voice button move when the panel beside it grew (CI failure on Phase 4); content now starts at the top.
+
+## Not tested in the hardening and redesign (needs your devices)
+
+- **Frame rate and first paint on your own hardware.** Measured in headless Chromium only. Check: open NOVA in Chrome, DevTools > Lighthouse > Performance (expect First Contentful Paint under 1 s and CLS 0), then DevTools > Performance > record while switching pages (no red long tasks; frames under 16.7 ms).
+- **Installed app on a phone.** Check: install NOVA (Chrome/Edge: install icon; iPhone Safari: Share > Add to Home Screen), choose Daylight, close and reopen: no dark flash; turn on airplane mode, open a page: "No connection"; turn it off: the page reloads by itself.
+- **Real microphone, real Gmail, real Google sign-in, real Ollama, real ntfy push** are unchanged from earlier milestones and still need the steps listed below.
 
 ## Not tested (and why)
 

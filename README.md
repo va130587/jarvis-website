@@ -5,7 +5,7 @@
 1. **NOVA server mode (new, Phase 1):** sign-in, a private database, a Memory Vault, a chat that explains what it did, an activity history, usage tracking and security controls. Free to run on your own computer.
 2. **The Classic tools (original):** tasks, notes, calendar connections, a UAE job assistant and a voice system. They keep working exactly as before, with data stored in your browser.
 
-See `NOVA_AUDIT.md` (what was found), `NOVA_IMPLEMENTATION_PLAN.md` (the phases), `NOVA_FEATURE_STATUS.md` (what works, honestly), `ARCHITECTURE.md` and `NOVA_TEST_REPORT.md`.
+See `NOVA_AUDIT.md` (what was found), `NOVA_IMPLEMENTATION_PLAN.md` (the phases), `NOVA_FEATURE_STATUS.md` (what works, honestly), `ARCHITECTURE.md`, `NOVA_TEST_REPORT.md`, `DESIGN_SYSTEM.md` (colours, type, spacing, motion, themes), `FEATURE_MATRIX.md` (every page, route, phrase and job with its tests) and `docs/POLISH_CHECKLIST.md`. Screenshots before and after the redesign: `docs/screenshots/before/` and `docs/screenshots/after/` (both themes).
 
 ## Run NOVA on your computer (free, nothing to install)
 
@@ -42,7 +42,7 @@ NOVA tries its fixed rules first, then the local model with the approved tools. 
 
 **ProofLoop (the signature feature):** NOVA does not treat "I made a draft" or "the send call returned OK" as done. A request with a deadline becomes a *commitment* that moves through Request Detected → … → Submitted → Awaiting Confirmation → Verified → Completed, and the evidence behind every step is kept. Try `remind me to send the proposal to the client by Friday` in Chat (you approve, NOVA creates the task, and the commitment waits in *Awaiting Confirmation* because NOVA cannot see whether you did it), then `I sent the proposal` to confirm. Open **ProofLoop** for Mission Control, **Load demo scenarios** for nine labelled fictional examples, and **Export proof receipt** for a Markdown or printable record of what is and is not proven.
 
-**What works today:** sign-in and sessions, an agent that can create tasks and notes, complete or delete tasks and forget memories **only after you approve each change** (you see a preview first, NOVA re-reads the result to verify it, and most changes have Undo), the Memory Vault (you approve every memory; secrets are refused; sensitive details need confirmation), chat with plain-English "what NOVA did" steps, the NOVA orb, activity and usage pages, data export and deletion, voice requests that reach NOVA. In server mode, voice or typed phrases like "add a task to call HR by Friday" go to NOVA (server tasks, with approval) instead of the browser-only NOVA task list. **Upcoming and clearly labelled in the app:** Knowledge Base.
+**What works today:** sign-in and sessions, an agent that can create tasks and notes, complete or delete tasks and forget memories **only after you approve each change** (you see a preview first, NOVA re-reads the result to verify it, and most changes have Undo), the Memory Vault (you approve every memory; secrets are refused; sensitive details need confirmation), chat with plain-English "what NOVA did" steps, the NOVA orb, activity and usage pages, data export and deletion, voice requests that reach NOVA. In server mode, voice or typed phrases like "add a task to call HR by Friday" go to NOVA (server tasks, with approval) instead of the browser-only NOVA task list.
 
 **Voice (NOVA > Voice):** push-to-talk (click, or hold the button / Space), a live transcript you can edit before sending, English UK/US or Arabic (UAE), and plain messages if the microphone is blocked, you are offline, or nothing was heard (typing always works). NOVA prefers a natural voice such as "Microsoft Andrew Online (Natural)" when your browser (Edge) has it; this is free and comes from the browser, and no "Andrew HD" voice exists there today. You can approve **small, undoable** changes by saying "approve" (a bare "yes" is ignored); deleting, forgetting and anything external need a button. Voice never proves who you are. Test it on a real microphone with `NOVA_VOICE_TEST_SCRIPT.md`.
 
@@ -59,6 +59,8 @@ NOVA tries its fixed rules first, then the local model with the approved tools. 
 - **Ctrl+K command palette:** search tasks, notes, memories, commitments, e-mail and documents at once, jump to any page, run quick actions, or type **>** to ask NOVA. Fully keyboard-driven.
 - **Install as an app:** NOVA has a web app manifest and a service worker, so Chrome/Edge can install it (and iPhone can add it to the home screen); the app shell opens offline. Your data is never cached by the worker.
 - Setup for real Gmail: in Google Cloud enable the Gmail API, add `http://127.0.0.1:8787/auth/gmail/callback` as a redirect URI on the same OAuth client used for sign-in, set `NOVA_SECRET_KEY`, restart, then Smart Email > Connect Gmail.
+
+**Look and feel:** two themes, **Deep Space** (dark, the default) and **Daylight** (light), chosen in Security and Settings → Appearance and remembered in the browser. Glass panels, an orb that glides between its 11 states, a slow ambient light that stops when the tab is hidden or motion is reduced, page changes under 250 ms, skeletons while loading. Every page says what went wrong when it cannot load (offline, session ended, too many requests, server error) and offers **Try again**. Self-hosted fonts (nothing is downloaded from other sites). Measured: first content in about 0.2 s, no layout shift, no task over 100 ms, frames costing about 3 ms (60 fps needs under 16.7).
 
 **Static mode:** if you open the same pages from GitHub Pages (no server), NOVA's server features are simply absent and the Classic tools work as before.
 
@@ -407,6 +409,8 @@ The starter list is Careem, Cobblestone Energy, Huspy, Datadog, Databricks, Mong
 - Focus is always clearly outlined, and text has strong contrast.
 - If "reduce motion" is on in your device settings, NOVA turns off all animation, including the start-up sequence.
 - Animations pause when the tab is hidden.
+- Two themes (Deep Space and Daylight); both meet WCAG AA contrast, checked on every page by axe-core.
+- Right-to-left text (Arabic) keeps its own direction inside lists and messages.
 
 ## Files
 
@@ -445,6 +449,14 @@ The job assistant is tested too:
 - **Collector:** fixtures for each kind of source: normalising, filtering, duplicates, removed and old jobs, failing sources, no pointless commits, the phone message (with a stand-in for ntfy), the workflow file, and a check that no secret or personal data is committed.
 - **Browser:** the dashboard, tabs, filters, Why panel, saved searches, alerts, application pack, digest and profile; every new voice command typed; Smart mode with a stand-in model (detection, consent, progress, fallback, no action without confirmation).
 - **Layout** at 1440, 768 and 390 pixels, **keyboard-only** use, and an **axe-core** accessibility scan (no serious or critical problems).
+
+NOVA itself is checked end to end as well (see `NOVA_TEST_REPORT.md` for the full list):
+- **Smoke walk:** all 17 NOVA pages at 390, 768, 1024 and 1440 px in Deep Space and at 390 and 1440 px in Daylight, each after its main interaction: no layout problems, no console errors, no failed requests, no serious or critical axe issues.
+- **Error states:** offline, expired session (401), too many requests (429), server error (500) and a slow server (3 s) on Dashboard, Chat, Smart Email, Knowledge Base, Life Tracker and Automation.
+- **Stress:** 200 tasks, 200 e-mails, 100 documents, 100 notifications, long Arabic titles and emoji.
+- **Races:** double-clicked Approve runs once, two approvals at the same moment, 40 fast page switches, focus timer, keyboard focus kept through background redraws.
+- **Performance:** first content, layout shift, long tasks and frame cost at 390 and 1440 px.
+- **Feature matrix:** every page, API route, phrase and scheduled job must have a test.
 
 To run them, install Node.js, then in this folder:
 

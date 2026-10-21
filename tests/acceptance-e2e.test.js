@@ -118,6 +118,21 @@ test('NOVA_DEMO_GUIDE.md, step by step, on the demo data', async () => {
   for (const a of ['email_send_refused', 'email_tracked', 'schedule_run_now']) assert.ok(audit.includes(a), a);
   await page.evaluate(() => { location.hash = 'usage'; }); await page.waitForTimeout(600);
   assert.match(await page.innerText('main'), /rules|built-in/i);
-  assert.deepEqual(clean(errors), []);
+  // 9. Look and feel: Daylight theme from Security and Settings, remembered after a reload, and back
+  await page.evaluate(() => { location.hash = 'security'; }); await page.waitForSelector('#themePanel');
+  await page.click('.theme-opt.t-light'); await page.waitForFunction(() => document.documentElement.getAttribute('data-theme') === 'light');
+  await page.reload(); await page.waitForFunction(() => window.NOVA && NOVA.user && window.J);
+  assert.equal(await page.getAttribute('html', 'data-theme'), 'light');
+  await page.evaluate(() => { location.hash = 'security'; }); await page.waitForSelector('#themePanel'); await page.click('.theme-opt.t-dark');
+  await page.waitForFunction(() => !document.documentElement.hasAttribute('data-theme'));
+  // 10. Tasks and Calendar: Done shows a preview first; Reject changes nothing
+  await page.evaluate(() => { location.hash = 'hub'; }); await page.waitForSelector('button[data-act="novaTaskDone"]');
+  await page.locator('button[data-act="novaTaskDone"]').first().click(); await page.waitForSelector('#hubPreview .preview');
+  await page.click('#hubPreview button[data-act="novaRejectRun"]'); await page.waitForFunction(() => !document.querySelector('#hubPreview .preview'));
+  // 11. When the server fails, the page says so and Try again recovers
+  await page.route(/\/api\/life$/, r => r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }));
+  await page.evaluate(() => { location.hash = 'life'; }); await page.waitForSelector('.load-error:has-text("Try again")');
+  await page.unroute(/\/api\/life$/); await page.click('.load-error button[data-act="novaRetry"]'); await page.waitForSelector('.life-grid');
+  assert.deepEqual(clean(errors).filter(e => !/status of 500/.test(e)), []);
   await ctx.close();
 });

@@ -4,9 +4,9 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 
 | Feature | Status | Notes |
 |---|---|---|
-| NOVA brand, premium dark UI, 14-page navigation | WORKING AND TESTED | Live pages are real; only Knowledge Base is labelled Soon/Upcoming. Layout at 390/768/1440 and axe (no serious issues) executed. "Premium" look is a judgement, see screenshots. |
+| NOVA brand, 17-page navigation in five groups (Today, Work, Life, Knowledge, System), phone bottom bar | WORKING AND TESTED | All 17 pages are live. Smoke walk at 390/768/1024/1440 in Deep Space and 390/1440 in Daylight: layout, console, requests and axe clean. How it *looks* is a judgement: see `docs/screenshots/after/`. |
 | NOVA orb: idle, listening, transcribing, understanding, waiting approval, speaking, completed, error | WORKING AND TESTED | Set by real events: chat request lifecycle, proposal awaiting approval, errors, and the voice engine's state. Each state has its own text label; animation stops with reduced motion. |
-| NOVA orb: planning, executing a tool | DEMO ONLY | Visuals exist; nothing triggers them until the agent and tools arrive in Phase 2. |
+| NOVA orb: planning, executing a tool, focusing | WORKING AND TESTED | Set by agent runs and focus sessions. All 11 states glide from one to the next (colour transition); reduced motion stops the movement. |
 | Sign-in with Google (OIDC, PKCE) | IMPLEMENTED BUT UNVERIFIED | Fully tested against a stand-in Google (state, nonce, audience, expiry, allow-list, replay). Real Google needs your Client ID and a person: REQUIRES CONFIGURATION. |
 | Development sign-in (local only) | WORKING AND TESTED | Allow-list enforced; refuses to start on a non-loopback host. |
 | Sessions: HttpOnly cookie, hashed id, idle + absolute expiry, revoke, sign-out | WORKING AND TESTED | Fake-clock tests for both timeouts. |
@@ -97,3 +97,10 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 | Timed reminders by sentence or form (relative, clock, tomorrow, weekdays, daily / weekday repeats), delivered by the server; cancel, "again in 10 minutes" | WORKING AND TESTED | Fake-clock tests: exact Dubai times, one delivery per occurrence even with concurrent ticks, repeats, late delivery after downtime. Delivery needs the NOVA server running (see DEPLOYMENT.md for always-on). Phone delivery needs ntfy configured. |
 | Habits: check-ins (today and the last 6 days), current and best streak, weekday habits, 13-week heatmap, archive, "check in reading" | WORKING AND TESTED | |
 | Money in AED: sentence or form, automatic category, month by category, vs last month, monthly budget with pace marker, alerts once at 80% and 100%, delete | WORKING AND TESTED | Amounts are stored as whole fils (no rounding errors). Categories are keyword rules: change one with the category menu. No bank connection (by design: free and private). |
+| Design system (tokens), Deep Space and Daylight themes, remembered theme choice | WORKING AND TESTED | `design.css`, `DESIGN_SYSTEM.md`; theme test (keyboard, reload, back); axe contrast checks in both themes. |
+| Error states on every page (offline, 401, 429, 500, slow) with Try again and automatic recovery | WORKING AND TESTED | `tests/error-states-e2e.test.js`; real network loss on a phone: UNVERIFIED (turn on airplane mode, open a page, turn it off). |
+| Large data, Arabic and emoji | WORKING AND TESTED | 200 tasks, 200 e-mails, 100 documents, 100 notifications (`tests/stress-e2e.test.js`). |
+| Race safety (double approval, fast switching, background redraws) | WORKING AND TESTED | `tests/race-e2e.test.js`; server claims an approval atomically. |
+| Done and Delete buttons on NOVA tasks | WORKING AND TESTED | Preview and approval as in Chat (`POST /api/actions`, whitelisted tools only). |
+| Performance budget (first content < 1 s, no layout shift, no task > 100 ms, frame cost < 16.7 ms) | WORKING AND TESTED (headless Chromium) | Measured about 0.2 s, 0.000, none, about 3 ms. On your own devices: UNVERIFIED (DevTools > Lighthouse and Performance panel; see NOVA_TEST_REPORT.md). |
+| Installed-app theme on a phone (no light flash) | IMPLEMENTED BUT UNVERIFIED | Needs a real phone: install, choose Daylight, close and reopen. |

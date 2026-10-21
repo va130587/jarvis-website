@@ -1,4 +1,4 @@
-# NOVA demo guide (about 7 minutes)
+# NOVA demo guide (about 8 minutes)
 
 A script for showing NOVA to someone. It uses a **separate demo database with fictional data**, so your own NOVA is never touched. Everything below was run by the automated tests; anything that needs real accounts or a real microphone is marked.
 
@@ -92,6 +92,13 @@ Open **Voice Assistant**.
 ## 8. Trust (30 seconds)
 
 **Security and Settings**: the tool list with risk levels, active sessions, the audit log, **Download everything (JSON)** and the delete buttons. **AI Usage and Cost**: every reply is free here (built-in rules, or a local model with `NOVA_AI_PROVIDER=ollama`).
+
+## 9. Look and feel (30 seconds)
+
+- **Security and Settings → Appearance**: switch between **Deep Space** (dark) and **Daylight** (light). The choice is remembered in this browser and applied before the page appears.
+- Point out the **orb** gliding between states, the sidebar groups (Today, Work, Life, Knowledge, System) and, on a phone, the bottom bar.
+- **Tasks and Calendar**: each NOVA task has **Done** and **Delete**; both show a preview first. Press **Reject** to show that nothing changed.
+- Honest errors: if the server or the connection fails, the page says what happened, offers **Try again**, and reloads by itself when the connection is back. Nothing you typed in Chat is lost.
 
 ## Questions people ask
 
