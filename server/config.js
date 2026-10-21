@@ -32,7 +32,7 @@ function load(env, over) {
       monthlyLimitUsd: env.NOVA_MONTHLY_LIMIT_USD === undefined || env.NOVA_MONTHLY_LIMIT_USD === '' ? null : +env.NOVA_MONTHLY_LIMIT_USD
     },
     agent: { maxSteps: +env.NOVA_AGENT_MAX_STEPS || 5, toolTimeoutMs: +env.NOVA_TOOL_TIMEOUT_MS || 5000, runTimeoutMs: +env.NOVA_RUN_TIMEOUT_MS || 30000, approvalTtlMs: (+env.NOVA_APPROVAL_TTL_HOURS || 24) * 3600e3 },
-    limits: { auth: { max: +env.NOVA_RATE_AUTH_MAX || 20, perMs: 60e3 }, api: { max: +env.NOVA_RATE_API_MAX || 240, perMs: 60e3 }, chat: { max: +env.NOVA_RATE_CHAT_MAX || 30, perMs: 60e3 } },
+    limits: { auth: { max: +env.NOVA_RATE_AUTH_MAX || 20, perMs: 60e3 }, api: { max: +env.NOVA_RATE_API_MAX || 240, perMs: 60e3 }, chat: { max: +env.NOVA_RATE_CHAT_MAX || 30, perMs: 60e3 }, verify: { max: +env.NOVA_RATE_VERIFY_MAX || 30, perMs: 60e3 } },
     // Encrypts stored account tokens (Gmail). Any long random string; without it NOVA refuses to store tokens. Never commit it.
     secretKey: env.NOVA_SECRET_KEY || '',
     scheduler: { enabled: env.NOVA_SCHEDULER !== 'off', intervalMs: +env.NOVA_SCHEDULER_INTERVAL_MS || 30000 },

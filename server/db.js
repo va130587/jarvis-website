@@ -151,7 +151,10 @@ const MIGRATIONS = [
      id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, amount_fils INTEGER NOT NULL, category TEXT NOT NULL,
      note TEXT, day TEXT NOT NULL, created_at INTEGER NOT NULL, deleted_at INTEGER);
    CREATE INDEX expenses_user ON expenses(user_id, day);
-   CREATE TABLE budgets (user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, category TEXT NOT NULL, monthly_fils INTEGER NOT NULL, PRIMARY KEY (user_id, category));`
+   CREATE TABLE budgets (user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, category TEXT NOT NULL, monthly_fils INTEGER NOT NULL, PRIMARY KEY (user_id, category));`,
+  // 8: proof receipts: the fingerprint of every receipt this NOVA issued (so a pasted receipt can be checked), never its content
+  `CREATE TABLE receipts (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, commitment_id INTEGER, fingerprint TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL);`
 ];
 
 function migrate(db) {

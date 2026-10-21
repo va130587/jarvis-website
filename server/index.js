@@ -28,10 +28,11 @@ const { createLife } = require('./life');
 const { createOrbit } = require('./orbit');
 const { createReplay } = require('./replay');
 const { createRadar } = require('./radar');
+const { createVerify } = require('./verify');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
-const STATIC_OK = /^\/(index\.html|redirect\.html|manifest\.webmanifest|[a-z0-9-]+\.(?:js|css))$|^\/icons\/[a-z0-9-]+\.(?:png|svg)$|^\/fonts\/[a-z0-9-]+\.woff2$|^\/(vendor|data|blueprint)\/[A-Za-z0-9._\/-]+$/;
+const STATIC_OK = /^\/(index\.html|redirect\.html|verify\.html|manifest\.webmanifest|[a-z0-9-]+\.(?:js|css))$|^\/icons\/[a-z0-9-]+\.(?:png|svg)$|^\/fonts\/[a-z0-9-]+\.woff2$|^\/(vendor|data|blueprint)\/[A-Za-z0-9._\/-]+$/;
 
 function createApp(over, deps) {
   const cfg = load(process.env, over);
@@ -46,7 +47,8 @@ function createApp(over, deps) {
   const pl = createProofLoop(db, now), adapters = createAdapters(db);
   const registry = deps.registry || createRegistry({ db, memory, pl });
   const agent = createAgent(cfg, db, registry, provider, pl);
-  const plApi = createProofLoopApi(cfg, db, pl, adapters);
+  const verify = createVerify(cfg, db, { now });
+  const plApi = createProofLoopApi(cfg, db, pl, adapters, verify);
   const chat = createChat(cfg, db, memory, provider, agent);
   const notifier = createNotifier(cfg, db, deps), life = createLife(cfg, db, { notifier }), briefing = createBriefing(cfg, db), email = createEmail(cfg, db, { fetch: deps.fetch, pl });
   const scheduler = createScheduler(cfg, db, deps.jobs || dailyJobs());
@@ -56,7 +58,7 @@ function createApp(over, deps) {
   const hdr = securityHeaders(cfg);
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
-  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router);
+  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
@@ -220,6 +222,7 @@ function createApp(over, deps) {
 
   function serveStatic(req, res, pathname) {
     if (pathname === '/') pathname = '/index.html';
+    if (pathname === '/verify') pathname = '/verify.html';           // the public receipt check
     if (!STATIC_OK.test(pathname) || pathname.includes('..')) return send(res, 404, 'Not found', hdr);
     const file = path.join(cfg.root, pathname);
     if (!file.startsWith(cfg.root + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, 'Not found', hdr);
