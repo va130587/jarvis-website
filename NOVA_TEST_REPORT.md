@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after the hardening and redesign (Phases 0 to 6) on top of Milestones 1 to 8: **451 tests: 450 passed, 0 failed, 1 skipped** (about 9 minutes), after the five newest features were added. Three runs in a row, plus CI on GitHub Actions. Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after the hardening and redesign (Phases 0 to 6) on top of Milestones 1 to 8: **663 tests: 662 passed, 0 failed, 1 skipped** (about 15 minutes), after the ten improvements were added. Three runs in a row, plus CI on GitHub Actions. Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -157,3 +157,44 @@ Real microphone accuracy, whether your browser offers "Andrew", Arabic recogniti
 ## Not tested (Milestones 1 and 2)
 
 Real Ollama model accuracy (run `node scripts/eval-nlu.js --provider ollama --min 0.8` on your machine; the keyword-only baseline is 23%); real Claude; ProofLoop with real Gmail/calendar evidence (those connectors do not exist yet); automatic follow-ups (the scheduler is Milestone 4).
+
+## The ten improvements: tests and findings
+
+New test files (all run by `npm test`; every new test was written to fail without its change):
+
+| Area | Files | What they prove |
+|---|---|---|
+| Help, Check my setup, wording | `tests/server-check.test.js`, `tests/help-e2e.test.js`, `tests/messages.test.js` | each check OK / Needs attention / Not set up with the exact step; read-only; no secrets, paths or addresses; the Help page at four widths in both themes; **no server message, toast or real error answer (every route, hostile bodies) contains a code, a path, "undefined", "[object" or "Error:"** |
+| Tour | `tests/server-tour.test.js`, `tests/tour-e2e.test.js` | shown once per account, remembered in the database, existing accounts marked done, Next/Back/Skip, Tab stays inside, Esc skips, focus returns, never covers its target, four widths in both themes |
+| Export and import | `tests/server-portable.test.js`, `tests/data-e2e.test.js` | round trip, merge without duplicates, nothing written before Approve, another person's file lands only in your account, sessions/tokens/unknown parts refused, hostile and oversized files, honest handling of "verified", readable Markdown; the preview in the browser |
+| Backups | `tests/server-backup.test.js`, `tests/backup-e2e.test.js` | once a day on a fake clock, keeps 14, damaged backup reported, restore test counts only your rows and leaves the live database untouched, 7-day warning, plain failure message |
+| Undo list | `tests/server-undo.test.js`, `tests/undo-e2e.test.js` | last 20 only, own changes only, preview then approval, expiry, double click, plain reasons, effects facts, every undoable kind really undone |
+| Planner and calendar | `tests/server-plan-calendar.test.js`, `tests/plan-calendar-e2e.test.js` | fixed blocks at the start, middle and end of the day, lunch, overlapping and partly-past events, all-day events, gaps backfilled, wrong day refused, events never stored, only that day sent, nothing written to the calendar |
+| Voice | `tests/speech-browser.test.js`, `tests/voice-browsers-e2e.test.js` | Chrome / Edge / Safari / Firefox / unknown sentences; type or paste with the same approval rules; the microphone test with tone, silence, faint, refused, missing, busy and unsupported sources; tracks released, nothing recorded or sent; a full real 10 seconds |
+| Demo | `tests/server-demo.test.js`, `tests/demo-guide-e2e.test.js` | at four different clocks (including 23:50 on the 1st of a month): 14 days of events at many hours, nothing in the future, a verified receipt that the check page matches, budget 78 to 82%, streaks 9 and 3, all labelled demo, idempotent; the five-step banner |
+| Speed and size | `tests/server-static.test.js`, `tests/perf-guard.test.js` | gzip identical after decoding, Vary, ETag and 304 per copy, nothing under /api or /auth cached, a changed file gets a new tag, each guard rule fails and passes when it should, a big file added on purpose fails, the first page measured in a browser is within 15% of its baseline |
+| Accessibility | `tests/a11y-e2e.test.js` | one h1 and no skipped levels, one main, named navigation, axe including **best-practice** on all 19 pages at 1280 and 390 px in both themes; skip link on every page; focus on the title with a polite announcement; contrast and text options remembered and effective; **7:1 text contrast** on every page in high contrast; no broken layout at 125% and 150% from 390 to 1440 px |
+
+Updated, not weakened: tests that counted "four jobs", "ten tasks" or "one notification" now expect five, sixteen and fifteen, because the defaults really grew (the Backup job; six finished tasks and fourteen briefings in the demo); a test that read the page title text now waits for its typing effect; the Automation Centre test reads `h2` instead of `h3`.
+
+### Defects found and fixed while adding the ten improvements
+
+- 17 developer-style API messages ("via must be …", "day must be a date like …") were rewritten in plain words (found by the new message test).
+- The planner left a free hour unused when meetings split the day; free gaps are now backfilled by priority (only when calendar events are present, so plans without a calendar are unchanged). Found while writing the calendar test; also fixed a crash the summary would have had when an event came first.
+- The tour's Tab key could leave the dialog in Chromium, and its card sat on top of the phone bottom bar (axe: target size): a focus trap, and the card now sits above the bar.
+- A backup's health result stayed cached after its checking file was deleted; the cache now includes the file's fingerprint.
+- The demo had no requests on some weekend days; every one of the last 14 days now has activity.
+- After a page change the focus on the title was lost as soon as data arrived and the page redrew; a redraw now keeps focus on the title.
+- At 150% text six pages broke their layout (planner times, category names, ProofLoop rows, usage tile, long buttons, topbar clock, list rows); sizes that held text now grow with it and rows wrap.
+- High contrast failed the strictest 7:1 check on e-mail avatars, finished items and red tags; fixed.
+
+## Not tested in the ten improvements (needs your devices or time)
+
+- **A real Windows `.bat` and Mac `.command` double-click.** Unzip, double-click, the browser should open at http://127.0.0.1:8788. On a Mac use right-click, Open the first time.
+- **Real Google and Outlook calendars in the planner.** Tested with an imported `.ics` file and fake events. Check: connect a calendar in Tool settings, open Focus and Planner, see your real meetings as purple blocks.
+- **Real microphones, and real Safari and Firefox.** Tested with browser profiles and a fake audio source; see rows 17 to 21 of `NOVA_VOICE_TEST_SCRIPT.md`.
+- **Real screen readers (NVDA, VoiceOver).** `docs/ACCESSIBILITY_CHECKLIST.md` is a 10-minute check; in particular, whether the page title read twice after a page change is too chatty.
+- **The backup job over real days, and restoring on another computer.** Tested on a fake clock; check that `backups/` fills each morning, and keep `NOVA_SECRET_KEY` with it.
+- **The tour's native dialog on Safari and real phones.** Tested in Chromium at four widths.
+- **gzip behind a proxy (nginx, Caddy) and speed on a slow device.** The guard runs on a fast machine; pass `Accept-Encoding` and `If-None-Match` through a proxy.
+- **The guided demo's "Receipt check" step** ticks when you press **Check a receipt**, not when you paste a receipt on the other page (that page is public and does not know who you are).
