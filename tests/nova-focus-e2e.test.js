@@ -9,16 +9,19 @@ const H = require('./helpers');
 const { createApp } = require('../server');
 const { seed } = require('../scripts/demo');
 
-let browser, app, base;
+let browser, app, base, T0, R0;
 test.before(async () => {
   browser = await H.launch();
-  app = createApp({ NOVA_DB: path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'nova-focus-')), 'f.db'), AUTH_MODE: 'dev', OWNER_EMAILS: 'demo@nova.local', HOST: '127.0.0.1', PORT: '0', NOVA_RATE_API_MAX: '100000', NOVA_RATE_AUTH_MAX: '100000', NOVA_RATE_CHAT_MAX: '100000' });
+  // The plan starts from "now", so the server's clock begins at 08:00 Dubai today (and keeps moving): the test gives the same plan at any real time of day.
+  const dubaiDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date()), now = () => T0 + (Date.now() - R0);
+  T0 = Date.parse(dubaiDay + 'T08:00:00+04:00'); R0 = Date.now();
+  app = createApp({ NOVA_DB: path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'nova-focus-')), 'f.db'), AUTH_MODE: 'dev', OWNER_EMAILS: 'demo@nova.local', HOST: '127.0.0.1', PORT: '0', NOVA_RATE_API_MAX: '100000', NOVA_RATE_AUTH_MAX: '100000', NOVA_RATE_CHAT_MAX: '100000' }, { now });
   seed(app); base = 'http://127.0.0.1:' + await app.listen();
 });
 test.after(async () => { await browser.close(); app.server.closeAllConnections(); await app.close(); });
 const clean = errors => errors.filter(e => !/Failed to load resource|ERR_|preload assets|fonts\.googleapis/.test(e));
 async function open(opts) {
-  const o = await H.openApp(browser, Object.assign({ base, hash: '' }, opts || {}));
+  const o = await H.openApp(browser, Object.assign({ base, hash: '', now: T0 + (Date.now() - R0) }, opts || {}));   // the browser's clock matches the server's
   await o.page.waitForFunction(() => window.NOVA && NOVA.mode !== 'unknown');
   await o.page.fill('#novaDevEmail', 'demo@nova.local'); await o.page.click('#novaDevForm button');
   await o.page.waitForFunction(() => window.NOVA && NOVA.user && window.J && J.current() === 'dashboard');

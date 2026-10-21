@@ -25,6 +25,7 @@ const { dubaiDate } = require('./agent/planner');
 const { createKb } = require('./kb');
 const { createProductivity } = require('./productivity');
 const { createLife } = require('./life');
+const { createOrbit } = require('./orbit');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -47,13 +48,13 @@ function createApp(over, deps) {
   const chat = createChat(cfg, db, memory, provider, agent);
   const notifier = createNotifier(cfg, db, deps), life = createLife(cfg, db, { notifier }), briefing = createBriefing(cfg, db), email = createEmail(cfg, db, { fetch: deps.fetch, pl });
   const scheduler = createScheduler(cfg, db, deps.jobs || dailyJobs());
-  const kb = createKb(cfg, db), prod = createProductivity(cfg, db);
+  const kb = createKb(cfg, db), prod = createProductivity(cfg, db), orbit = createOrbit(cfg, db, { now });
   registerDailyTools();
   const router = new Router();
   const hdr = securityHeaders(cfg);
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
-  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router);
+  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {

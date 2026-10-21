@@ -177,12 +177,40 @@
   /* ================= screens ================= */
   var S = J.screens;
   Object.assign(J.titles, { life: 'Life Tracker', focus: 'Focus and Planner', insights: 'Weekly Insights', briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings' });
+  /* ---- Promise Orbit: open promises, deadlines and tasks circle the orb; distance = how soon, shape + colour + words = state ---- */
+  var OSTATE = { overdue: 'Overdue', waiting: 'Waiting for proof', verified: 'Verified', normal: 'Open' }, OGLYPH = { overdue: '!', waiting: '…', verified: '✓', normal: '' };
+  function orbitHTML() {
+    var o = N.cache.orbit, sh = o ? o.shown : [], n = sh.length, total = o ? o.total : 0;
+    var dots = sh.map(function (it, i) {
+      var a = (-90 + i * 360 / n) * Math.PI / 180, r = it.state === 'overdue' ? 0.70 : it.days === null ? 0.92 : 0.72 + 0.20 * Math.min(Math.max(it.days, 0), 14) / 14;
+      return '<button type="button" class="odot s-' + it.state + '" style="left:' + (50 + 50 * r * Math.cos(a)).toFixed(2) + '%;top:' + (50 + 50 * r * Math.sin(a)).toFixed(2) + '%" data-act="orbitOpen" data-id="' + it.kind + ':' + it.id + '" data-cap="' + esc(it.label + ' · ' + it.who) + '" aria-label="' + esc(it.label) + '"><span aria-hidden="true">' + OGLYPH[it.state] + '</span></button>';
+    }).join('');
+    var summary = !o ? 'Looking at what is open…' : total ? total + ' open' + (o.overdue ? ' · ' + o.overdue + ' overdue' : '') : 'Nothing open: a clear orbit.';
+    var rows = sh.map(function (it) {
+      return '<tr><td><button type="button" class="linklike" data-act="orbitOpen" data-id="' + it.kind + ':' + it.id + '">' + esc(it.title) + '</button><br><small class="muted">' + esc(it.who) + '</small></td><td><span class="ostate s-' + it.state + '">' + OSTATE[it.state] + '</span></td><td>' + esc(it.label.replace(/^.*, (?=[^,]*$)/, '')) + '</td></tr>';
+    }).join('');
+    return '<div class="orbit-stage"><div class="orbit" role="group" aria-label="Promise orbit: ' + esc(summary) + '">' + dots + '</div><div class="orbit-core">' + orb('big') + '</div>' +
+      (o && o.more ? '<span class="chip orbit-more">+' + o.more + ' more</span>' : '') + '</div>' +
+      '<p class="orbit-caption" id="orbitCaption" data-default="' + esc(summary) + '">' + esc(summary) + '</p>' +
+      (n ? '<details class="orbit-list"><summary>Show as a list</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Open promises, deadlines and tasks"><table class="cmds"><thead><tr><th scope="col">Item</th><th scope="col">State</th><th scope="col">When</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        (o.more ? '<p class="small-text muted">+' + o.more + ' more in <a href="#proofloop">ProofLoop</a> and <a href="#hub">Tasks and Calendar</a>.</p>' : '') + '</details>' : '');
+  }
+  function orbitWire() {
+    var st = $('.orbit-stage'), cap = $('#orbitCaption'); if (!st || !cap) return;
+    function show(e) { var d = e.target.closest && e.target.closest('.odot'); cap.textContent = d ? d.getAttribute('data-cap') : cap.getAttribute('data-default'); }
+    ['mouseover', 'focusin'].forEach(function (ev) { st.addEventListener(ev, show); });
+    ['mouseleave', 'focusout'].forEach(function (ev) { st.addEventListener(ev, function () { cap.textContent = cap.getAttribute('data-default'); }); });
+  }
+  J.actions.orbitOpen = function (id) {
+    var p = String(id).split(':');
+    if (p[0] === 'commitment') plDetail(+p[1]); else location.hash = 'hub';
+  };
   S.dashboard = {
     render: function () {
       var m = N.cache.memories, u = N.cache.usage, a = N.cache.activity, convs = N.cache.conversations, ap = N.cache.approvals ? N.cache.approvals.approvals : null;
       var active = m ? m.memories.filter(function (x) { return x.status === 'active'; }).length : '…', proposed = (m ? m.memories.filter(function (x) { return x.status === 'proposed'; }).length : 0) + (ap ? ap.length : 0);
       var rules = 0, model = 0; if (u) u.byHandler.forEach(function (h) { if (h.handler === 'rules') rules += h.calls; else if (h.handler === 'claude' || h.handler === 'local-model') model += h.calls; });
-      return '<section class="hero nova-hero"><div class="core-stage">' + orb('big') + '</div><div>' +
+      return '<section class="hero nova-hero"><div class="core-stage">' + orbitHTML() + '</div><div>' +
         '<p class="eyebrow">' + esc(J.longDate ? J.longDate(J.today()) : '') + ' · Dubai</p><h1 class="greet">Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening') + ', ' + esc(name()) + '</h1>' +
         '<p class="lead">' + esc((N.daily && N.daily.headline()) || 'From Request to Verified Result.') + '</p><p class="live" id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p>' +
         '<div class="btn-row"><a class="btn primary" href="#chat">Talk to NOVA</a><a class="btn" href="#briefing">Daily Briefing</a><a class="btn ghost" href="#memory">Memory Vault</a></div></div></section>' +
@@ -196,7 +224,7 @@
         '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> ProofLoop commitments with evidence and receipts, voice with push-to-talk, sign-in, memories you approve, chat with built-in rules, tasks and notes that NOVA can create after you approve (with Undo where possible), activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Daily use:</b> a daily briefing, scheduled jobs (Dubai time) with retries and history, notifications (in NOVA, browser, optional phone push), and Smart Email (Gmail read-only, or a labelled demo inbox).</li><li><b>Knowledge:</b> a Knowledge Base that answers from your own documents with the source passage, and Ctrl+K search across everything.</li></ul></article>' +
         (convs ? '' : '');
     },
-    after: function () { stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals'], ['pl', '/api/proofloop/summary'], ['briefing', '/api/briefing']]); }
+    after: function () { orbitWire(); stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals'], ['pl', '/api/proofloop/summary'], ['briefing', '/api/briefing'], ['orbit', '/api/orbit']]); }
   };
 
   /* ---- chat ---- */
