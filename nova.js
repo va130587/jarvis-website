@@ -226,7 +226,7 @@
         '<article class="panel"><h2 class="label">What works today</h2><ul class="plain small-text"><li><b>Working:</b> ProofLoop commitments with evidence and receipts, voice with push-to-talk, sign-in, memories you approve, chat with built-in rules, tasks and notes that NOVA can create after you approve (with Undo where possible), activity history, usage ledger, data export and deletion.</li><li><b>Needs setup:</b> Claude answers (needs an API key; paid). Google sign-in (needs a free Google Client ID).</li><li><b>Daily use:</b> a daily briefing, scheduled jobs (Dubai time) with retries and history, notifications (in NOVA, browser, optional phone push), and Smart Email (Gmail read-only, or a labelled demo inbox).</li><li><b>Knowledge:</b> a Knowledge Base that answers from your own documents with the source passage, and Ctrl+K search across everything.</li></ul></article>' +
         (convs ? '' : '');
     },
-    after: function () { orbitWire(); stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals'], ['pl', '/api/proofloop/summary'], ['briefing', '/api/briefing'], ['orbit', '/api/orbit']]); }
+    after: function () { orbitWire(); stale('dashboard', [['memories', '/api/memories'], ['usage', '/api/usage'], ['activity', '/api/activity'], ['approvals', '/api/approvals'], ['pl', '/api/proofloop/summary'], ['briefing', '/api/briefing'], ['orbit', '/api/orbit'], ['backup', '/api/backup']]); }
   };
 
   /* ---- chat ---- */

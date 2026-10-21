@@ -71,10 +71,10 @@ test('Smart Email: demo inbox, filters with counts, reasons, draft (edit, copy, 
   assert.deepEqual(clean(errors), []); await ctx.close();
 });
 
-test('Automation Centre: four jobs, switch off, change time, run now with history; notification bell, read and pop-ups', async () => {
+test('Automation Centre: five jobs, switch off, change time, run now with history; notification bell, read and pop-ups', async () => {
   const { page, ctx, errors } = await open(fresh());
   await go(page, 'automation', '.sched');
-  assert.deepEqual(await page.$$eval('.sched h3', h => h.map(x => x.textContent)), ['Daily briefing', 'Deadline check', 'Follow-up nudges', 'E-mail check']);
+  assert.deepEqual(await page.$$eval('.sched h3', h => h.map(x => x.textContent)), ['Daily briefing', 'Deadline check', 'Follow-up nudges', 'Backup', 'E-mail check']);
   const card = page.locator('.sched[data-kind="deadlines"]');
   await card.locator('input[data-f="enabled"]').uncheck({ force: true });
   await page.waitForFunction(() => /Off/.test(document.querySelector('.sched[data-kind="deadlines"] .kv').textContent));

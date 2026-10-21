@@ -437,3 +437,8 @@ dialog.tour.no-target { background: rgb(var(--deep-rgb) / .74); }
 .imp-h { margin: var(--s3) 0 var(--s2); font-size: var(--fs-16); } .imp-table { margin-bottom: var(--s2); } .imp-table td { font-variant-numeric: tabular-nums; }
 .imp-notes { margin: var(--s2) 0; padding-left: var(--s5); display: grid; gap: var(--s1); color: var(--text-2); } .imp-total { margin: var(--s3) 0; }
 #impPreview:focus, #impDone:focus { outline: none; }
+
+/* Backups */
+.bk-warn { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); margin: 0 0 var(--s4); padding: var(--s3) var(--s4); border: 1px solid rgb(var(--warn-rgb) / .5); border-radius: var(--r-md); background: rgb(var(--warn-rgb) / .1); }
+.bk-result { margin: var(--s3) 0; padding: var(--s3) var(--s4); border-radius: var(--r-md); border: 1px solid var(--edge); } .bk-result.ok { border-color: rgb(var(--ok-rgb) / .5); } .bk-result.bad { border-color: rgb(var(--danger-rgb) / .6); }
+.bk-advice { margin: var(--s3) 0 0; padding-left: var(--s5); display: grid; gap: var(--s2); color: var(--text-2); }

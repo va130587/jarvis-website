@@ -33,6 +33,7 @@ const { createVerify } = require('./verify');
 const { createEffects } = require('./effects');
 const { createCheck } = require('./check');
 const { createPortable } = require('./portable');
+const { createBackups } = require('./backups');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -55,6 +56,7 @@ function createApp(over, deps) {
   const plApi = createProofLoopApi(cfg, db, pl, adapters, verify);
   const chat = createChat(cfg, db, memory, provider, agent);
   const notifier = createNotifier(cfg, db, deps), life = createLife(cfg, db, { notifier }), briefing = createBriefing(cfg, db), email = createEmail(cfg, db, { fetch: deps.fetch, pl });
+  const backups = createBackups(cfg, db, { now });
   const scheduler = createScheduler(cfg, db, deps.jobs || dailyJobs());
   const kb = createKb(cfg, db), prod = createProductivity(cfg, db), orbit = createOrbit(cfg, db, { now }), replay = createReplay(cfg, db, { now }), radar = createRadar(cfg, db, { now });
   registerDailyTools();
@@ -63,7 +65,7 @@ function createApp(over, deps) {
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
   notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router); createCheck(cfg, db, { provider, scheduler }).register(router);
-  const portable = createPortable(cfg, db, { now, memory, kb, plApi }); portable.register(router);
+  const portable = createPortable(cfg, db, { now, memory, kb, plApi }); portable.register(router); backups.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
@@ -101,6 +103,7 @@ function createApp(over, deps) {
     const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
     return {
       everyTick: () => life.deliver(),
+      backup: (user, run) => backups.job(user, run),
       async briefing(user, run) {
         const b = briefing.create(user, 'schedule');
         await notifier.notify(user.id, { kind: 'briefing', title: 'Your briefing for ' + b.weekday, body: b.headline + (b.focus ? ' Focus: ' + b.focus.text + '.' : '') + (run.missed ? ' (NOVA was not running for ' + plural(run.missed, 'earlier briefing') + '; this one replaces them.)' : ''), link: '#briefing', dedupe: 'briefing-run-' + run.id, tags: 'sunrise' });
@@ -273,7 +276,7 @@ function createApp(over, deps) {
   const server = http.createServer((req, res) => { onRequest(req, res); });
   const sweeper = setInterval(() => { limiter.sweep(); db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(now()); }, 10 * 60e3); sweeper.unref();
   return {
-    cfg, db, server, memory, provider, registry, agent, pl, scheduler, notifier, briefing, email, kb, prod, life,
+    cfg, db, server, memory, provider, registry, agent, pl, scheduler, backups, notifier, briefing, email, kb, prod, life,
     listen() { return new Promise(r => server.listen(cfg.port, cfg.host, () => r(server.address().port))); },
     close() { clearInterval(sweeper); scheduler.stop(); return new Promise(r => server.close(() => { try { db.close(); } catch (e) { /* closed */ } r(); })); }
   };

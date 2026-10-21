@@ -94,8 +94,8 @@
   }
   D.headline = function () { var r = N.cache.briefing; return r && r.preview ? r.preview.headline : ''; };
   D.dashboardStrip = function () {
-    var r = N.cache.briefing; if (!r) return '';
-    return '<div class="dash-brief">' + briefingCard(r.preview, { compact: true }) + '</div>';
+    var r = N.cache.briefing, w = N.cache.backup && N.cache.backup.warning;
+    return (w ? '<div class="bk-warn" role="note"><b>Backup:</b> ' + esc(w) + ' <a class="btn small" href="#automation">Open the Automation Centre</a></div>' : '') + (r ? '<div class="dash-brief">' + briefingCard(r.preview, { compact: true }) + '</div>' : '');
   };
   function speakBrief() {
     var r = N.cache.briefing, b = r && (r.briefing && r.briefing.day === r.preview.day ? r.preview : r.preview);
@@ -201,18 +201,36 @@
       '<label class="switch"><span class="txt"><b>Show browser pop-ups</b><small>Only if the browser allows them.</small></span><input type="checkbox" data-setting="novaPopups"' + (J.data.settings.novaPopups !== false ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label>' +
       '<div class="btn-row"><button type="button" class="btn small" data-act="dTestNotif">Send a test notification</button></div></article>';
   }
+  /* backups: the latest one in plain words, a restore test that never touches the live data, and what to keep safe */
+  var BK = { busy: false, result: null, error: '' };
+  function backupHTML() {
+    var b = N.cache.backup; if (!b) return '<article class="panel" id="bkPanel"><h2 class="label">Backups</h2>' + J.empty('Loading…') + '</article>';
+    if (!b.available) return '<article class="panel" id="bkPanel"><h2 class="label">Backups</h2><p class="small-text muted">' + esc(b.reason) + '</p></article>';
+    var l = b.last, head;
+    if (!l) head = '<p><b>No backup yet.</b> The Backup job saves one every night at 03:30 (Dubai). To make one now, press "Run now" on the Backup job above.</p>';
+    else head = '<ul class="sources"><li><span class="grow"><b>Latest backup</b><br><span class="small-text">' + esc(H().when(l.createdAt)) + ' (' + (l.ageDays === 0 ? 'today' : l.ageDays === 1 ? 'yesterday' : l.ageDays + ' days ago') + ') · ' + esc(l.size) + ' · ' + b.count + ' kept of up to ' + b.keep + '</span>' + (l.problem ? '<br><span class="small-text">Problem: ' + esc(l.problem) + '.</span>' : '') + '</span>' + J.tag(l.integrity === 'ok' ? 'Checked, good' : 'Damaged', l.integrity === 'ok' ? 'ok' : 'warn') + '</li></ul>';
+    var res = '';
+    if (BK.busy) res = J.empty('Loading…');
+    else if (BK.error) res = '<div class="load-error" role="alert"><b>The test could not run</b><p>' + esc(BK.error) + '</p></div>';
+    else if (BK.result) {
+      var t = BK.result, yours = t.yours ? Object.keys(t.yours).filter(function (k) { return t.yours[k]; }).map(function (k) { return t.yours[k] + ' ' + k; }).join(', ') : '';
+      res = '<div class="bk-result ' + (t.ok ? 'ok' : 'bad') + '" role="status"><b>' + (t.ok ? 'This backup works.' : 'This backup did not pass.') + '</b> ' + esc(t.message) + (t.ok ? ' Your items in it: ' + esc(yours || 'none yet') + '.' : '') + '</div>';
+    }
+    return '<article class="panel" id="bkPanel"><h2 class="label">Backups</h2>' + head + '<div class="btn-row"><button type="button" class="btn" data-act="bkTest"' + (BK.busy || !l ? ' disabled' : '') + '>Test my latest backup</button></div>' + res +
+      '<ul class="small-text bk-advice">' + b.advice.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul></article>';
+  }
   S.automation = {
     render: function () {
       var r = N.cache.schedules;
       if (!r) return J.head('Automation', 'Automation Centre', 'Loading…', '') + J.empty('Loading…');
       return J.head('Automation', 'Automation Centre', 'Jobs that run on the NOVA server at a Dubai time, even with this page closed. Each run is recorded; failed runs are retried, never duplicated.', '') +
-        '<div class="sched-grid">' + r.schedules.map(schedCard).join('') + '</div>' + channelsHTML() +
+        '<div class="sched-grid">' + r.schedules.map(schedCard).join('') + '</div>' + backupHTML() + channelsHTML() +
         '<article class="panel"><h2 class="label">Run history</h2>' + (r.runs.length ? '<div class="table-wrap" tabindex="0" role="region" aria-label="Run history (scrolls sideways)"><table class="cmds runs"><caption class="sr-only">Recent runs</caption><thead><tr><th scope="col">Job</th><th scope="col">When</th><th scope="col">How</th><th scope="col">Result</th><th scope="col">Attempts</th><th scope="col">Details</th></tr></thead><tbody>' +
           r.runs.map(function (x) { return '<tr><td>' + esc(x.name) + '</td><td class="mono">' + esc(H().when(x.startedAt || x.finishedAt)) + '</td><td>' + esc(x.trigger === 'manual' ? 'Run now' : 'Scheduled') + (x.missed ? ' <span class="small-text muted">(' + plural(x.missed, 'missed run') + ' merged)</span>' : '') + '</td><td>' + J.tag(x.status, RUN_TONE[x.status]) + '</td><td>' + x.attempts + '</td><td class="small-text">' + esc(x.error || x.summary || '') + (x.status === 'retrying' && x.nextAttemptAt ? ' Next try ' + esc(H().when(x.nextAttemptAt)) + '.' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<p class="empty">No runs yet. Press "Run now" on a job to try it.</p>') +
         '<p class="small-text muted">Scheduler: ' + (r.scheduler.running ? 'running, checks every ' + r.scheduler.intervalSeconds + ' s' : 'not running in this server process (NOVA_SCHEDULER=off or a test server). "Run now" still works.') + ' · ' + esc(r.scheduler.timeZone) + '</p></article>';
     },
     after: function () {
-      H().stale('automation', [['schedules', '/api/schedules'], ['notifs', '/api/notifications']]);
+      H().stale('automation', [['schedules', '/api/schedules'], ['notifs', '/api/notifications'], ['backup', '/api/backup']]);
       $$('[data-sched]').forEach(function (el) {
         el.addEventListener('change', function () {
           var f = el.getAttribute('data-f'), body = {}; body[f] = f === 'enabled' ? el.checked : el.value;
@@ -258,6 +276,12 @@
     dDelDraft: function (id) { api('DELETE', '/api/email/drafts/' + id).then(function () { return api('GET', '/api/email/' + D.emailSel); }).then(function (m) { N.cache.mail = m; J.render(false); }).catch(fail); },
     dSendDraft: function (id) { api('POST', '/api/email/drafts/' + id + '/send', {}).catch(function (e) { J.toast(e.message); }); },
     dTrack: function (id) { api('POST', '/api/email/' + id + '/track', {}).then(function (r) { J.toast(r.direction === 'owed_to_me' ? 'Tracking their promise in ProofLoop (owed to you).' : 'Tracking your reply in ProofLoop.'); N.cache.pl = null; return reloadEmail(); }).catch(fail); },
+    bkTest: function () {
+      if (BK.busy) return; BK.busy = true; BK.error = ''; BK.result = null; J.render(false);
+      api('POST', '/api/backup/test', {}).then(function (r) { BK.result = r; }).catch(function (e) { BK.error = e.message; }).then(function () {
+        BK.busy = false; J.render(false); var b = $('button[data-act="bkTest"]'); if (b) b.focus({ preventScroll: true });
+      });
+    },
     dRunNow: function (id) { J.toast('Running…'); api('POST', '/api/schedules/' + id + '/run', {}).then(function (r) { J.toast(r.run.name + ': ' + r.run.status + (r.run.summary ? ', ' + r.run.summary : r.run.error ? ', ' + r.run.error : '')); return Promise.all([H().load('schedules', '/api/schedules'), poll(false)]); }).then(function () { J.render(false); }).catch(fail); },
     dAskPerm: function () { if (!('Notification' in window)) return; Promise.resolve(Notification.requestPermission()).then(function () { J.render(false); }); },
     dTestNotif: function () { api('POST', '/api/notifications/test', {}).then(function (r) { J.toast(r.notification ? 'Test sent' + (r.notification.push === 'sent' ? ' (also to your phone).' : r.notification.push && /^failed/.test(r.notification.push) ? '. Phone push failed: ' + r.notification.push.replace('failed: ', '') + '.' : '.') : 'Sent.'); return poll(false); }).catch(fail); }

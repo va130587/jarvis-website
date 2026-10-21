@@ -11,9 +11,10 @@ const crypto = require('crypto');
 const { DatabaseSync } = require('node:sqlite');
 
 const ROOT = path.join(__dirname, '..');
-try { if (fs.existsSync(path.join(ROOT, '.env'))) process.loadEnvFile(path.join(ROOT, '.env')); } catch (e) { /* the environment may already be set */ }
-const DB = process.env.NOVA_DB ? path.resolve(ROOT, process.env.NOVA_DB) : path.join(ROOT, '.nova', 'nova.db');
-const DIR = process.env.NOVA_BACKUP_DIR ? path.resolve(ROOT, process.env.NOVA_BACKUP_DIR) : path.join(ROOT, 'backups');
+// The settings file is read only when this runs as a command, so the NOVA server can use backup() and restore() without side effects.
+if (require.main === module) { try { if (fs.existsSync(path.join(ROOT, '.env'))) process.loadEnvFile(path.join(ROOT, '.env')); } catch (e) { /* the environment may already be set */ } }
+const dbPath = () => process.env.NOVA_DB ? path.resolve(ROOT, process.env.NOVA_DB) : path.join(ROOT, '.nova', 'nova.db');
+const dirPath = () => process.env.NOVA_BACKUP_DIR ? path.resolve(ROOT, process.env.NOVA_BACKUP_DIR) : path.join(ROOT, 'backups');
 const sha = f => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
 const stamp = d => d.toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
 
@@ -37,7 +38,7 @@ function inspect(file) {
 
 function backup(opts) {
   opts = opts || {};
-  const src = opts.db || DB, dir = opts.dir || DIR;
+  const src = opts.db || dbPath(), dir = opts.dir || dirPath();
   if (!fs.existsSync(src)) throw new Error('No database at ' + src + '. Start NOVA once first (npm start).');
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   const out = path.join(dir, 'nova-' + stamp(opts.date || new Date()) + '.db');
@@ -47,7 +48,7 @@ function backup(opts) {
   fs.chmodSync(out, 0o600);
   const info = inspect(out);
   if (info.integrity !== 'ok' || info.version === null) { fs.rmSync(out, { force: true }); throw new Error('The backup failed its check (' + info.integrity + '). Nothing was kept.'); }
-  const manifest = { file: path.basename(out), createdAt: new Date().toISOString(), sha256: sha(out), bytes: fs.statSync(out).size, schemaVersion: info.version, counts: info.counts, note: 'Restore with: npm run restore -- ' + path.relative(ROOT, out) };
+  const manifest = { file: path.basename(out), createdAt: (opts.date || new Date()).toISOString(), sha256: sha(out), bytes: fs.statSync(out).size, schemaVersion: info.version, counts: info.counts, note: 'Restore with: npm run restore -- ' + path.relative(ROOT, out) };
   fs.writeFileSync(out.replace(/\.db$/, '.json'), JSON.stringify(manifest, null, 2), { mode: 0o600 });
   if (opts.keep) prune(dir, opts.keep);
   return Object.assign({ path: out }, manifest);
@@ -61,7 +62,7 @@ function prune(dir, keep) {
 
 function restore(file, opts) {
   opts = opts || {};
-  const target = opts.db || DB, src = path.resolve(file || '');
+  const target = opts.db || dbPath(), src = path.resolve(file || '');
   if (!file || !fs.existsSync(src)) throw new Error('Give the backup file to restore, for example: npm run restore -- backups/nova-20261020-074500.db');
   const info = inspect(src);
   if (info.integrity !== 'ok') throw new Error('That file is damaged (' + info.integrity + '). Nothing was changed.');

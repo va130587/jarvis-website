@@ -89,7 +89,7 @@ test('demo: seeds a separate database once (tasks, notes, memories, nine ProofLo
   const a = seed(app), b = seed(app);
   assert.equal(a.seeded, true); assert.equal(b.seeded, false, 'seeding again adds nothing');
   const n = t => app.db.prepare('SELECT COUNT(*) n FROM ' + t + ' WHERE user_id = ?').get(a.uid).n;
-  assert.equal(n('tasks'), 10); assert.equal(n('notes'), 2, 'one demo note plus the one a ProofLoop scenario creates'); assert.equal(n('memories'), 3); assert.equal(n('commitments'), 9); assert.equal(n('emails'), 10); assert.equal(n('briefings'), 1); assert.equal(n('schedules'), 4); assert.equal(n('notifications'), 1); assert.equal(n('documents'), 3); assert.equal(n('habits'), 2); assert.equal(n('reminders'), 2); assert.equal(n('expenses'), 8);
+  assert.equal(n('tasks'), 10); assert.equal(n('notes'), 2, 'one demo note plus the one a ProofLoop scenario creates'); assert.equal(n('memories'), 3); assert.equal(n('commitments'), 9); assert.equal(n('emails'), 10); assert.equal(n('briefings'), 1); assert.equal(n('schedules'), 5); assert.equal(n('notifications'), 1); assert.equal(n('documents'), 3); assert.equal(n('habits'), 2); assert.equal(n('reminders'), 2); assert.equal(n('expenses'), 8);
   assert.ok(app.db.prepare('SELECT COUNT(*) n FROM commitments WHERE is_demo = 1').get().n === 9 && app.db.prepare('SELECT COUNT(*) n FROM emails WHERE is_demo = 1').get().n === 10, 'all demo items are labelled demo');
   await app.close();
   // the demo script's own entry point

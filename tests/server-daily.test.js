@@ -120,7 +120,7 @@ test('schedules API: edit time and days (validated), run now, history, isolation
   const k = fakeClock(T0);
   const { s, c } = await setup({}, { now: k.now });
   const sch = (await c.get('/api/schedules')).json;
-  assert.deepEqual(sch.schedules.map(x => x.kind), ['briefing', 'deadlines', 'followups', 'email']);
+  assert.deepEqual(sch.schedules.map(x => x.kind), ['briefing', 'deadlines', 'followups', 'backup', 'email']);
   assert.match(sch.scheduler.timeZone, /Asia\/Dubai/);
   const b = sch.schedules[0];
   let r = await c.patch('/api/schedules/' + b.id, { time: '06:45', days: 'weekdays' });
@@ -128,7 +128,7 @@ test('schedules API: edit time and days (validated), run now, history, isolation
   for (const bad of [{ time: '25:00' }, { time: '7:30' }, { days: 'mon' }, { days: '9' }, { enabled: 'yes' }]) assert.equal((await c.patch('/api/schedules/' + b.id, bad)).status, 400, JSON.stringify(bad));
   r = await c.post('/api/schedules/' + b.id + '/run');
   assert.equal(r.json.run.status, 'succeeded'); assert.equal(r.json.run.trigger, 'manual'); assert.match(r.json.run.summary, /nothing due today|clear/i);
-  r = await c.post('/api/schedules/' + sch.schedules[3].id + '/run');
+  r = await c.post('/api/schedules/' + sch.schedules.find(x => x.kind === 'email').id + '/run');
   assert.equal(r.json.run.status, 'skipped'); assert.equal(r.json.run.summary, 'Gmail is not connected.');
   const h = (await c.get('/api/schedules')).json.runs; assert.equal(h.length, 2);
   const m = s.client(); await m.login('mallory@example.com');
