@@ -432,3 +432,8 @@ dialog.tour.no-target { background: rgb(var(--deep-rgb) / .74); }
 .tour-btns { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s4); } .tour-btns .grow { flex: 1; }
 .tour-btns .btn { min-height: 40px; padding-inline: var(--s4); }
 @media (max-width: 900px) { .tour-card:not(.top) { bottom: calc(var(--s4) + 72px + env(safe-area-inset-bottom, 0px)); } }
+
+/* Import / export */
+.imp-h { margin: var(--s3) 0 var(--s2); font-size: var(--fs-16); } .imp-table { margin-bottom: var(--s2); } .imp-table td { font-variant-numeric: tabular-nums; }
+.imp-notes { margin: var(--s2) 0; padding-left: var(--s5); display: grid; gap: var(--s1); color: var(--text-2); } .imp-total { margin: var(--s3) 0; }
+#impPreview:focus, #impDone:focus { outline: none; }

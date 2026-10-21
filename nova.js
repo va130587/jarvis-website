@@ -657,6 +657,7 @@
           (N.install && N.install.can() ? '<button type="button" class="btn small primary" data-act="novaInstall">Install NOVA</button>' : (N.install && N.install.installed() ? '' : '<p class="small-text">In Chrome or Edge: the install icon in the address bar, or menu &gt; "Install NOVA". On iPhone (Safari): Share &gt; "Add to Home Screen". The browser only offers this on https or on this computer (127.0.0.1).</p>')) + '</article>' +
         '<article class="panel"><h2 class="label">Your data</h2><div class="btn-row"><button type="button" class="btn" data-act="novaExport">Download everything (JSON)</button><button type="button" class="btn danger" data-act="novaDeleteMem">Delete all my memories</button><button type="button" class="btn danger" data-act="novaDeleteAll">Delete my account and all data</button></div>' +
           '<p class="small-text muted">NOVA keeps your data until you delete it. An automatic retention schedule is not built yet.</p></article>' +
+        (N.data ? N.data.panel() : '') +
         '<article class="panel"><h2 class="label">Audit log (your last 50 events)</h2>' + (au ? (au.entries.length ? '<ul class="mini-list">' + au.entries.map(function (e) { return '<li><span class="when">' + esc(ago(e.at)) + '</span><span class="what">' + esc(e.action.replace(/_/g, ' ')) + '<small>' + esc(e.detail || '') + '</small></span></li>'; }).join('') + '</ul>' : J.empty('Nothing yet.')) : J.empty('Loading…')) +
           '<p class="small-text muted">Tokens, keys and passwords are removed before anything is logged.</p></article>';
     },

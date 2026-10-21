@@ -32,6 +32,7 @@ const { createRadar } = require('./radar');
 const { createVerify } = require('./verify');
 const { createEffects } = require('./effects');
 const { createCheck } = require('./check');
+const { createPortable } = require('./portable');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -62,6 +63,7 @@ function createApp(over, deps) {
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
   notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router); createCheck(cfg, db, { provider, scheduler }).register(router);
+  const portable = createPortable(cfg, db, { now, memory, kb, plApi }); portable.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
@@ -186,8 +188,10 @@ function createApp(over, deps) {
   });
   router.get('/api/audit', ctx => ({ status: 200, body: { entries: db.prepare('SELECT ts, action, detail FROM audit_log WHERE user_id = ? ORDER BY id DESC LIMIT 50').all(ctx.auth.user.id).map(r => ({ at: r.ts, action: r.action, detail: r.detail })) } }));
   router.get('/api/export', ctx => {
-    const id = ctx.auth.user.id;
-    return { status: 200, headers: { 'Content-Disposition': 'attachment; filename="nova-export.json"' }, body: { exportedAt: now(), user: auth.publicUser(ctx.auth.user),
+    const id = ctx.auth.user.id, fmt = ctx.url.searchParams.get('format') || 'json';
+    if (fmt !== 'json' && fmt !== 'md') throw new HttpError(400, 'Choose the export format: JSON or Markdown.', 'invalid');
+    if (fmt === 'md') return { status: 200, headers: { 'Content-Type': 'text/markdown; charset=utf-8', 'Content-Disposition': 'attachment; filename="nova-export.md"' }, body: Buffer.from(portable.markdown(ctx.auth.user)) };
+    return { status: 200, headers: { 'Content-Disposition': 'attachment; filename="nova-export.json"' }, body: { format: 'nova-export', version: 1, exportedAt: now(), user: auth.publicUser(ctx.auth.user),
       memories: memory.list(id), conversations: db.prepare('SELECT id, title FROM conversations WHERE user_id = ?').all(id).map(c => Object.assign({}, c, { messages: db.prepare('SELECT role, content, created_at FROM messages WHERE conversation_id = ? AND user_id = ? ORDER BY id').all(c.id, id) })),
       tasks: db.prepare('SELECT id, title, due, status, created_at, completed_at FROM tasks WHERE user_id = ? AND deleted_at IS NULL').all(id), notes: db.prepare('SELECT id, text, created_at FROM notes WHERE user_id = ? AND deleted_at IS NULL').all(id),
       commitments: db.prepare('SELECT * FROM commitments WHERE user_id = ?').all(id), schedules: db.prepare('SELECT kind, hour, minute, days, enabled FROM schedules WHERE user_id = ?').all(id),
@@ -256,7 +260,7 @@ function createApp(over, deps) {
         if (o && new URL(o).host !== req.headers.host) throw new HttpError(403, 'Cross-site request blocked.', 'bad_origin');
         if (req.headers['x-nova-csrf'] !== a.session.csrf) throw new HttpError(403, 'Missing or wrong security token. Reload the page.', 'csrf');
       }
-      const ctx = { req, res, url, params: m.params, auth: a, body: ['POST', 'PATCH', 'PUT'].includes(req.method) ? await readJson(req) : {} };
+      const ctx = { req, res, url, params: m.params, auth: a, body: ['POST', 'PATCH', 'PUT'].includes(req.method) ? await readJson(req, m.route.opts.maxBody) : {} };
       const out = await m.route.handler(ctx);
       send(res, out.status, out.body === undefined ? '' : out.body, out.headers);
     } catch (e) {

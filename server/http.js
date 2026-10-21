@@ -40,7 +40,7 @@ function readBody(req, limit) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
     let dead = false;
-    req.on('data', c => { if (dead) return; size += c.length; if (size > limit) { dead = true; chunks.length = 0; reject(new HttpError(413, 'Request too large.', 'too_large')); req.resume(); } else chunks.push(c); });
+    req.on('data', c => { if (dead) return; size += c.length; if (size > limit) { dead = true; chunks.length = 0; reject(new HttpError(413, 'That is too large to send at once. Nothing was changed.', 'too_large')); req.resume(); } else chunks.push(c); });
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
