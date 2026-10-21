@@ -86,7 +86,7 @@
         '<article class="panel"><h2 class="label">Focus today</h2>' + (f ? '<p class="focus-total"><b class="num">' + dur(f.todayMin) + '</b> today · ' + dur(f.weekMin) + ' this week</p>' + (f.today.length ? '<ul class="mini-list">' + f.today.map(function (x) { return '<li><span class="when">' + new Date(x.startedAt).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit' }) + '</span><span class="what">' + esc(x.title) + '<small>' + (x.status === 'running' ? 'running' : x.minutes + ' min · ' + x.status) + '</small></span></li>'; }).join('') + '</ul>' : '<p class="empty">No sessions yet today.</p>') : '…') + '</article></div>' +
         '<article class="panel plan"><div class="panel-head"><h2 class="label">' + (pr.note ? 'Tomorrow' : 'Today') + ' · ' + esc(pr.weekday) + '</h2><span class="small-text muted">' + esc(w.start) + '–' + esc(w.end) + ' Dubai</span></div>' +
           (pr.note ? '<p class="gmail-msg"><span>' + esc(pr.note) + '</span></p>' : '') +
-          '<p class="plan-sum">' + esc(pr.summary) + '</p>' +
+          '<p class="plan-sum">' + esc(pr.summary) + '</p>' + calNote(p) +
           '<div class="plan-opts"><div class="field"><label for="pStart">Start</label><input id="pStart" type="time" value="' + esc(st().planStart || '09:00') + '"></div><div class="field"><label for="pEnd">End</label><input id="pEnd" type="time" value="' + esc(st().planEnd || '18:00') + '"></div>' +
           '<label class="check-chip"><input type="checkbox" id="pLunch"' + (st().planLunch === false ? '' : ' checked') + '>Lunch 13:00–14:00</label></div>' +
           (pr.blocks.length ? '<ol class="timeline-plan" aria-label="Suggested plan">' + pr.blocks.map(blockHTML).join('') + '</ol>' : '<p class="empty">Nothing to plan. Add tasks with dates, or say "remind me to … by Friday".</p>') +
@@ -101,6 +101,30 @@
     }
   };
   function planUrl() { var s = st(); return '/api/plan?start=' + encodeURIComponent(s.planStart || '09:00') + '&end=' + encodeURIComponent(s.planEnd || '18:00') + (s.planLunch === false ? '&lunch=off' : ''); }
+  /* ---- the calendar already in this browser (Google, Outlook, .ics): only the planned day's events are sent, read-only, never stored ---- */
+  function calEvents(day) {
+    if (!J.cal || !J.cal.itemsByDay) return { has: false, list: [] };
+    var c = J.cal.cfg ? J.cal.cfg() : null, has = !!((J.cal.connected && J.cal.connected().length) || (c && c.ics && c.ics.length));
+    if (!has) return { has: false, list: [] };
+    var items = (J.cal.itemsByDay(day, day)[day] || []).filter(function (x) { return x.kind === 'event'; });
+    return { has: true, list: items.map(function (x) { return { title: String(x.title || 'Busy').slice(0, 80), allDay: !!x.allDay, start: x.time || '00:00', end: x.endTime || x.time || '00:00' }; }).slice(0, 40) };
+  }
+  // The plan comes first as usual; if a calendar is set up in this browser, it is asked again with that day's events.
+  N.fetchers['/api/plan'] = function (path) {
+    return api('GET', path).then(function (g) {
+      var cal = calEvents(g.proposal.day);
+      if (!cal.has) { g.calendarState = 'none'; return g; }
+      var s = st();
+      return api('POST', '/api/plan/propose', { start: s.planStart || '09:00', end: s.planEnd || '18:00', lunch: s.planLunch !== false, day: g.proposal.day, events: cal.list })
+        .then(function (r) { r.calendarState = 'used'; return r; }, function () { g.calendarState = 'failed'; return g; });
+    });
+  };
+  function calNote(p) {
+    var t = p.calendarState === 'used' ? (p.proposal.calendar && (p.proposal.calendar.events || p.proposal.calendar.allDay.length) ? 'Planned around your calendar. Events are fixed; NOVA never adds or changes calendar events.' : 'Your calendar has nothing for this day. NOVA never adds or changes calendar events.')
+      : p.calendarState === 'failed' ? 'Your calendar events could not be used this time, so this plan does not include them.'
+      : 'No calendar is connected, so this plan has no meetings in it. Connect one or import an .ics file in <a href="#settings">Tool settings</a>.';
+    return '<p class="small-text muted plan-cal" role="note">' + (p.calendarState === 'none' ? t : esc(t)) + '</p>';
+  }
   function replan() { N.h.load('plan', planUrl()).then(function () { J.render(false); }).catch(function (e) { fail(e); }); }
 
   /* ================= Weekly Insights ================= */
@@ -203,7 +227,7 @@
       J.openForm({ title: 'How long will "' + el.getAttribute('data-title') + '" take?', submit: 'Save', fields: [{ name: 'minutes', label: 'Minutes (5 to 480)', value: el.getAttribute('data-min'), required: true }],
         onSave: function (v) { var n = parseInt(v.minutes, 10); if (!(n >= 5 && n <= 480)) { J.toast('Use a number from 5 to 480.'); return false; } api('PATCH', '/api/tasks/' + id + '/estimate', { minutes: n }).then(function () { J.toast('Saved. The plan uses your estimate now.'); replan(); }).catch(fail); } });
     },
-    fSavePlan: function () { var s = st(); api('POST', '/api/plan', { start: s.planStart || '09:00', end: s.planEnd || '18:00', lunch: s.planLunch !== false }).then(function () { J.toast('Plan saved for today.'); replan(); }).catch(fail); },
+    fSavePlan: function () { var s = st(), body = { start: s.planStart || '09:00', end: s.planEnd || '18:00', lunch: s.planLunch !== false }, p = N.cache.plan; if (p && p.calendarState === 'used') { body.day = p.proposal.day; body.events = calEvents(p.proposal.day).list; } api('POST', '/api/plan', body).then(function () { J.toast('Plan saved for today.'); replan(); }).catch(fail); },
     iSpeak: function () { var r = N.cache.insights; if (!r) return; if (J.voice && J.voice.speak && st().voice) J.voice.speak(r.spoken); else J.toast(r.spoken); }
   });
 

@@ -34,7 +34,8 @@ function createEffects(db, { now }) {
   }
   function planLine(uid, iso, what) {
     const p = plan(uid, iso); if (!p || !Array.isArray(p.blocks)) return null;
-    return 'You have a saved plan for ' + niceDay(iso) + ' (' + plural(p.blocks.filter(b => b.kind !== 'lunch' && b.kind !== 'break').length, 'work block', 'work blocks') + '). ' + what;
+    const busy = p.blocks.filter(b => b.kind === 'event').length;
+    return 'You have a saved plan for ' + niceDay(iso) + ' (' + plural(p.blocks.filter(b => b.kind !== 'lunch' && b.kind !== 'break' && b.kind !== 'event').length, 'work block', 'work blocks') + (busy ? ' around ' + plural(busy, 'busy calendar block', 'busy calendar blocks') : '') + '). ' + what;
   }
 
   const BY_TOOL = {
@@ -87,7 +88,7 @@ function createEffects(db, { now }) {
       for (const r of db.prepare("SELECT text FROM reminders WHERE user_id = ? AND status = 'pending' AND due_at >= ? AND due_at < ?").all(u.id, at - 60e3 + 1, at + 60e3)) out.push('Another reminder is set for the same time: ' + q(r.text) + '.');
       for (const f of db.prepare("SELECT title, started_at, planned_min FROM focus_sessions WHERE user_id = ? AND status = 'running'").all(u.id)) { const end = f.started_at + f.planned_min * 60e3; if (at >= f.started_at && at < end) out.push('A focus session (' + q(f.title) + ') will still be running then; it ends at ' + hm(end) + '.'); }
       const p = plan(u.id, day), m = parts(at).h * 60 + parts(at).mi;
-      for (const b of p && Array.isArray(p.blocks) ? p.blocks : []) if (m >= minOf(b.start) && m < minOf(b.end)) out.push('At that time your saved plan has ' + q(b.title) + ' (' + b.start + ' to ' + b.end + ').');
+      for (const b of p && Array.isArray(p.blocks) ? p.blocks : []) if (m >= minOf(b.start) && m < minOf(b.end)) out.push(b.kind === 'event' ? 'That time clashes with a calendar event in your saved plan (' + b.start + ' to ' + b.end + ').' : 'At that time your saved plan has ' + q(b.title) + ' (' + b.start + ' to ' + b.end + ').');
       return out;
     },
     'expenses.add': (u, i) => {

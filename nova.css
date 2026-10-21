@@ -214,7 +214,7 @@ kbd { font: 500 var(--fs-12)/1.4 var(--mono); padding: 0 var(--s1); border: 1px 
 .blk-time { display: grid; align-content: start; padding-top: var(--s2); color: var(--cyan-2); font-size: var(--fs-14); } .blk-time small { color: var(--dim); font-size: var(--fs-12); }
 .blk-body { display: grid; gap: var(--s1); padding: var(--s2) var(--s3); border: 1px solid var(--line); border-left: 3px solid var(--cyan); background: var(--fill-2); min-width: 0; }
 .blk-body b { overflow-wrap: anywhere; } .blk-body small { color: var(--muted); font-size: var(--fs-12); } .blk-body .btn-row { margin-top: 2px; }
-.blk.k-promise .blk-body { border-left-color: var(--gold); } .blk.k-break .blk-body, .blk.k-lunch .blk-body { border-left-color: var(--dim); border-style: dashed; background: transparent; }
+.blk.k-event .blk-body { border-left-color: var(--violet); background: rgb(var(--violet-rgb) / .08); } .blk.k-promise .blk-body { border-left-color: var(--gold); } .blk.k-break .blk-body, .blk.k-lunch .blk-body { border-left-color: var(--dim); border-style: dashed; background: transparent; }
 @media (max-width: 1100px) { .readouts:has(#focusChip) #voiceChip { display: none; } }
 .focus-chip { display: inline-flex; align-items: center; gap: var(--s1); color: var(--violet-ink); border-color: rgb(var(--violet-rgb) / .6); text-decoration: none; }
 .focus-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 8px var(--violet); animation: orb-breathe 2s ease-in-out infinite; }

@@ -13,6 +13,25 @@ const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 6
 const toMin = s => { const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(s || '')); return m ? +m[1] * 60 + +m[2] : null; };
 const dur = m => m >= 60 ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '') : m + 'm';
 
+// Calendar events for the planned day, sent by the browser with the request (read from the calendar already in your browser).
+// They are used for this one answer and never stored by NOVA. Timed events become fixed blocks; all-day events are only mentioned.
+function cleanEvents(raw) {
+  if (raw === undefined || raw === null) return null;
+  const bad = () => new HttpError(400, 'The calendar events could not be read, so the plan was not changed. Try again without them.', 'invalid');
+  if (!Array.isArray(raw) || raw.length > 40) throw bad();
+  const timed = [], allDay = [];
+  for (const e of raw) {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) throw bad();
+    const title = typeof e.title === 'string' && e.title.trim() ? e.title.replace(/\s+/g, ' ').trim().slice(0, 80) : 'Busy';
+    if (e.allDay === true) { allDay.push(title); continue; }
+    const s = toMin(e.start), en = e.end === '24:00' ? 1440 : toMin(e.end);
+    if (s === null || en === null) throw bad();
+    if (en > s) timed.push({ s, e: en, title });
+  }
+  timed.sort((a, b) => a.s - b.s || a.e - b.e);
+  return { timed, allDay };
+}
+
 // A sensible guess when you have not set an estimate. It is always labelled as a guess.
 function guessMinutes(title) {
   const t = String(title).toLowerCase();
@@ -47,7 +66,11 @@ function createProductivity(cfg, db) {
     tasks.filter(x => x.due && x.due > day && x.due <= soon).sort((a, b) => a.due.localeCompare(b.due)).forEach(x => push({ kind: 'task', taskId: x.id, title: x.title, why: 'Due ' + relDay(x.due, day), est: x.estimate_min }, 2));
     tasks.filter(x => !x.due).sort((a, b) => a.created_at - b.created_at).slice(0, 3).forEach(x => push({ kind: 'task', taskId: x.id, title: x.title, why: 'No date; one of your oldest open tasks', est: x.estimate_min }, 3));
 
-    const blocks = [], unscheduled = []; let cur = from, sinceBreak = 0, lunchDone = !lunch || from >= lunch[1];
+    if (o.eventsDay && o.eventsDay !== day) throw new HttpError(409, 'The planned day changed while your calendar was being read. Try again.', 'day_changed');
+    const ev = o.events || null, busy = [];
+    if (ev) for (const x of ev.timed) { const s = Math.max(x.s, from), e = Math.min(x.e, end); if (e > s) busy.push([s, e, x.title]); }
+    const blocks = [], unscheduled = [], skipped = []; let cur = from, sinceBreak = 0, lunchDone = !lunch || from >= lunch[1];
+    for (const b of busy) blocks.push({ start: hm(b[0]), end: hm(b[1]), kind: 'event', title: b[2], why: 'Fixed: a calendar event', fixed: true });
     // Lunch is protected: a block that would reach into it starts after it, and the lunch block is shown once.
     const pastLunch = (s0, minutes) => {
       if (lunchDone || (s0 < lunch[0] && s0 + minutes <= lunch[0])) return s0;
@@ -57,20 +80,40 @@ function createProductivity(cfg, db) {
     for (const it of items) {
       const minutes = Math.min(it.est || guessMinutes(it.title), 180), guessed = !it.est;
       if (sinceBreak >= 90 && cur + 10 <= end && (lunchDone || cur + 10 <= lunch[0])) { blocks.push({ start: hm(cur), end: hm(cur + 10), kind: 'break', title: 'Short break', why: 'After 90 minutes of focus' }); cur += 10; sinceBreak = 0; }
-      const before = blocks.length, wasDone = lunchDone, s0 = pastLunch(cur, minutes);
+      const before = blocks.length, wasDone = lunchDone; let s0 = pastLunch(cur, minutes);
+      for (let guard = 0; guard < 60; guard++) { const hit = busy.find(b => b[0] < s0 + minutes && b[1] > s0); if (!hit) break; s0 = pastLunch(hit[1], minutes); }      // never over a fixed event
       if (s0 + minutes > end) {
         if (blocks.length > before) { blocks.length = before; lunchDone = wasDone; }        // do not add lunch just for an item that is skipped
+        skipped.push({ it, minutes, guessed });
         unscheduled.push({ title: it.title, why: it.why + '. Needs ' + dur(minutes) + (guessed ? ' (estimated)' : '') + ', which does not fit in the time left.', taskId: it.taskId || null });
         continue;
       }
       blocks.push({ start: hm(s0), end: hm(s0 + minutes), kind: it.kind, title: it.title, why: it.why, minutes, guessed, taskId: it.taskId || null, commitmentId: it.commitmentId || null });
       cur = s0 + minutes + 10; sinceBreak += minutes;
     }
+    // With calendar events there can be free gaps between them: what did not fit in order may still fit in an earlier gap (most urgent first).
+    if (busy.length && skipped.length) {
+      for (const sk of skipped) {
+        const taken = blocks.filter(b => b.kind !== 'break').map(b => [toMin(b.start), toMin(b.end)]).sort((a, b) => a[0] - b[0]);
+        const starts = [from].concat(taken.map(t => t[1])).filter(x => x >= from).sort((a, b) => a - b);
+        const s0 = starts.find(s => s + sk.minutes <= end && !taken.some(t => t[0] < s + sk.minutes && t[1] > s));
+        if (s0 === undefined) continue;
+        blocks.push({ start: hm(s0), end: hm(s0 + sk.minutes), kind: sk.it.kind, title: sk.it.title, why: sk.it.why, minutes: sk.minutes, guessed: sk.guessed, taskId: sk.it.taskId || null, commitmentId: sk.it.commitmentId || null });
+        const i = unscheduled.findIndex(u => u.title === sk.it.title && u.taskId === (sk.it.taskId || null)); if (i >= 0) unscheduled.splice(i, 1);
+      }
+    }
     blocks.sort((a, b) => a.start.localeCompare(b.start));
     const planned = blocks.filter(b => b.minutes).reduce((a, b) => a + b.minutes, 0), windowMin = end - from - (lunch && from < lunch[1] ? lunch[1] - Math.max(from, lunch[0]) : 0);
-    const summary = !items.length ? 'Nothing is due or overdue. Your time is yours: pick something you care about.' :
-      'Planned ' + blocks.filter(b => b.minutes).length + ' of ' + items.length + ' item' + (items.length === 1 ? '' : 's') + ' (' + dur(planned) + ' of focused work)' + (unscheduled.length ? '; ' + unscheduled.length + ' do' + (unscheduled.length === 1 ? 'es' : '') + ' not fit.' : '.') + (blocks[0] ? ' Start with "' + blocks.find(b => b.minutes).title + '" at ' + blocks.find(b => b.minutes).start + '.' : '');
-    return { day, weekday: DAY_NAMES[new Date(day + 'T12:00:00Z').getUTCDay()], window: { start: hm(start), end: hm(end), from: hm(from), lunch: lunch ? [hm(lunch[0]), hm(lunch[1])] : null }, blocks, unscheduled, totals: { plannedMin: planned, freeMin: Math.max(0, windowMin - planned) }, note, summary, generatedAt: t };
+    // minutes taken by events (overlaps counted once, and the lunch hour not counted twice)
+    let busyMin = 0, edge = -1;
+    for (const b of busy) { const s = Math.max(b[0], edge), e = b[1]; if (e > s) { busyMin += e - s; if (lunch) busyMin -= Math.max(0, Math.min(e, lunch[1]) - Math.max(s, lunch[0])); edge = Math.max(edge, e); } }
+    busyMin = Math.max(0, busyMin);
+    const work = blocks.find(b => b.minutes);
+    const cal = ev ? { used: true, events: busy.length, allDay: ev.allDay.slice(0, 10), busyMin } : null;
+    const around = cal && (cal.events || cal.allDay.length) ? ' Planned around ' + (cal.events ? cal.events + ' calendar event' + (cal.events === 1 ? '' : 's') + ' (' + dur(busyMin) + ' busy)' : 'no timed calendar events') + (cal.allDay.length ? ', plus ' + cal.allDay.length + ' all-day event' + (cal.allDay.length === 1 ? '' : 's') + ' that do not block time' : '') + '.' : '';
+    const summary = (!items.length ? 'Nothing is due or overdue. Your time is yours: pick something you care about.' :
+      'Planned ' + blocks.filter(b => b.minutes).length + ' of ' + items.length + ' item' + (items.length === 1 ? '' : 's') + ' (' + dur(planned) + ' of focused work)' + (unscheduled.length ? '; ' + unscheduled.length + ' do' + (unscheduled.length === 1 ? 'es' : '') + ' not fit.' : '.') + (work ? ' Start with "' + work.title + '" at ' + work.start + '.' : '')) + around;
+    return { day, weekday: DAY_NAMES[new Date(day + 'T12:00:00Z').getUTCDay()], window: { start: hm(start), end: hm(end), from: hm(from), lunch: lunch ? [hm(lunch[0]), hm(lunch[1])] : null }, blocks, unscheduled, totals: { plannedMin: planned, freeMin: Math.max(0, windowMin - planned - busyMin) }, calendar: cal, note, summary, generatedAt: t };
   }
 
   /* ---------------- focus sessions ---------------- */
@@ -127,8 +170,18 @@ function createProductivity(cfg, db) {
       const proposal = plan(ctx.auth.user, o), saved = db.prepare('SELECT data, created_at FROM day_plans WHERE user_id = ? AND day = ?').get(ctx.auth.user.id, proposal.day);
       return { status: 200, body: { proposal, saved: saved ? Object.assign(JSON.parse(saved.data), { savedAt: saved.created_at }) : null } };
     });
+    // The same proposal, planned around the calendar events the browser sends for that one day. Read-only: the events are not stored.
+    router.post('/api/plan/propose', ctx => {
+      const b = ctx.body, o = { start: b.start, end: b.end, lunch: b.lunch !== false, events: cleanEvents(b.events), eventsDay: typeof b.day === 'string' ? b.day : undefined };
+      if ((o.start && toMin(o.start) === null) || (o.end && toMin(o.end) === null)) throw new HttpError(400, 'Times must be HH:MM (24-hour, Dubai time).', 'invalid');
+      const proposal = plan(ctx.auth.user, o), saved = db.prepare('SELECT data, created_at FROM day_plans WHERE user_id = ? AND day = ?').get(ctx.auth.user.id, proposal.day);
+      return { status: 200, body: { proposal, saved: saved ? Object.assign(JSON.parse(saved.data), { savedAt: saved.created_at }) : null } };
+    });
     router.post('/api/plan', ctx => {
-      const o = { start: ctx.body.start, end: ctx.body.end, lunch: ctx.body.lunch !== false }, pr = plan(ctx.auth.user, o);
+      const o = { start: ctx.body.start, end: ctx.body.end, lunch: ctx.body.lunch !== false, events: cleanEvents(ctx.body.events), eventsDay: typeof ctx.body.day === 'string' ? ctx.body.day : undefined }, pr = plan(ctx.auth.user, o);
+      // Calendar events are never kept: the saved plan keeps only that the time was busy (no title), and all-day titles are dropped.
+      for (const b of pr.blocks) if (b.kind === 'event') b.title = 'Busy (calendar)';
+      if (pr.calendar) pr.calendar.allDay = pr.calendar.allDay.map(() => 'All-day event');
       db.prepare('INSERT INTO day_plans (user_id, day, data, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id, day) DO UPDATE SET data = excluded.data, created_at = excluded.created_at').run(ctx.auth.user.id, pr.day, JSON.stringify(pr), now());
       audit(db, now, ctx.auth.user.id, 'day_plan_saved', pr.day + ': ' + pr.blocks.length + ' blocks', ctx.req.socket.remoteAddress);
       return { status: 201, body: { saved: pr } };

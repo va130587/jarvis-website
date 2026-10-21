@@ -134,8 +134,11 @@
   // Opening a page is a new visit: it always asks for fresh data (something may have changed elsewhere: another tab, a
   // scheduled job). Only redraws of the page you are on use the 2-second window. Capture phase: runs before the router draws.
   window.addEventListener('hashchange', function () { fetchedAt = {}; }, true);
+  // A page can register its own way of fetching a path (N.fetchers['/api/plan'] = function (path) { ... }), for example to add data from this browser.
+  N.fetchers = {};
+  function get(path) { var f = N.fetchers[path.split('?')[0]]; return f ? f(path) : api('GET', path); }
   function load(key, path) {
-    if (!inflight[path]) { var g = gen, box = inflight; box[path] = api('GET', path).then(function (d) { delete box[path]; if (g === gen) fetchedAt[path] = Date.now(); return { d: d, g: g }; }, function (e) { delete box[path]; throw e; }); }
+    if (!inflight[path]) { var g = gen, box = inflight; box[path] = get(path).then(function (d) { delete box[path]; if (g === gen) fetchedAt[path] = Date.now(); return { d: d, g: g }; }, function (e) { delete box[path]; throw e; }); }
     return inflight[path].then(function (r) { if (r.g >= (shownGen[key] || 0)) { N.cache[key] = r.d; shownGen[key] = r.g; } return N.cache[key]; });   // an older answer never replaces a newer one
   }
   function fresh(key, path) { return N.cache[key] && fetchedAt[path] && Date.now() - fetchedAt[path] < 2000; }
