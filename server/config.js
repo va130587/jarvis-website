@@ -35,6 +35,7 @@ function load(env, over) {
     limits: { auth: { max: +env.NOVA_RATE_AUTH_MAX || 20, perMs: 60e3 }, api: { max: +env.NOVA_RATE_API_MAX || 240, perMs: 60e3 }, chat: { max: +env.NOVA_RATE_CHAT_MAX || 30, perMs: 60e3 }, verify: { max: +env.NOVA_RATE_VERIFY_MAX || 30, perMs: 60e3 } },
     // Encrypts stored account tokens (Gmail). Any long random string; without it NOVA refuses to store tokens. Never commit it.
     secretKey: env.NOVA_SECRET_KEY || '',
+    tour: env.NOVA_TOUR !== 'off',                                  // the first-run tour (on by default; tests switch it off)
     scheduler: { enabled: env.NOVA_SCHEDULER !== 'off', intervalMs: +env.NOVA_SCHEDULER_INTERVAL_MS || 30000 },
     // Phone push through ntfy.sh (free; or your own ntfy server). The topic name is the only secret: anyone who knows it can read the messages.
     ntfy: { url: (env.NOVA_NTFY_URL || 'https://ntfy.sh').replace(/\/$/, ''), topic: env.NOVA_NTFY_TOPIC || '', token: env.NOVA_NTFY_TOKEN || '' },

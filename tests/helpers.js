@@ -4,6 +4,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+process.env.NOVA_TOUR = process.env.NOVA_TOUR || 'off';       // the first-run tour would cover every page these tests drive; tests/tour-e2e.test.js turns it on
 const ROOT = path.join(__dirname, '..');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json', '.ics': 'text/calendar', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain' };
 

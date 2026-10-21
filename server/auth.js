@@ -13,7 +13,7 @@ const rand = n => crypto.randomBytes(n || 32).toString('base64url');
 function createAuth(cfg, db) {
   const now = cfg.now;
 
-  function publicUser(u) { return u && { id: u.id, email: u.email, displayName: u.display_name, personalization: !!u.personalization, autoLowRisk: !!u.auto_low_risk, createdAt: u.created_at }; }
+  function publicUser(u) { return u && { id: u.id, email: u.email, displayName: u.display_name, personalization: !!u.personalization, autoLowRisk: !!u.auto_low_risk, createdAt: u.created_at, tourSeen: !!u.tour_done_at }; }
   function origin(req) { return cfg.baseUrl || ('http://' + (req.headers.host || (cfg.host + ':' + cfg.port))); }
 
   function upsertUser(email, name, sub) {
@@ -59,7 +59,7 @@ function createAuth(cfg, db) {
       return { status: 200, body: {
         authenticated: !!a, user: a ? publicUser(a.user) : null, csrf: a ? a.session.csrf : null,
         authMode: cfg.authMode, googleConfigured: !!(cfg.google.clientId && cfg.google.clientSecret), devLogin: cfg.authMode === 'dev',
-        aiProvider: cfg.ai.provider } };
+        aiProvider: cfg.ai.provider, tour: cfg.tour } };
     });
 
     router.get('/auth/google/start', { public: true }, ctx => {

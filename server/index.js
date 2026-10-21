@@ -177,7 +177,11 @@ function createApp(over, deps) {
       if (typeof ctx.body.personalization !== 'boolean') throw new HttpError(400, 'Choose whether NOVA personalises its answers: on or off.', 'invalid');
       db.prepare('UPDATE users SET personalization = ? WHERE id = ?').run(ctx.body.personalization ? 1 : 0, ctx.auth.user.id);
     }
-    audit(db, now, ctx.auth.user.id, 'profile_updated', Object.keys(ctx.body).filter(k => ['displayName', 'personalization', 'autoLowRisk'].includes(k)).join(','), ctx.req.socket.remoteAddress);
+    if (ctx.body.tour !== undefined) {
+      if (ctx.body.tour !== 'done') throw new HttpError(400, 'The tour can only be marked as finished.', 'invalid');
+      db.prepare('UPDATE users SET tour_done_at = ? WHERE id = ?').run(now(), ctx.auth.user.id);
+    }
+    audit(db, now, ctx.auth.user.id, 'profile_updated', Object.keys(ctx.body).filter(k => ['displayName', 'personalization', 'autoLowRisk', 'tour'].includes(k)).join(','), ctx.req.socket.remoteAddress);
     return { status: 200, body: { user: auth.publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.auth.user.id)) } };
   });
   router.get('/api/audit', ctx => ({ status: 200, body: { entries: db.prepare('SELECT ts, action, detail FROM audit_log WHERE user_id = ? ORDER BY id DESC LIMIT 50').all(ctx.auth.user.id).map(r => ({ at: r.ts, action: r.action, detail: r.detail })) } }));

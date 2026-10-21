@@ -154,7 +154,10 @@ const MIGRATIONS = [
    CREATE TABLE budgets (user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, category TEXT NOT NULL, monthly_fils INTEGER NOT NULL, PRIMARY KEY (user_id, category));`,
   // 8: proof receipts: the fingerprint of every receipt this NOVA issued (so a pasted receipt can be checked), never its content
   `CREATE TABLE receipts (
-     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, commitment_id INTEGER, fingerprint TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL);`
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, commitment_id INTEGER, fingerprint TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL);`,
+  // 9: the first-run tour: when this person finished or skipped it (NULL = not yet). People who already had an account are marked done.
+  `ALTER TABLE users ADD COLUMN tour_done_at INTEGER;
+   UPDATE users SET tour_done_at = created_at;`
 ];
 
 function migrate(db) {
