@@ -25,7 +25,7 @@
       (D.list.length ? '<ul class="notif-list">' + D.list.map(function (n) {
         return '<li class="' + (n.read ? '' : 'unread') + ' k-' + esc(n.kind) + '"><button type="button" class="notif-item" data-act="dOpenNotif" data-id="' + n.id + '"><b>' + esc(n.title) + '</b><span>' + esc(n.body) + '</span><small class="mono">' + esc(H().ago(n.at)) + (n.push === 'sent' ? ' · sent to phone' : /^failed/.test(n.push || '') ? ' · phone push failed' : '') + '</small></button></li>';
       }).join('') + '</ul>' : '<p class="empty">No notifications yet. Your daily briefing and reminders will appear here.</p>') +
-      '<p class="small-text muted notif-foot"><a href="#automation">Notification settings</a></p>';
+      '<p class="small-text muted notif-foot">' + (N.undo && N.undo.count() !== null ? '<a href="#replay" data-undo-link>' + (N.undo.count() ? 'Changes you can undo (' + N.undo.count() + ')' : 'Changes NOVA made for you') + '</a> · ' : '') + '<a href="#automation">Notification settings</a></p>';
   }
   function mountBell() {
     var host = $('.readouts'); if (!host) return;
@@ -40,6 +40,7 @@
     if (D.open) {
       if (!p) { p = document.createElement('div'); p.id = 'novaNotifs'; p.className = 'notif-panel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Notifications'); document.body.appendChild(p); }
       p.innerHTML = panelHTML(); p.hidden = false;
+      H().load('undo', '/api/undo').then(function () { if (D.open) { var q = $('#novaNotifs'), f = q && q.contains(document.activeElement) ? document.activeElement : null, k = f && f.getAttribute('data-act'), id = f && f.getAttribute('data-id'); if (q) { q.innerHTML = panelHTML(); if (f) { var again = k ? q.querySelector('[data-act="' + k + '"][data-id="' + id + '"]') : null; if (again) again.focus(); } } } }).catch(function () { /* the link just does not show */ });
       var first = p.querySelector('button'); if (first) first.focus();
     } else if (p) p.hidden = true;
     var b = $('#novaBell'); if (b) b.setAttribute('aria-expanded', String(D.open));

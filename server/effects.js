@@ -102,6 +102,47 @@ function createEffects(db, { now }) {
   function effects(user, tool, input, runId) {
     try { const f = BY_TOOL[tool]; return f ? f(user, input || {}, runId).map(s => clip(s, 260)) : []; } catch (e) { return null; }
   }
-  return { effects };
+
+  // The same kind of facts for UNDOING a change: what else the undo touches, and what it does not bring back. `o` is what the original action returned.
+  const UNDO = {
+    'tasks.create': (u, o) => {
+      const out = [], t = task(u.id, o.id); if (!t) return out;
+      for (const c of linked(u.id, t.id)) if (open(c)) out.push('Its ProofLoop commitment ' + q(c.title) + ' (#' + c.id + ') will be cancelled too.');
+      const p = plan(u.id, today()), b = p && Array.isArray(p.blocks) ? p.blocks.find(x => x.taskId === t.id) : null;
+      if (b) out.push('It is a block in your saved plan for today (' + b.start + ' to ' + b.end + '); the plan is not changed.');
+      return out;
+    },
+    'tasks.complete': (u, o) => {
+      const out = [], t = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(o.id, u.id); if (!t) return out;
+      for (const c of linked(u.id, t.id)) if (c.status === 'completed') out.push('Your ProofLoop commitment ' + q(c.title) + ' (#' + c.id + ') was closed when this task was marked done. Undoing does not reopen it: it stays Completed.');
+      return out;
+    },
+    'tasks.delete': (u, o) => {
+      const out = [], t = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(o.id, u.id); if (!t) return out;
+      for (const c of linked(u.id, t.id)) if (open(c)) out.push('Your ProofLoop commitment ' + q(c.title) + ' (#' + c.id + ') was never closed, so it stays ' + LABEL[c.status] + '.');
+      if (t.due && t.due < today() && t.status === 'open') out.push('Its date (' + t.due + ') has passed, so it will be overdue as soon as it is back.');
+      return out;
+    },
+    'commitments.create': (u, o) => {
+      const c = db.prepare('SELECT task_id FROM commitments WHERE id = ? AND user_id = ?').get(o.id, u.id), out = [];
+      if (c && c.task_id) { const t = task(u.id, c.task_id); if (t && t.status === 'open') out.push('Its linked task #' + t.id + ' ' + q(t.title) + ' stays open; only the commitment is cancelled.'); }
+      return out;
+    },
+    'reminders.create': (u, o) => { const r = db.prepare('SELECT text, due_at FROM reminders WHERE id = ? AND user_id = ?').get(o.id, u.id); return r ? ['The reminder ' + q(r.text) + ' for ' + hm(r.due_at) + ' will not go off.'] : []; },
+    'expenses.add': (u, o) => {
+      const e = db.prepare('SELECT amount_fils, day FROM expenses WHERE id = ? AND user_id = ?').get(o.id, u.id), out = [];
+      const b = db.prepare("SELECT monthly_fils FROM budgets WHERE user_id = ? AND category = 'total'").get(u.id);
+      if (e && b && e.day.slice(0, 7) === today().slice(0, 7)) {
+        const month = today().slice(0, 7), spent = db.prepare('SELECT COALESCE(SUM(amount_fils), 0) s FROM expenses WHERE user_id = ? AND deleted_at IS NULL AND day >= ? AND day <= ?').get(u.id, month + '-01', month + '-31').s, pct = f => Math.round(100 * f / b.monthly_fils);
+        out.push('This month\'s spending goes from ' + aed(spent) + ' to ' + aed(spent - e.amount_fils) + ' of your ' + aed(b.monthly_fils) + ' budget (' + pct(spent) + '% to ' + pct(spent - e.amount_fils) + '%).');
+      }
+      return out;
+    },
+    'habits.check': (u, o) => { const h = db.prepare('SELECT name FROM habits WHERE id = ? AND user_id = ?').get(o.id, u.id); return h ? ['The habit ' + q(h.name) + ' will show as not done on ' + niceDay(o.day) + '.'] : []; }
+  };
+  function undoEffects(user, tool, output) {
+    try { const f = UNDO[tool]; return f ? f(user, output || {}).map(s => clip(s, 260)) : []; } catch (e) { return null; }
+  }
+  return { effects, undoEffects };
 }
 module.exports = { createEffects };

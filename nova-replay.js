@@ -38,7 +38,7 @@
     }).join('') + '</ol>';
   }
 
-  S.replay = {
+  var page = {
     render: function () {
       var d = day(), today = dubaiToday(), r = N.cache[key(d)];
       var head = J.head('Review', 'Day Replay', 'What NOVA did on a day, in order, from its own records. Read-only: nothing here changes anything.', '');
@@ -54,11 +54,16 @@
       return head + controls + '<article class="panel">' + eventsHTML(r, m) + (r.truncated ? '<p class="small-text muted">Showing the first ' + r.events.length + ' of ' + r.total + ' events.</p>' : '') + '</article>';
     },
     after: function () {
-      N.h.stale('replay', [[key(), url()]]);
+      N.h.stale('replay', [[key(), url()], ['undo', '/api/undo']]);
       var sl = $('#rpTime'), dt = $('#rpDay'), r = N.cache[key()];
       if (sl && r) sl.addEventListener('input', function () { R.min = +sl.value; paint(r, R.min); });
       if (dt) dt.addEventListener('change', function () { if (/^\d{4}-\d{2}-\d{2}$/.test(dt.value) && dt.value <= dubaiToday()) go(dt.value); });
     }
+  };
+  // The page is the day, then the Undo list (the last 20 changes, whatever the day shown).
+  S.replay = {
+    render: function () { return page.render() + (N.undo ? N.undo.panel() : ''); },
+    after: function () { page.after(); }
   };
   // Move the marker without redrawing the page: only the quiet/full look of the rows, the readout and the strip marker change.
   function paint(r, m) {
