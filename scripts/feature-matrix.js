@@ -12,7 +12,7 @@ const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const covered = re => tests.filter(t => re.test(t.s)).map(t => t.f);
 
 const PAGES = [['dashboard', 'Dashboard'], ['briefing', 'Daily Briefing'], ['chat', 'NOVA Chat'], ['voice', 'Voice Assistant'], ['email', 'Smart Email'], ['hub', 'Tasks and Calendar'], ['focus', 'Focus and Planner'], ['life', 'Life Tracker'],
-  ['proofloop', 'ProofLoop'], ['insights', 'Weekly Insights'], ['automation', 'Automation Centre'], ['identity', 'Personal Identity'], ['memory', 'Memory Vault'], ['knowledge', 'Knowledge Base'], ['usage', 'AI Usage and Cost'], ['connections', 'Connected Apps'], ['security', 'Security and Settings']];
+  ['proofloop', 'ProofLoop'], ['insights', 'Weekly Insights'], ['replay', 'Day Replay'], ['automation', 'Automation Centre'], ['identity', 'Personal Identity'], ['memory', 'Memory Vault'], ['knowledge', 'Knowledge Base'], ['usage', 'AI Usage and Cost'], ['connections', 'Connected Apps'], ['security', 'Security and Settings']];
 const PHRASES = [['who am I', 'rules'], ['remember that I like green tea', 'rules'], ['add a task to call HR by friday', 'tasks.create'], ['what are my tasks', 'tasks.list'], ['mark call HR done', 'tasks.complete'], ['delete task call HR', 'tasks.delete'],
   ['add a note that the lab is closed', 'notes.create'], ['search my memories for tea', 'memory.search'], ['forget green tea', 'memory.delete'], ['Omar owes me the final figures by Thursday', 'commitments.create'], ['what is overdue', 'commitments.list'],
   ['I sent the proposal', 'commitments.confirm'], ['brief me', 'briefing.today'], ['any important emails?', 'email.list'], ['what do my notes say about the visa renewal', 'kb.search'], ['plan my day', 'plan.today'], ['how was my week', 'insights.week'],

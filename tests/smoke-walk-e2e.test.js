@@ -39,6 +39,7 @@ const STEPS = {
   life: async p => { await p.fill('#lifeQ', 'how much did I spend this month'); await p.press('#lifeQ', 'Enter'); await p.waitForSelector('.cap-reply'); },
   proofloop: async p => { await p.locator('button[data-act="plOpen"]').first().click(); await p.waitForSelector('#formDialog[open]'); await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('#formDialog[open]')); },
   insights: async p => { await p.waitForSelector('.chart'); await p.focus('#chDone .bm'); await p.waitForSelector('#chDone .tip:not([hidden])'); },
+  replay: async p => { await p.waitForSelector('#rpTime'); await p.focus('#rpTime'); await p.keyboard.press('Home'); await p.waitForSelector('#rpReadout'); },
   automation: async p => { await p.waitForSelector('.sched'); },
   identity: async p => { await p.waitForSelector('main h1'); },
   memory: async p => { await p.waitForSelector('main h1'); },
@@ -49,7 +50,7 @@ const STEPS = {
 };
 
 for (const [width, theme] of [[390, 'dark'], [768, 'dark'], [1024, 'dark'], [1440, 'dark'], [390, 'light'], [1440, 'light']]) {
-  test('smoke walk at ' + width + ' px, ' + (theme === 'light' ? 'Daylight' : 'Deep Space') + ' theme: all 17 pages are clean after their main interaction', async () => {
+  test('smoke walk at ' + width + ' px, ' + (theme === 'light' ? 'Daylight' : 'Deep Space') + ' theme: all 18 pages are clean after their main interaction', async () => {
     const init = theme === 'light' ? "try { localStorage.setItem('nova.theme', 'light'); } catch (e) {}" : undefined;
     const { page, ctx, errors } = await H.openApp(browser, { base, hash: '', width, height: width === 390 ? 844 : 900, init });
     const failed = [];

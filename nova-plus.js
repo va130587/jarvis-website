@@ -80,11 +80,12 @@
   }
 
   /* ================= Command palette (Ctrl+K) ================= */
-  var PAGES = [['dashboard', 'Dashboard'], ['briefing', 'Daily Briefing'], ['chat', 'NOVA Chat'], ['voice', 'Voice Assistant'], ['email', 'Smart Email'], ['hub', 'Tasks and Calendar'], ['focus', 'Focus and Planner'], ['life', 'Life Tracker'], ['proofloop', 'ProofLoop'], ['insights', 'Weekly Insights'], ['automation', 'Automation Centre'], ['identity', 'Personal Identity'], ['memory', 'Memory Vault'], ['knowledge', 'Knowledge Base'], ['usage', 'AI Usage and Cost'], ['connections', 'Connected Apps'], ['security', 'Security and Settings']];
+  var PAGES = [['dashboard', 'Dashboard'], ['briefing', 'Daily Briefing'], ['chat', 'NOVA Chat'], ['voice', 'Voice Assistant'], ['email', 'Smart Email'], ['hub', 'Tasks and Calendar'], ['focus', 'Focus and Planner'], ['life', 'Life Tracker'], ['proofloop', 'ProofLoop'], ['insights', 'Weekly Insights'], ['replay', 'Day Replay'], ['automation', 'Automation Centre'], ['identity', 'Personal Identity'], ['memory', 'Memory Vault'], ['knowledge', 'Knowledge Base'], ['usage', 'AI Usage and Cost'], ['connections', 'Connected Apps'], ['security', 'Security and Settings']];
   var ACTIONS = [
     { title: 'Plan my day', sub: 'Focus and Planner', run: function () { location.hash = 'focus'; } },
     { title: 'Start a 25-minute focus session', sub: 'Focus and Planner', run: function () { if (N.focus) N.focus.start({ minutes: 25, title: 'Focus' }); location.hash = 'focus'; } },
     { title: 'How was my week?', sub: 'Weekly Insights', run: function () { location.hash = 'insights'; } },
+    { title: 'What did NOVA do today?', sub: 'Day Replay', run: function () { location.hash = 'replay'; } },
     { title: 'Read my briefing aloud', sub: 'Daily Briefing', run: function () { location.hash = 'briefing'; setTimeout(function () { if (J.actions.dSpeakBrief) J.actions.dSpeakBrief(); }, 600); } },
     { title: 'Start listening (push to talk)', sub: 'Voice', run: function () { location.hash = 'voice'; setTimeout(function () { var b = $('#ptt'); if (b && !b.disabled) b.click(); }, 500); } },
     { title: 'Send a test notification', sub: 'Automation Centre', run: function () { if (J.actions.dTestNotif) J.actions.dTestNotif(); } },
