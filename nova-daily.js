@@ -184,7 +184,7 @@
   var RUN_TONE = { succeeded: 'ok', skipped: 'dim', failed: 'red', retrying: 'gold', running: 'gold', pending: 'dim' };
   function schedCard(s) {
     var l = s.lastRun;
-    return '<article class="panel sched' + (s.enabled ? '' : ' off') + '" data-kind="' + esc(s.kind) + '"><div class="sched-head"><h3 class="label">' + esc(s.name) + '</h3>' +
+    return '<article class="panel sched' + (s.enabled ? '' : ' off') + '" data-kind="' + esc(s.kind) + '"><div class="sched-head"><h2 class="label">' + esc(s.name) + '</h2>' +
       '<label class="switch mini"><span class="sr-only">' + esc(s.name) + ' on</span><input type="checkbox" data-sched="' + s.id + '" data-f="enabled"' + (s.enabled ? ' checked' : '') + '><span class="knob" aria-hidden="true"></span></label></div>' +
       '<p class="small-text muted">' + esc(s.description) + '</p>' +
       '<div class="sched-row"><div class="field"><label for="t' + s.id + '">Time (Dubai)</label><input id="t' + s.id + '" type="time" value="' + esc(s.time) + '" data-sched="' + s.id + '" data-f="time"></div>' +

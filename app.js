@@ -153,7 +153,7 @@
   function render(animate) {
     var scr = J.screens[current];
     if (!scr) return;
-    var active = document.activeElement, activeId = active && main.contains(active) ? active.id : '', caret = null, activeSel = null;
+    var active = document.activeElement, activeId = active && main.contains(active) ? active.id : '', caret = null, activeSel = null, onTitle = !!(active && active.matches && active.matches('main h1'));
     if (activeId) { try { caret = active.selectionStart; } catch (e) { caret = null; } }
     else if (active && main.contains(active) && active.getAttribute('data-act')) {   // a button without an id: find it again by what it does
       activeSel = '[data-act="' + active.getAttribute('data-act') + '"]' + (active.hasAttribute('data-id') ? '[data-id="' + CSS.escape(active.getAttribute('data-id')) + '"]' : '');
@@ -173,6 +173,9 @@
     if (!animate && activeSel && document.activeElement === document.body) {
       var same = $$(activeSel.sel, main)[activeSel.n];
       if (same) same.focus({ preventScroll: true });
+    }
+    if (!animate && onTitle && document.activeElement === document.body) {      // the page title had focus (after a page change): keep it there when the page redraws with new data
+      var t = main.querySelector('h1'); if (t) { t.setAttribute('tabindex', '-1'); t.focus({ preventScroll: true }); }
     }
     if (!animate && activeId) {
       var again = document.getElementById(activeId);
@@ -197,7 +200,12 @@
     current = h;
     render(true);
     closeMore();
-    if (!initial) { window.scrollTo(0, 0); main.focus({ preventScroll: true }); }
+    if (!initial) {
+      window.scrollTo(0, 0);
+      var title = main.querySelector('h1');                                  // focus moves to the page title, and the new page is announced politely
+      if (title) { title.setAttribute('tabindex', '-1'); title.focus({ preventScroll: true }); } else main.focus({ preventScroll: true });
+      var say = $('#navAnnounce'); if (say) say.textContent = TITLES[current] + ' page';
+    }
   }
   function badges() {
     var counts = { overdue: J.overdue().length, newjobs: J.jobs ? J.jobs.newJobs().length : 0, newmatches: J.matches ? J.matches.newCount() : 0 };

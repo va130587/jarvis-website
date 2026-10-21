@@ -56,6 +56,10 @@
   color-scheme: dark;
 }
 
+/* ---- Larger text (Security and Settings): every text size is a token, so the whole page follows ---- */
+:root[data-text="125"] { --fs-12: 15px; --fs-14: 17.5px; --fs-16: 20px; --fs-20: 25px; --fs-25: 31px; --fs-31: 39px; --fs-39: 49px; }
+:root[data-text="150"] { --fs-12: 18px; --fs-14: 21px; --fs-16: 24px; --fs-20: 30px; --fs-25: 37.5px; --fs-31: 46.5px; --fs-39: 58.5px; }
+
 /* ---- Daylight ---- */
 :root[data-theme="light"] {
   --bg-top: #f5f8fc;
@@ -91,3 +95,26 @@
 @media (prefers-reduced-motion: reduce) {
   :root { --t-fast: 0ms; --t-med: 0ms; --t-slow: 0ms; }
 }
+
+/* ---- High contrast (Security and Settings): plain, strong text and edges in either theme; the ambient effects stop ---- */
+:root[data-contrast="high"] {
+  --text: #ffffff; --text-2: #f1f6fc; --text-3: #dfe9f5; --muted-rgb: 223 233 245;
+  --edge: rgb(var(--edge-rgb) / .7); --edge-hi: rgb(var(--edge-rgb) / 1);
+  --glass: rgb(var(--surface-rgb) / .97);
+  --cyan: #7be4ff; --cyan-ink: #c9f4ff; --warn: #ffd98a; --danger: #ff9a9a; --ok: #7df0b8; --violet: #bda8ff;
+  --fx-opacity: 0;
+}
+:root[data-theme="light"][data-contrast="high"] {
+  --text: #000000; --text-2: #0a1424; --text-3: #162338; --muted-rgb: 10 20 36;
+  --edge: rgb(var(--edge-rgb) / .75); --edge-hi: rgb(var(--edge-rgb) / 1);
+  --glass: rgb(var(--surface-rgb) / 1);
+  --cyan: #00476b; --cyan-ink: #003a58; --warn: #5c3b00; --danger: #8c120b; --ok: #05502f; --violet: #3d2799;
+  --warn-ink: #4a3000; --danger-ink: #6e0f0a; --ok-ink: #04401f; --violet-ink: #2f1d7a;
+}
+:root[data-contrast="high"] :focus-visible { outline-width: 3px; outline-offset: 3px; }
+:root[data-contrast="high"] .panel, :root[data-contrast="high"] .btn, :root[data-contrast="high"] input, :root[data-contrast="high"] select, :root[data-contrast="high"] textarea { border-color: var(--edge-hi); }
+
+/* High contrast: the pieces that used softer colours get the strongest ones too */
+:root[data-contrast="high"] .avatar { background: hsl(var(--h) 55% 16%); }
+:root[data-contrast="high"] .item.done .item-title, :root[data-contrast="high"] .ev.done, :root[data-contrast="high"] .mev.done, :root[data-contrast="high"] .rem-list.done li { opacity: 1; color: var(--text-2); }
+:root[data-contrast="high"] .red, :root[data-contrast="high"] .red-text, :root[data-contrast="high"] .item.late .due { color: var(--danger-ink); }

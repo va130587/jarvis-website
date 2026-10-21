@@ -13,6 +13,14 @@
   if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
 })();
 
+// Display options (Security and Settings): high contrast and larger text, remembered like the theme and applied before the first paint.
+(function () {
+  try {
+    if (localStorage.getItem('nova.contrast') === 'high') document.documentElement.setAttribute('data-contrast', 'high');
+    var t = localStorage.getItem('nova.text'); if (t === '125' || t === '150') document.documentElement.setAttribute('data-text', t);
+  } catch (e) {}
+})();
+
 // The app shell stays invisible until NOVA has drawn its own layout (or knows it runs without its server), so nothing jumps
 // on first load. nova.js removes the class; this timer is only a safety net.
 (function () {
