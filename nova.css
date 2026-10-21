@@ -337,3 +337,9 @@ main.enter > *:nth-child(n+5) { animation-delay: 60ms; }
 .center { align-content: start; }   /* a taller neighbour must not stretch the rows (it made "Start listening" 70 px tall), and nothing moves when it grows */
 .ptt { min-width: 200px; min-height: 48px; margin-top: var(--s3); border-radius: var(--r-full); }
 .center .seg-field { justify-content: center; gap: var(--s2); margin-top: var(--s3); }
+
+/* ---------- static mode note (no NOVA server): the Classic tools only ---------- */
+.static-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); margin: var(--s3) var(--s8) 0; padding: var(--s3) var(--s4); border: 1px solid rgb(var(--warn-rgb) / .5); border-radius: var(--r-md); background: var(--gold-soft); color: var(--text); font-size: var(--fs-14); }
+.static-banner[hidden] { display: none; }
+.static-banner code { font-family: var(--mono); color: var(--warn-ink); }
+@media (max-width: 900px) { .static-banner { margin: var(--s3) var(--s4) 0; } }

@@ -679,7 +679,7 @@
         if (!location.hash || location.hash === '#today') location.hash = 'dashboard'; else J.render(true);
         N.setState('idle');
       })
-      .catch(function () { N.mode = 'standalone'; reveal(); });
+      .catch(function () { N.mode = 'standalone'; var b = $('#staticBanner'); if (b) b.hidden = false; reveal(); });
   }
   var NOVA_VIEWS = NOVA_NAV.map(function (n) { return n[0]; });
   document.addEventListener('jarvis:rendered', function (e) { document.body.setAttribute('data-group', NOVA_VIEWS.indexOf(e.detail.view) >= 0 ? 'nova' : 'tools'); });
