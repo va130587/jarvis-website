@@ -56,6 +56,37 @@
     }
   }
 
+  // What this browser can do with voice, in one plain sentence that ends with the fix. Detected from the browser's own features, with its name only for the wording.
+  // level: 'full' (listen and speak), 'partial' (Safari), 'typing' (cannot listen: type or paste; replies can still be read aloud if it can speak).
+  function browser(win) {
+    var nav = (win && win.navigator) || {}, ua = String(nav.userAgent || ''), listens = !!(win && (win.SpeechRecognition || win.webkitSpeechRecognition)), speaks = !!(win && win.speechSynthesis);
+    var name = /Edg(e|A|iOS)?\//.test(ua) ? 'Edge' : /Firefox\/|FxiOS\//.test(ua) ? 'Firefox' : /OPR\/|Opera/.test(ua) ? 'Opera' : /Chrome\/|CriOS\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '';
+    var read = speaks ? ' NOVA can still read its answers aloud.' : ' This browser cannot read answers aloud either, so replies are text only.';
+    var level, text;
+    if (!listens) {
+      level = 'typing';
+      text = (name ? name + ' cannot' : 'This browser cannot') + ' listen to your voice. Type or paste your request below.' + read + ' To talk to NOVA, use Chrome or Edge.';
+    } else if (name === 'Safari') {
+      level = 'partial';
+      text = 'In Safari, listening works only partly (and only with Dictation turned on in your Mac or iPhone settings), while reading answers aloud works' + (speaks ? '' : ' if the browser allows it') + '. If the button does nothing, type or paste below, or use Chrome or Edge.';
+    } else if (name === 'Chrome' || name === 'Edge' || name === 'Opera') {
+      level = 'full';
+      text = name + ' can both listen and speak. It sends your voice to ' + (name === 'Edge' ? 'Microsoft' : name === 'Opera' ? 'its maker' : 'Google') + ' to turn it into words, so listening needs the internet; typing always works.';
+    } else {
+      level = 'full';
+      text = 'This browser says it can listen' + (speaks ? ' and speak' : '') + '. If the listening button does not work, type or paste below, or use Chrome or Edge.';
+    }
+    return { name: name || 'Unknown browser', level: level, listens: listens, speaks: speaks, text: text };
+  }
+
+  // Microphone self-test: how loud (0 to 100) a block of audio is, and what the loudest moment means. Nothing here records or sends audio.
+  function level(rms) { if (!(rms > 0)) return 0; var db = 20 * Math.log10(rms); return Math.max(0, Math.min(100, Math.round((db + 60) / 60 * 100))); }
+  function micVerdict(peak) {
+    if (peak >= 20) return { ok: true, title: 'Your microphone works.', text: 'NOVA heard sound (the loudest moment reached ' + peak + '%). If speech recognition still struggles, check the language setting on this page.' };
+    if (peak >= 6) return { ok: false, title: 'Your microphone is very quiet.', text: 'NOVA heard something faint (the loudest moment reached ' + peak + '%). Move closer, raise the microphone volume in your system settings, and test again.' };
+    return { ok: false, title: 'NOVA heard almost nothing.', text: 'Check that the microphone is not muted, that it is the input your computer is using, and that you spoke during the test. Then test again.' };
+  }
+
   // The browser's recogniser behind a small contract:  start({lang, onStart, onInterim(text), onFinal(text, confidence), onError(code), onEnd()}) -> { stop(), abort() }
   function createBrowserProvider(win) {
     var SR = win && (win.SpeechRecognition || win.webkitSpeechRecognition);
@@ -84,5 +115,5 @@
   }
   function avg(f) { var c = f.map(function (x) { return x.confidence; }).filter(function (x) { return x !== null; }); return c.length ? c.reduce(function (a, b) { return a + b; }, 0) / c.length : null; }
 
-  return { LANGS: LANGS, score: score, pick: pick, report: report, isNatural: natural, parseApproval: parseApproval, explain: explain, createBrowserProvider: createBrowserProvider };
+  return { LANGS: LANGS, score: score, pick: pick, report: report, isNatural: natural, parseApproval: parseApproval, explain: explain, createBrowserProvider: createBrowserProvider, browser: browser, level: level, micVerdict: micVerdict };
 });

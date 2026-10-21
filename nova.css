@@ -449,3 +449,10 @@ dialog.tour.no-target { background: rgb(var(--deep-rgb) / .74); }
 .un-what { min-width: 0; flex: 1 1 220px; overflow-wrap: anywhere; } .un-act { flex: 0 1 280px; text-align: right; } .un-reason { text-align: left; display: block; }
 .fx-list { margin: 0; padding-left: var(--s4); } .preview-dl dt { font-weight: 600; margin-top: var(--s2); } .preview-dl dd { margin: 0; color: var(--text-2); }
 @media (max-width: 600px) { .un-act { flex-basis: 100%; text-align: left; } }
+
+/* Voice: browser sentence and microphone test */
+.vbrowser { margin: var(--s2) 0 0; max-width: 46ch; }
+.mic-meter { height: 14px; margin: var(--s3) 0 var(--s1); border: 1px solid var(--edge); border-radius: var(--r-full); background: rgb(var(--deep-rgb) / .6); overflow: hidden; }
+.mic-meter i { display: block; height: 100%; width: 0; background: var(--cyan); }
+.mic-read { margin: 0 0 var(--s2); font-size: var(--fs-14); font-variant-numeric: tabular-nums; }
+.mic-result { margin: var(--s3) 0; padding: var(--s3) var(--s4); border: 1px solid var(--edge); border-radius: var(--r-md); } .mic-result.ok { border-color: rgb(var(--ok-rgb) / .55); } .mic-result.bad { border-color: rgb(var(--warn-rgb) / .6); }
