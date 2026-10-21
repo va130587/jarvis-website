@@ -1,0 +1,8 @@
+{
+  "allowLargeFiles": [
+    "vendor/msal-browser-4.30.0.min.js"
+  ],
+  "firstPageBytes": 383103,
+  "measuredOn": "2026-10-21",
+  "note": "The first page is everything the browser downloads before sign-in, as sent (gzip). The guard fails if it grows more than 15% above this."
+}

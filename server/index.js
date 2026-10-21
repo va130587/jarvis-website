@@ -35,6 +35,7 @@ const { createCheck } = require('./check');
 const { createPortable } = require('./portable');
 const { createBackups } = require('./backups');
 const { createUndoList } = require('./undolist');
+const { createStatic } = require('./static');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -63,7 +64,7 @@ function createApp(over, deps) {
   const kb = createKb(cfg, db), prod = createProductivity(cfg, db), orbit = createOrbit(cfg, db, { now }), replay = createReplay(cfg, db, { now }), radar = createRadar(cfg, db, { now });
   registerDailyTools();
   const router = new Router();
-  const hdr = securityHeaders(cfg);
+  const hdr = securityHeaders(cfg), files = createStatic({ root: cfg.root, types: TYPES, headers: hdr });
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
   notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router); createCheck(cfg, db, { provider, scheduler }).register(router);
@@ -246,10 +247,7 @@ function createApp(over, deps) {
     if (pathname === '/') pathname = '/index.html';
     if (pathname === '/verify') pathname = '/verify.html';           // the public receipt check
     if (!STATIC_OK.test(pathname) || pathname.includes('..')) return send(res, 404, 'Not found', hdr);
-    const file = path.join(cfg.root, pathname);
-    if (!file.startsWith(cfg.root + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, 'Not found', hdr);
-    res.writeHead(200, Object.assign({ 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' }, hdr));
-    fs.createReadStream(file).pipe(res);
+    if (!files.serve(req, res, pathname)) return send(res, 404, 'Not found', hdr);
   }
 
   async function onRequest(req, res) {

@@ -33,6 +33,8 @@ jobs:
         run: for f in server/*.js server/*/*.js scripts/*.js; do node --check "$f"; done
       - name: Run all tests
         run: npm test
+      - name: Speed and size guard (first content under 1 s, no layout shift, no 100 ms task, first page within 15% of its saved size, no new file over 200 KB)
+        run: node scripts/perf-guard.js
       - name: Keep screenshots when something fails
         if: failure()
         uses: actions/upload-artifact@v4
