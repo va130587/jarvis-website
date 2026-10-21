@@ -59,6 +59,15 @@ Scale (ratio 1.25): `--fs-12` · `--fs-14` · `--fs-16` · `--fs-20` · `--fs-25
 - **Navigation**: sidebar groups Today · Work · Life · Knowledge · System; on phones a bottom bar with Home, Today, Chat, Tasks and More.
 - **Icons**: one set, 24 px grid, 1.6 px round strokes, `currentColor`.
 
+## Newest components
+
+- **Promise Orbit** (`.orbit`, `.odot`): dots on the dashboard orb. State is shape + colour + words: overdue = red ring with "!", waiting = dashed amber ring, verified = green ring with a tick, open = cyan ring. Turns one small step a second (`steps(240)`), pauses on hover/focus, when the tab is hidden and with reduced motion.
+- **Day Replay** (`.rp-*`): an hourly activity strip, a range slider with a marker, and a list of events; rows later than the marker use a dashed edge and the secondary text colour (never lower contrast than AA).
+- **Life Radar** (`.rd-*`): `--chart-1` (this week, solid line, filled) and `--chart-2` (last week, dashed, hollow points), chosen with the colour-blind check; text in text tokens; every spoke focusable.
+- **Receipt check** (`verify.css`): the same tokens on a standalone page.
+- **Effects** (`.preview .fx`): a row in the Future Preview card.
+- Tokens added: `--chart-1` to `--chart-6` (the categorical order, one per variable).
+
 ## Components (all in app.css / nova.css)
 
 Panel (`.panel`, glass, `--r-md`, `--e1`, edge glow on hover) · Button (`.btn`, `.primary`, `.gold`, `.ghost`, `.danger`, `.danger-solid`, `.small`) · Field (`.field`, inputs, select, textarea) · Chip and tag · Stat tile (`.stat`) · List item (`.item`) · Empty state (`.empty`) · Error state (`.load-error`) · Toast · Dialog · Preview card (`.preview`) · Orb (`.nova-orb`, 11 states) · Chart (`.chart`).

@@ -62,6 +62,8 @@ NOVA tries its fixed rules first, then the local model with the approved tools. 
 
 **Look and feel:** two themes, **Deep Space** (dark, the default) and **Daylight** (light), chosen in Security and Settings → Appearance and remembered in the browser. Glass panels, an orb that glides between its 11 states, a slow ambient light that stops when the tab is hidden or motion is reduced, page changes under 250 ms, skeletons while loading. Every page says what went wrong when it cannot load (offline, session ended, too many requests, server error) and offers **Try again**. Self-hosted fonts (nothing is downloaded from other sites). Measured: first content in about 0.2 s, no layout shift, no task over 100 ms, frames costing about 3 ms (60 fps needs under 16.7).
 
+**Five newer features:** **Promise Orbit** (the dashboard orb is circled by dots for your open promises, deadlines and tasks; distance = how soon, state by colour, shape and words), **Day Replay** (what NOVA did on any day, in order, with a time slider; read-only), **Life Radar** (Weekly Insights: five measures from 0 to 100, this week against last, each rule written under the chart; "not enough data yet" instead of invented numbers), **verifiable proof receipts** (a fingerprint on every receipt, a QR code on the printable one, and a public check page at `/verify` that says whether this NOVA issued exactly that text) and **"What happens if"** (every approval preview lists what else the change touches, from your own data). The QR codes are made by NOVA's own small encoder; no outside service or runtime package is used (the test suite uses one test-only QR reader, jsQR).
+
 **Static mode:** if you open the same pages from GitHub Pages (no server), NOVA's server features are simply absent and the Classic tools work as before.
 
 ---
@@ -457,6 +459,7 @@ NOVA itself is checked end to end as well (see `NOVA_TEST_REPORT.md` for the ful
 - **Races:** double-clicked Approve runs once, two approvals at the same moment, 40 fast page switches, focus timer, keyboard focus kept through background redraws.
 - **Performance:** first content, layout shift, long tasks and frame cost at 390 and 1440 px.
 - **Feature matrix:** every page, API route, phrase and scheduled job must have a test.
+- **The five newest features:** Promise Orbit, Day Replay, Life Radar, receipts with QR and the check page, and Effects each have server tests and browser tests at four widths in both themes with axe; the QR encoder is decoded by an independent reader.
 
 To run them, install Node.js, then in this folder:
 

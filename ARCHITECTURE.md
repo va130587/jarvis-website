@@ -164,3 +164,12 @@ Tool registry and approvals, ProofLoop, Gmail and Outlook, scheduler, speech pro
 - **Task buttons:** `POST /api/actions` accepts only whitelisted tools (`tasks.complete`, `tasks.delete`) for the signed-in user's own tasks and goes through the normal agent run, so the preview, approval, verification and undo rules are unchanged.
 - **Redraws keep focus:** `J.render()` restores focus by id, or for buttons without an id by `data-act` + `data-id`.
 - **Motion:** page change 180 ms (+ at most 60 ms stagger); orb colours glide via registered custom properties; the ambient layer moves in steps (3 per second) so the blurred glass above it is not redrawn every frame; everything stops with reduced motion or a hidden tab.
+
+## The five newest features (read-only views, receipts, effects)
+
+- **`server/orbit.js`**: `GET /api/orbit`. Open commitments and tasks, one list (a task that backs a commitment is shown once), overdue first then nearest, 12 shown and the rest counted. Dubai dates. Read-only.
+- **`server/replay.js`**: `GET /api/replay?day=`. One Dubai day of events built from `run_steps` (only the human-meaningful kinds), `commitment_events`, `notifications`, `focus_sessions`, `schedule_runs` and a whitelist of `audit_log` actions; 500 events at most. Read-only.
+- **`server/radar.js`**: `GET /api/radar`. Five measures for this and last Dubai week; a measure without data is `null`. The scoring rules are returned with the numbers so the page can print them.
+- **`server/verify.js`, `server/qr.js`**: proof receipts get a SHA-256 fingerprint of their text; migration 8 adds `receipts(fingerprint UNIQUE, user_id, commitment_id, created_at)`: the fingerprint only, never the content. `POST /api/verify` is public (no session, no CSRF token because it uses no authority), rate limited in its own `verify` group, answers with one of a few fixed messages and never repeats the pasted text. `/verify` serves `verify.html`. `qr.js` is a small QR encoder (byte mode, level M, versions 1 to 10); `tests/qr.test.js` decodes its output with jsQR (a test-only devDependency).
+- **`server/effects.js`**: called by the agent when it stores an approval; adds `effects: string[]` (or `null` if the lookup failed) to the preview. Facts from the database only. The browser shows "No other effects found." for an empty list.
+- **Front end**: `nova-replay.js` (Day Replay), the orbit in `nova.js` (dashboard), the radar in `nova-focus.js` (Weekly Insights), `verify-page.js`.

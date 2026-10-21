@@ -84,6 +84,10 @@ docker run -d --name nova --restart unless-stopped -p 127.0.0.1:8787:8787 -v nov
 
 With `BASE_URL` on https, cookies are marked Secure automatically.
 
+## Proof receipts and the check page
+
+Every proof receipt ends with a fingerprint, and NOVA remembers the fingerprints it issued (never the receipt text). Anyone can check a receipt at `https://your-address/verify`; it needs no sign-in and is rate limited. Set `BASE_URL` (as above) so the QR code on the printable receipt opens that check page; without it the QR code holds just the fingerprint. The check only knows receipts issued by this NOVA, so keep the database (and its backups) for as long as you want old receipts to stay checkable.
+
 ## Backups (do this)
 
 ```bash

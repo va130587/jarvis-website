@@ -1,6 +1,6 @@
 # NOVA Test Report
 
-Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after the hardening and redesign (Phases 0 to 6) on top of Milestones 1 to 8: **364 tests: 363 passed, 0 failed, 1 skipped** (about 8 minutes). Three runs in a row, plus CI on GitHub Actions. Only tests that were executed are listed.
+Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result after the hardening and redesign (Phases 0 to 6) on top of Milestones 1 to 8: **451 tests: 450 passed, 0 failed, 1 skipped** (about 9 minutes), after the five newest features were added. Three runs in a row, plus CI on GitHub Actions. Only tests that were executed are listed.
 
 | Area | File | Tests | What it proves |
 |---|---|---|---|
@@ -33,6 +33,11 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 | Signature look | `tests/signature-e2e.test.js` | 4 pass | five sidebar groups and the phone bar; one greeting on the dashboard and the day's headline in the hero; count-ups end on the real number; skeleton loading with words kept; page change within 250 ms; orb colour transition; ambient layer paused when hidden and still with reduced motion (tokens 0 ms) |
 | Performance | `tests/perf-e2e.test.js` | 2 pass | at 390 and 1440 px with 200 tasks: first contentful paint under 1 s (measured 160 to 270 ms), cumulative layout shift under 0.1 (measured 0.000), no long task over 100 ms while opening 8 pages (none), frame cost median under 8 ms and 95th percentile under 16.7 ms (about 2.5 and 8 ms), measured with the frame-rate cap off |
 | Feature matrix | `tests/feature-matrix.test.js` | 1 pass | every page, API route (93), phrase and scheduled job is exercised by at least one test file (`FEATURE_MATRIX.md`) |
+| Promise Orbit | `tests/server-orbit.test.js`, `tests/orbit-e2e.test.js` | 4 + 13 pass | states, order and wording from known rows; a task that backs a commitment shown once; 12 cap with "+188 more"; Dubai midnight; privacy; read-only; dots match the API; overdue = red + "!" + words; Tab/Enter opens an item, Escape returns focus; empty state; motion pauses (hover, hidden tab, reduced motion); layout and axe at 4 widths in both themes |
+| Day Replay | `tests/server-replay.test.js`, `tests/replay-e2e.test.js` | 3 + 11 pass | every source in time order with plain titles and internal steps left out; Dubai day boundary; bad and future days refused; 500 cap says so; privacy; read-only; slider by keyboard and mouse, readout and aria-valuetext; day buttons; 240 events; no request that changes anything; layout and axe |
+| Life Radar | `tests/server-radar.test.js`, `tests/radar-e2e.test.js` | 3 + 10 pass | each of the five measures from a fixed week with known answers; null for no data; week boundary; privacy; chart outlines told apart without colour, exact numbers on hover and focus, table, rules text, "not enough data yet"; layout and axe |
+| Receipts and QR | `tests/qr.test.js`, `tests/server-verify.test.js`, `tests/verify-e2e.test.js` | 3 + 7 + 12 pass | encoder decoded by jsQR for versions 1 to 10, Arabic, emoji, 60 random strings, and as the SVG in a receipt; same fingerprint for the same receipt; any changed character fails; other-NOVA receipt; hostile input never echoed; 413/415/400; rate limit; no private data in answers; check page under the strict CSP; layout and axe in both themes |
+| What happens if | `tests/server-effects.test.js`, `tests/effects-e2e.test.js` | 8 + 10 pass | each tool's effects from real rows; empty case; read tools have no preview; looking changes nothing; privacy; failing lookup says null; the card in the browser at 4 widths in both themes |
 | Classic tools (unchanged) | earlier files | 144 pass, 1 skipped | calendar, .ics, collector, matching, Jobs for you, voice commands, Smart mode (mocked), layout, axe |
 
 ## Defects found and fixed during the hardening and redesign (Phases 0 to 6)
@@ -48,6 +53,18 @@ Run: `npm test` on Node 22.22, Playwright 1.56 + Chromium, Linux sandbox. Result
 - The top bar's clock went off-screen at 768 px on some classic pages (CI failure on Phase 1).
 - The first load shifted the layout (0.398) when NOVA replaced the static sidebar and top bar; now 0.000.
 - Phase 4 centring made the voice button move when the panel beside it grew (CI failure on Phase 4); content now starts at the top.
+
+## Defects found and fixed while adding the five newest features
+
+- Day Replay kept one cache entry for all days, so going back to a day fetched less than two seconds earlier left the page on "Loading…". One entry per day now.
+- The planner test only passed outside working hours (it plans from the real "now"); its server and browser clocks now start at 08:00 Dubai.
+- The suite sets `BASE_URL` for its browser tests, which silently changed the receipts' QR content in a server test; that test now pins it.
+- A backup test hard-coded database version 7; it now compares the manifest with the database's own version.
+
+## Not tested in the newest features (needs your devices)
+
+- **Scanning the receipt QR with a real phone camera.** The code is decoded by an independent reader in the tests, but camera angle, print size and screen glare need a person. Check: open a receipt's printable version (ProofLoop → a commitment → the HTML receipt), scan the QR with your phone camera; with `BASE_URL` set it should open the check page and say "Matches"; without it, it shows the 64-character fingerprint to paste.
+- **Motion of the Promise Orbit on a real device.** Measured only in headless Chromium; look at the dashboard on your phone and laptop for smoothness.
 
 ## Not tested in the hardening and redesign (needs your devices)
 

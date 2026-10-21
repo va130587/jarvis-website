@@ -1,4 +1,4 @@
-# NOVA demo guide (about 8 minutes)
+# NOVA demo guide (about 10 minutes)
 
 A script for showing NOVA to someone. It uses a **separate demo database with fictional data**, so your own NOVA is never touched. Everything below was run by the automated tests; anything that needs real accounts or a real microphone is marked.
 
@@ -93,7 +93,15 @@ Open **Voice Assistant**.
 
 **Security and Settings**: the tool list with risk levels, active sessions, the audit log, **Download everything (JSON)** and the delete buttons. **AI Usage and Cost**: every reply is free here (built-in rules, or a local model with `NOVA_AI_PROVIDER=ollama`).
 
-## 9. Look and feel (30 seconds)
+## 9. The five newest features (2 minutes)
+
+- **Promise Orbit** (Dashboard): dots circle the orb, one per open promise, deadline or task, nearest first. A red ring with **!** is overdue, a dashed amber ring is waiting for proof, a green tick is verified. Press **Tab** to a dot: the line under the orb says what it is; **Enter** opens it. **Show as a list** gives the same information as a table.
+- **Day Replay** (Life group): what NOVA did today, in order. Drag the slider or press **Home**, **End** and the arrow keys: rows later than the marker go quiet and say "later". Use **Previous day** to look back. It is read-only.
+- **Life Radar** (Weekly Insights): five measures from 0 to 100, this week (solid) against last week (dashed). Hover or Tab to a point for the exact numbers; **Show as a table**. A measure with no data says "not enough data yet" instead of a number.
+- **Proof receipt check**: in ProofLoop open a commitment, **Export proof receipt**. It ends with a fingerprint. Open **/verify** (or **Check a receipt** in ProofLoop), paste the receipt: **Matches**. Change one letter: **Does not match**. The printable receipt has a QR code. Nothing from your paste is shown back.
+- **What happens if**: in Chat type `add a task to call HR by friday`. The preview now has an **Effects** row (what else is due that day, the ProofLoop tracking NOVA will add). A request with nothing else affected says "No other effects found." Reject it.
+
+## 9b. Look and feel (30 seconds)
 
 - **Security and Settings → Appearance**: switch between **Deep Space** (dark) and **Daylight** (light). The choice is remembered in this browser and applied before the page appears.
 - Point out the **orb** gliding between states, the sidebar groups (Today, Work, Life, Knowledge, System) and, on a phone, the bottom bar.

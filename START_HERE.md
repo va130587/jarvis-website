@@ -20,7 +20,7 @@ Run `npm start`. The first time, the terminal prints a setup address and a one-t
 
 | Page | In one line |
 |---|---|
-| Dashboard | Greeting, what matters today, approvals waiting, promises at a glance |
+| Dashboard | Greeting, what matters today, approvals waiting, and the **Promise Orbit**: dots around the orb for your open promises, deadlines and tasks (distance = how soon) |
 | Daily Briefing | Overdue, due today, follow-ups, important e-mail, and "the one thing" |
 | NOVA Chat | Ask in plain words; NOVA shows a preview and waits for your approval |
 | Voice Assistant | Push-to-talk with an editable transcript |
@@ -29,7 +29,8 @@ Run `npm start`. The first time, the terminal prints a setup address and a one-t
 | Focus and Planner | Fits your tasks into your working hours; focus timer |
 | Life Tracker | Timed reminders, habits with streaks, spending in AED |
 | ProofLoop | Promises with evidence, from "request" to "verified"; proof receipts |
-| Weekly Insights | Reliability score, tasks done, focus time, charts |
+| Weekly Insights | Reliability score, tasks done, focus time, charts, and the **Life Radar** (five measures, this week against last) |
+| Day Replay | What NOVA did on any day, in order, with a time slider; read-only |
 | Automation Centre | Jobs that run by themselves at Dubai times; run history |
 | Personal Identity | Your name and personalisation switch |
 | Memory Vault | Memories you approved |
@@ -39,6 +40,8 @@ Run `npm start`. The first time, the terminal prints a setup address and a one-t
 | Security and Settings | Sessions, audit log, export, delete, light/dark theme |
 
 Press **Ctrl+K** (Cmd+K on a Mac) anywhere to search everything.
+
+Also worth trying: every **approval preview** now has an **Effects** line (what else it touches, such as other items due that day), and a ProofLoop **proof receipt** ends with a fingerprint you can check at **/verify** (the printable version has a QR code).
 
 ## If something does not start
 

@@ -133,6 +133,26 @@ test('NOVA_DEMO_GUIDE.md, step by step, on the demo data', async () => {
   await page.route(/\/api\/life$/, r => r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }));
   await page.evaluate(() => { location.hash = 'life'; }); await page.waitForSelector('.load-error:has-text("Try again")');
   await page.unroute(/\/api\/life$/); await page.click('.load-error button[data-act="novaRetry"]'); await page.waitForSelector('.life-grid');
+  // 12. Promise Orbit: dots on the dashboard; an overdue one is marked with "!", opens its commitment from the keyboard
+  await page.evaluate(() => { location.hash = 'dashboard'; }); await page.waitForSelector('.odot.s-overdue');
+  assert.equal(await page.locator('.odot.s-overdue').first().innerText(), '!'); assert.match(await page.getAttribute('.odot.s-overdue', 'aria-label'), /overdue \d+ days?/);
+  await page.locator('.odot[data-id^="commitment:"]').first().focus(); await page.keyboard.press('Enter'); await page.waitForSelector('#formDialog[open]'); await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#formDialog[open]'));
+  // 13. Day Replay: today's events in order, the slider moves the marker
+  await page.evaluate(() => { location.hash = 'replay'; }); await page.waitForSelector('.rp-ev'); const total = await page.locator('.rp-ev').count(); assert.ok(total > 3);
+  await page.focus('#rpTime'); await page.keyboard.press('Home'); assert.match(await page.innerText('#rpReadout'), new RegExp('Up to 00:00: 0 of ' + total + ' events')); await page.keyboard.press('End'); assert.match(await page.innerText('#rpReadout'), new RegExp('of ' + total + ' events'));
+  // 14. Life Radar on Weekly Insights: five measures, exact numbers on focus, a table
+  await page.evaluate(() => { location.hash = 'insights'; }); await page.waitForSelector('#radarPanel .rd-spoke'); assert.equal(await page.locator('.rd-spoke').count(), 5);
+  await page.locator('.rd-spoke').first().focus(); assert.match(await page.innerText('#rdTip'), /Promises kept on time: this week/);
+  // 15. Proof receipt: export, then the public check page says it matches; one changed letter does not
+  const rec = await page.evaluate(async () => { const l = await fetch('/api/commitments').then(x => x.json()); return fetch('/api/commitments/' + l.commitments[0].id + '/receipt?format=md').then(x => x.text()); });
+  assert.match(rec, /\*\*Fingerprint \(SHA-256\):\*\* `[0-9a-f]{64}`/);
+  await page.goto(page.url().split('#')[0].replace(/\/$/, '') + '/verify'); await page.waitForSelector('#verifyForm');
+  await page.fill('#receipt', rec); await page.click('#check'); await page.waitForFunction(() => /Matches/.test(document.getElementById('verdict').textContent));
+  await page.fill('#receipt', rec.replace('Proof receipt', 'Proof receipt!')); await page.click('#check'); await page.waitForFunction(() => /Does not match/.test(document.getElementById('verdict').textContent));
+  // 16. What happens if: the preview lists effects before you approve; Reject changes nothing
+  await page.goto(page.url().split('/verify')[0] + '/#chat'); await page.waitForSelector('#novaMsg'); await page.fill('#novaMsg', 'add a task to call HR by friday'); await page.click('#novaChatForm button');
+  await page.waitForSelector('.preview .fx li'); assert.match(await page.innerText('.preview .fx'), /ProofLoop/); await page.click('.preview button:has-text("Reject")');
   assert.deepEqual(clean(errors).filter(e => !/status of 500/.test(e)), []);
   await ctx.close();
 });
