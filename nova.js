@@ -51,7 +51,7 @@
         var msg = (j.error && j.error.message) || '';
         if (r.status === 429) msg = 'NOVA is receiving too many requests. Wait ' + (r.headers.get('Retry-After') || '30') + ' seconds, then try again.';
         else if (r.status >= 500 && !msg) msg = 'Something went wrong on the server. Nothing was changed. Try again in a moment.';
-        var e = new Error(msg || 'Request failed (' + r.status + ').'); e.status = r.status; e.code = (j.error && j.error.code) || (r.status === 429 ? 'rate_limited' : r.status >= 500 ? 'server_error' : 'error'); throw e;
+        var e = new Error(msg || 'NOVA could not finish that. Nothing was changed. Try again in a moment.'); e.status = r.status; e.code = (j.error && j.error.code) || (r.status === 429 ? 'rate_limited' : r.status >= 500 ? 'server_error' : 'error'); throw e;
       });
     });
   }
@@ -94,6 +94,7 @@
     cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', loop: '<path d="M5 12a7 7 0 0 1 12-5l2-2v6h-6l2.2-2.2A4.5 4.5 0 0 0 7.5 12M19 12a7 7 0 0 1-12 5l-2 2v-6h6l-2.2 2.2A4.5 4.5 0 0 0 16.5 12"/>',
     auto: '<path d="M13 3 5 13h6l-1 8 8-10h-6z"/>', id: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', mem: '<path d="M12 3c-4 0-7 2-7 5v8c0 3 3 5 7 5s7-2 7-5V8c0-3-3-5-7-5z"/><path d="M5 8c0 3 3 5 7 5s7-2 7-5M5 14c0 3 3 5 7 5s7-2 7-5"/>',
     book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>', cost: '<path d="M4 19h16"/><path d="M7 16V9M12 16V5M17 16v-4"/>', plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
+    help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1.1.9-1.1 1.7M12 16.8v.2"/>',
     heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
     replay: '<path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4.5 4v4h4M12 8v4.2l2.6 1.6"/>',
     clock: '<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M9.5 3h5"/>',
@@ -101,10 +102,10 @@
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', tool: '<circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.4"/>'
   };
   var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['briefing', 'Daily Briefing', 'sun'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail'], ['hub', 'Tasks and Calendar', 'cal'], ['focus', 'Focus and Planner', 'clock'], ['life', 'Life Tracker', 'heart'], ['proofloop', 'ProofLoop', 'loop'], ['insights', 'Weekly Insights', 'cost'], ['replay', 'Day Replay', 'replay'],
-    ['automation', 'Automation Centre', 'auto'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock']];
+    ['automation', 'Automation Centre', 'auto'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock'], ['support', 'Help', 'help']];
   // The sidebar in five groups, by when you need them.
   var NAV_GROUPS = [['Today', ['dashboard', 'briefing', 'chat', 'voice']], ['Work', ['email', 'hub', 'focus', 'proofloop', 'automation']], ['Life', ['life', 'insights', 'replay', 'identity']],
-    ['Knowledge', ['knowledge', 'memory']], ['System', ['usage', 'connections', 'security']]];
+    ['Knowledge', ['knowledge', 'memory']], ['System', ['usage', 'connections', 'security', 'support']]];
   var TOOLS_NAV = [['today', 'Today', 'tool'], ['tasks', 'Tasks', 'tool'], ['calendar', 'Calendar', 'cal'], ['notes', 'Notes', 'book'], ['matches', 'Jobs for you', 'tool'], ['jobs', 'Job finder', 'tool'], ['applications', 'Applications', 'tool'], ['growth', 'Growth', 'cost'], ['review', 'Weekly review', 'cost'], ['profile', 'Job profile', 'id'], ['settings', 'Tool settings', 'tool'], ['help', 'Voice commands', 'mic']];
   function link(v, label, ic, badge) { return '<a href="#' + v + '" data-view="' + v + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (IC[ic] || IC.tool) + '</svg><span>' + esc(label) + '</span>' + (badge ? '<em class="count soon" aria-hidden="true">Soon</em><span class="sr-only"> (upcoming, not built yet)</span>' : '') + '</a>'; }
   function buildNav() {
@@ -177,7 +178,7 @@
 
   /* ================= screens ================= */
   var S = J.screens;
-  Object.assign(J.titles, { life: 'Life Tracker', focus: 'Focus and Planner', insights: 'Weekly Insights', replay: 'Day Replay', briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings' });
+  Object.assign(J.titles, { life: 'Life Tracker', focus: 'Focus and Planner', insights: 'Weekly Insights', replay: 'Day Replay', briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings', support: 'Help' });
   /* ---- Promise Orbit: open promises, deadlines and tasks circle the orb; distance = how soon, shape + colour + words = state ---- */
   var OSTATE = { overdue: 'Overdue', waiting: 'Waiting for proof', verified: 'Verified', normal: 'Open' }, OGLYPH = { overdue: '!', waiting: '…', verified: '✓', normal: '' };
   function orbitHTML() {

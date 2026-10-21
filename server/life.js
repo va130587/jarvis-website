@@ -163,7 +163,7 @@ function createLife(cfg, db, deps) {
       else {
         const t = +ctx.body.dueAt, rep = ctx.body.repeat || 'none';
         if (!Number.isFinite(t) || t <= now() || t > now() + 366 * DAY) throw new HttpError(400, 'Pick a time in the future (within a year).', 'invalid');
-        if (!['none', 'daily', 'weekdays'].includes(rep)) throw new HttpError(400, 'repeat must be none, daily or weekdays.', 'invalid');
+        if (!['none', 'daily', 'weekdays'].includes(rep)) throw new HttpError(400, 'Choose how often to repeat: never, daily or weekdays.', 'invalid');
         when = { dueAt: t, repeat: rep };
       }
       const r = createReminder(ctx.auth.user.id, { text, dueAt: when.dueAt, repeat: when.repeat });
@@ -179,7 +179,7 @@ function createLife(cfg, db, deps) {
       const r = db.prepare('SELECT * FROM reminders WHERE id = ? AND user_id = ?').get(+ctx.params.id, ctx.auth.user.id);
       if (!r || r.status === 'cancelled') throw new HttpError(404, 'Reminder not found.', 'not_found');
       const mins = ctx.body.minutes === undefined ? 10 : ctx.body.minutes;
-      if (!Number.isInteger(mins) || mins < 1 || mins > 1440) throw new HttpError(400, 'minutes must be 1 to 1440.', 'invalid');
+      if (!Number.isInteger(mins) || mins < 1 || mins > 1440) throw new HttpError(400, 'Choose a number of minutes from 1 to 1440.', 'invalid');
       const s = createReminder(ctx.auth.user.id, { text: r.text, dueAt: now() + mins * MIN, repeat: 'none' });
       return { status: 201, body: { reminder: s } };
     });

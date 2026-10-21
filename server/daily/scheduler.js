@@ -102,9 +102,9 @@ function createScheduler(cfg, db, jobs) {
     router.patch('/api/schedules/:id', ctx => {
       const s = own(ctx.auth.user.id, +ctx.params.id), b = ctx.body, t = now();
       let { hour, minute, days, enabled } = s;
-      if (b.enabled !== undefined) { if (typeof b.enabled !== 'boolean') throw new HttpError(400, 'enabled must be true or false.', 'invalid'); enabled = b.enabled ? 1 : 0; }
-      if (b.time !== undefined) { const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(b.time)); if (!m) throw new HttpError(400, 'time must be HH:MM (24-hour, Dubai time).', 'invalid'); hour = +m[1]; minute = +m[2]; }
-      if (b.days !== undefined) { if (!validDays(b.days)) throw new HttpError(400, 'days must be daily, weekdays, weekends or a list like 1,3,5 (0 = Sunday).', 'invalid'); days = String(b.days); }
+      if (b.enabled !== undefined) { if (typeof b.enabled !== 'boolean') throw new HttpError(400, 'Choose whether the job is on or off.', 'invalid'); enabled = b.enabled ? 1 : 0; }
+      if (b.time !== undefined) { const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(b.time)); if (!m) throw new HttpError(400, 'Enter the time as hours and minutes, for example 07:30 (24-hour, Dubai time).', 'invalid'); hour = +m[1]; minute = +m[2]; }
+      if (b.days !== undefined) { if (!validDays(b.days)) throw new HttpError(400, 'Choose daily, weekdays, weekends or a list of days like 1,3,5 (0 is Sunday).', 'invalid'); days = String(b.days); }
       db.prepare('UPDATE schedules SET hour = ?, minute = ?, days = ?, enabled = ?, next_run_at = ?, updated_at = ? WHERE id = ?').run(hour, minute, days, enabled, nextRun(t, hour, minute, days), t, s.id);
       audit(db, now, ctx.auth.user.id, 'schedule_updated', s.kind + ' ' + hhmm(hour, minute) + ' ' + days + (enabled ? ' on' : ' off'), ctx.req.socket.remoteAddress);
       return { status: 200, body: { schedule: view(db.prepare('SELECT * FROM schedules WHERE id = ?').get(s.id)) } };
@@ -122,6 +122,6 @@ function createScheduler(cfg, db, jobs) {
     timer.unref();
   }
   function stop() { clearInterval(timer); timer = null; }
-  return { tick, runNow, ensureDefaults, register, start, stop, KINDS };
+  return { tick, runNow, ensureDefaults, register, start, stop, running: () => !!timer, KINDS };
 }
 module.exports = { createScheduler, KINDS, BACKOFF, MAX_ATTEMPTS };

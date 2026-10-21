@@ -135,7 +135,7 @@ function createProductivity(cfg, db) {
     });
     router.patch('/api/tasks/:id/estimate', ctx => {
       const m = ctx.body.minutes;
-      if (m !== null && !(Number.isInteger(m) && m >= 5 && m <= 480)) throw new HttpError(400, 'minutes must be a whole number from 5 to 480, or null.', 'invalid');
+      if (m !== null && !(Number.isInteger(m) && m >= 5 && m <= 480)) throw new HttpError(400, 'Choose a whole number of minutes from 5 to 480, or leave it empty.', 'invalid');
       const r = db.prepare('UPDATE tasks SET estimate_min = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL').run(m, +ctx.params.id, ctx.auth.user.id);
       if (!r.changes) throw new HttpError(404, 'Task not found.', 'not_found');
       return { status: 200, body: { ok: true, minutes: m } };
@@ -145,7 +145,7 @@ function createProductivity(cfg, db) {
       const uid = ctx.auth.user.id; settle(uid);
       if (db.prepare("SELECT id FROM focus_sessions WHERE user_id = ? AND status = 'running'").get(uid)) throw new HttpError(409, 'A focus session is already running. Stop it first.', 'already_running');
       const minutes = ctx.body.minutes === undefined ? 25 : ctx.body.minutes;
-      if (!Number.isInteger(minutes) || minutes < 5 || minutes > 180) throw new HttpError(400, 'minutes must be a whole number from 5 to 180.', 'invalid');
+      if (!Number.isInteger(minutes) || minutes < 5 || minutes > 180) throw new HttpError(400, 'Choose a whole number of minutes from 5 to 180.', 'invalid');
       let title = ctx.body.title === undefined ? null : str(ctx.body.title, 'title', { max: 200 }), taskId = null;
       if (ctx.body.taskId !== undefined && ctx.body.taskId !== null) {
         const tk = db.prepare("SELECT id, title FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL").get(+ctx.body.taskId, uid);

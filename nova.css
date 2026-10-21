@@ -411,3 +411,11 @@ input[type="range"]#rpTime { padding: 0; min-height: 28px; }
 .rd-rules { margin: 0; padding-left: var(--s5); display: grid; gap: var(--s1); font-size: var(--fs-14); color: var(--text-2); } .rd-rules b { color: var(--text); font-weight: 500; }
 @media (max-width: 760px) { .rd-wrap { grid-template-columns: 1fr; } }
 .preview .fx { overflow-wrap: anywhere; unicode-bidi: plaintext; } .preview .fx li { margin: 0 0 var(--s1); }
+
+/* Help */
+.hp-steps { margin: var(--s2) 0 0; padding-left: var(--s5); display: grid; gap: var(--s2); }
+.hp-pages { display: grid; grid-template-columns: max-content 1fr; gap: var(--s2) var(--s4); margin: var(--s2) 0 0; }
+.hp-pages dt { font-weight: 600; } .hp-pages dd { margin: 0; color: var(--text-2); }
+.hp-prob { padding: var(--s2) 0; border-top: 1px solid var(--edge); } .hp-prob summary { cursor: pointer; color: var(--cyan-ink, var(--cyan)); font-weight: 500; } .hp-prob p { margin: var(--s2) 0 0; color: var(--text-2); }
+.hp-summary { font-weight: 600; margin: var(--s3) 0 var(--s2); }
+@media (max-width: 600px) { .hp-pages { grid-template-columns: 1fr; gap: 0; } .hp-pages dd { margin-bottom: var(--s2); } }

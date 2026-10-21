@@ -46,11 +46,12 @@ const STEPS = {
   knowledge: async p => { await p.fill('#kbQ', 'when should I renew my visa'); await p.press('#kbQ', 'Enter'); await p.waitForSelector('.kb-answer'); },
   usage: async p => { await p.waitForSelector('main h1'); },
   connections: async p => { await p.waitForFunction(() => !/Checking…/.test(document.querySelector('main').textContent)); },
+  support: async p => { await p.click('button[data-act="hpCheck"]'); await p.waitForSelector('.hp-checks li'); },
   security: async p => { await p.waitForSelector('#installPanel'); await p.keyboard.press('Control+k'); await p.waitForSelector('#novaPalette:not([hidden])'); await p.keyboard.type('visa'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); }
 };
 
 for (const [width, theme] of [[390, 'dark'], [768, 'dark'], [1024, 'dark'], [1440, 'dark'], [390, 'light'], [1440, 'light']]) {
-  test('smoke walk at ' + width + ' px, ' + (theme === 'light' ? 'Daylight' : 'Deep Space') + ' theme: all 18 pages are clean after their main interaction', async () => {
+  test('smoke walk at ' + width + ' px, ' + (theme === 'light' ? 'Daylight' : 'Deep Space') + ' theme: all 19 pages are clean after their main interaction', async () => {
     const init = theme === 'light' ? "try { localStorage.setItem('nova.theme', 'light'); } catch (e) {}" : undefined;
     const { page, ctx, errors } = await H.openApp(browser, { base, hash: '', width, height: width === 390 ? 844 : 900, init });
     const failed = [];

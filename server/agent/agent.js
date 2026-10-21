@@ -344,7 +344,7 @@ function createAgent(cfg, db, registry, provider, pl, fx) {
     });
     router.post('/api/approvals/:id/approve', { group: 'chat' }, async ctx => {
       const via = ctx.body.via;
-      if (via !== undefined && via !== 'voice' && via !== 'button') throw new HttpError(400, 'via must be "voice" or "button".', 'invalid');
+      if (via !== undefined && via !== 'voice' && via !== 'button') throw new HttpError(400, 'That approval did not say whether it came from your voice or a button. Nothing was changed.', 'invalid');
       if (via === 'voice') {   // a spoken "approve" is only accepted for low-risk, undoable changes, never with edits
         const a = own('approvals', ctx.auth.user.id, +ctx.params.id);
         if (!voiceApprovable(registry.get(a.tool), parse(a.preview))) { audit(db, now, ctx.auth.user.id, 'voice_approval_refused', a.tool + ' #' + a.id, ctx.req.socket.remoteAddress); throw new HttpError(403, 'This action needs a button press, not a spoken approval, because it is not a low-risk, undoable change.', 'voice_not_allowed'); }

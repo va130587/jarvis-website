@@ -92,7 +92,7 @@ function createChat(cfg, db, memory, provider, agent) {
     router.post('/api/chat', { group: 'chat' }, async ctx => {
       const message = str(ctx.body.message, 'message', { max: 2000 });
       const cid = ctx.body.conversationId === undefined || ctx.body.conversationId === null ? null : Number(ctx.body.conversationId);
-      if (cid !== null && !Number.isInteger(cid)) throw new HttpError(400, 'conversationId must be a number.', 'invalid');
+      if (cid !== null && !Number.isInteger(cid)) throw new HttpError(400, 'That conversation could not be found. Start a new one.', 'invalid');
       const ac = new AbortController(); ctx.req.on('close', () => { if (!ctx.res.writableEnded) ac.abort(); });
       return { status: 200, body: await handle(ctx.auth, message, cid, ac.signal) };
     });

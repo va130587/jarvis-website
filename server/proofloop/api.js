@@ -90,7 +90,7 @@ function createProofLoopApi(cfg, db, pl, adapters, verify) {
     router.post('/api/commitments', ctx => {
       const b = ctx.body, title = str(b.title, 'title', { max: 200 }), direction = oneOf(b.direction, 'direction', ['i_owe', 'owed_to_me']);
       const counterparty = str(b.counterparty, 'counterparty', { max: 100, optional: true }), deadline = str(b.deadline, 'deadline', { max: 10, optional: true });
-      if (deadline && !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) throw new HttpError(400, 'deadline must look like 2026-10-23.', 'invalid');
+      if (deadline && !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) throw new HttpError(400, 'Enter the deadline as a date, for example 2026-10-23.', 'invalid');
       const id = guard(() => { const i = pl.create(ctx.auth.user.id, { title, direction, counterparty, deadline, sourceType: 'manual', sourceRef: 'Mission Control', actor: 'you' }); pl.transition(ctx.auth.user.id, i, 'request_understood', { note: 'You described it.', actor: 'you' }); return i; });
       audit(db, now, ctx.auth.user.id, 'commitment_created', 'id ' + id, ctx.req.socket.remoteAddress);
       return { status: 201, body: { commitment: detail(ctx.auth.user.id, id) } };
@@ -105,14 +105,14 @@ function createProofLoopApi(cfg, db, pl, adapters, verify) {
     router.post('/api/commitments/:id/evidence', ctx => {
       const b = ctx.body, kind = oneOf(b.kind, 'kind', EVIDENCE_KINDS), description = str(b.description, 'description', { max: 500 });
       const refType = str(b.refType, 'refType', { max: 30, optional: true }), refId = b.refId === undefined || b.refId === null ? null : b.refId;
-      if (refId !== null && !Number.isInteger(refId)) throw new HttpError(400, 'refId must be a whole number.', 'invalid');
+      if (refId !== null && !Number.isInteger(refId)) throw new HttpError(400, 'That reference could not be found. Reload the page and try again.', 'invalid');
       guard(() => pl.addEvidence(ctx.auth.user.id, +ctx.params.id, { kind, description, refType, refId }, adapters));
       audit(db, now, ctx.auth.user.id, 'evidence_added', kind + ' on commitment ' + ctx.params.id, ctx.req.socket.remoteAddress);
       return { status: 201, body: { commitment: detail(ctx.auth.user.id, +ctx.params.id) } };
     });
     router.get('/api/commitments/:id/receipt', ctx => {
       const d = guard(() => detail(ctx.auth.user.id, +ctx.params.id)), fmt = ctx.url.searchParams.get('format') || 'md', user = ctx.auth.user;
-      if (fmt !== 'html' && fmt !== 'md') throw new HttpError(400, 'format must be md or html.', 'invalid');
+      if (fmt !== 'html' && fmt !== 'md') throw new HttpError(400, 'Choose the receipt format: Markdown or HTML.', 'invalid');
       const iss = issued(d, user);
       if (fmt === 'html') return { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': 'inline; filename="proof-receipt-' + d.id + '.html"' }, body: Buffer.from(receiptHtml(d, user, iss)) };
       return { status: 200, headers: { 'Content-Type': 'text/markdown; charset=utf-8', 'Content-Disposition': 'attachment; filename="proof-receipt-' + d.id + '.md"' }, body: Buffer.from(iss.text) };

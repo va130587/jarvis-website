@@ -31,6 +31,7 @@ const { createReplay } = require('./replay');
 const { createRadar } = require('./radar');
 const { createVerify } = require('./verify');
 const { createEffects } = require('./effects');
+const { createCheck } = require('./check');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -60,7 +61,7 @@ function createApp(over, deps) {
   const hdr = securityHeaders(cfg);
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
-  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router);
+  notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router); createCheck(cfg, db, { provider, scheduler }).register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
@@ -82,7 +83,7 @@ function createApp(over, deps) {
   router.post('/api/actions', { group: 'chat' }, async ctx => {
     const tool = ctx.body.tool, id = ctx.body.id;
     if (!BUTTON_TOOLS[tool]) throw new HttpError(400, 'That action cannot be started from a button.', 'invalid');
-    if (!Number.isInteger(id) || id < 1) throw new HttpError(400, 'id must be a positive whole number.', 'invalid');
+    if (!Number.isInteger(id) || id < 1) throw new HttpError(400, 'That item could not be found. Reload the page and try again.', 'invalid');
     const row = BUTTON_TOOLS[tool]().get(id, ctx.auth.user.id);
     if (!row) throw new HttpError(404, 'Task not found (or already done).', 'not_found');
     const verb = tool === 'tasks.complete' ? 'Mark task' : 'Delete task';
@@ -169,11 +170,11 @@ function createApp(over, deps) {
     const name = str(ctx.body.displayName, 'displayName', { max: 60, optional: true });
     if (name !== undefined) db.prepare('UPDATE users SET display_name = ? WHERE id = ?').run(name, ctx.auth.user.id);
     if (ctx.body.autoLowRisk !== undefined) {
-      if (typeof ctx.body.autoLowRisk !== 'boolean') throw new HttpError(400, 'autoLowRisk must be true or false.', 'invalid');
+      if (typeof ctx.body.autoLowRisk !== 'boolean') throw new HttpError(400, 'Choose whether low-risk actions run on their own: on or off.', 'invalid');
       db.prepare('UPDATE users SET auto_low_risk = ? WHERE id = ?').run(ctx.body.autoLowRisk ? 1 : 0, ctx.auth.user.id);
     }
     if (ctx.body.personalization !== undefined) {
-      if (typeof ctx.body.personalization !== 'boolean') throw new HttpError(400, 'personalization must be true or false.', 'invalid');
+      if (typeof ctx.body.personalization !== 'boolean') throw new HttpError(400, 'Choose whether NOVA personalises its answers: on or off.', 'invalid');
       db.prepare('UPDATE users SET personalization = ? WHERE id = ?').run(ctx.body.personalization ? 1 : 0, ctx.auth.user.id);
     }
     audit(db, now, ctx.auth.user.id, 'profile_updated', Object.keys(ctx.body).filter(k => ['displayName', 'personalization', 'autoLowRisk'].includes(k)).join(','), ctx.req.socket.remoteAddress);
@@ -196,7 +197,7 @@ function createApp(over, deps) {
   // Deleting your data: 'memories' keeps the account; 'all' also removes conversations, activity, usage and the account itself (sessions end).
   router.post('/api/data/delete', ctx => {
     const scope = ctx.body.scope, id = ctx.auth.user.id;
-    if (!['memories', 'all'].includes(scope)) throw new HttpError(400, 'scope must be "memories" or "all".', 'invalid');
+    if (!['memories', 'all'].includes(scope)) throw new HttpError(400, 'Choose what to delete: your memories, or everything.', 'invalid');
     if (ctx.body.confirm !== 'DELETE MY DATA') throw new HttpError(400, 'Type DELETE MY DATA to confirm.', 'confirm_required');
     db.exec('BEGIN');
     try {

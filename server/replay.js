@@ -50,7 +50,7 @@ function createReplay(cfg, db, { now }) {
   function register(router) {
     router.get('/api/replay', ctx => {
       const q = ctx.url.searchParams.get('day') || dubaiDay(now());
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(q) || isNaN(Date.parse(q + 'T00:00:00Z')) || new Date(q + 'T00:00:00Z').toISOString().slice(0, 10) !== q) throw new HttpError(400, 'day must be a date like 2026-10-21.', 'invalid');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(q) || isNaN(Date.parse(q + 'T00:00:00Z')) || new Date(q + 'T00:00:00Z').toISOString().slice(0, 10) !== q) throw new HttpError(400, 'Pick a day as a date, for example 2026-10-21.', 'invalid');
       if (q > dubaiDay(now() + DAY) || q < '2020-01-01') throw new HttpError(400, 'Pick a day from 2020 up to today.', 'invalid');
       return { status: 200, body: replay(ctx.auth.user.id, q) };
     });
