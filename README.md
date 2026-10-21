@@ -9,6 +9,8 @@ See `NOVA_AUDIT.md` (what was found), `NOVA_IMPLEMENTATION_PLAN.md` (the phases)
 
 ## Run NOVA on your computer (free, nothing to install)
 
+**Never used a terminal?** Install Node.js LTS, unzip the project and double-click `Start NOVA demo.bat` (Windows) or `Start NOVA demo.command` (Mac). See `START_HERE.md`.
+
 You need **Node.js 22.13 or newer**. There are no packages to install to run it.
 
 ```

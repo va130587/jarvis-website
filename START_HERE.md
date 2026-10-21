@@ -2,7 +2,15 @@
 
 NOVA is a personal assistant that runs **on your computer**. The GitHub website shows only the original "Classic tools"; the assistant features need NOVA running.
 
-## Run the demo (fictional data, 2 minutes)
+## Easiest way: double-click
+
+After installing **Node.js LTS** (https://nodejs.org) and unzipping this folder:
+- **Windows:** double-click **`Start NOVA demo.bat`**. A black window opens and your browser opens NOVA by itself.
+- **Mac:** double-click **`Start NOVA demo.command`** (if the Mac refuses, right-click it, choose **Open**, then **Open**).
+
+Sign in with **demo@nova.local**. Keep the black window open while you use NOVA; close it to stop. If Node.js is missing or too old, the window says so in plain words and tells you what to do.
+
+## Run the demo by typing (fictional data, 2 minutes)
 
 1. Install **Node.js LTS** (22.13 or newer) from https://nodejs.org, then reopen your terminal.
 2. Download this project (green **Code** button, then **Download ZIP**) and unzip it. Or `git clone https://github.com/va130587/jarvis-website.git`.

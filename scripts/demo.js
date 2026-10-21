@@ -3,6 +3,7 @@
 //   npm run demo:reset    delete the demo database and create it again
 // Sign in with demo@nova.local (development sign-in, this computer only). Everything in the demo is fictional and marked "demo".
 'use strict';
+require('./check-node').ensure();               // plain words if Node.js is too old (before anything that needs it)
 const fs = require('fs');
 const path = require('path');
 const { createApp } = require('../server');

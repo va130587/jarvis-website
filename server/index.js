@@ -1,5 +1,6 @@
 // NOVA server: serves the front end and the JSON API from one origin. Run: node server/index.js   (see .env.example)
 'use strict';
+require('../scripts/check-node').ensure();      // plain words if Node.js is too old
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
