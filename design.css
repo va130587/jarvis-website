@@ -26,6 +26,7 @@
   --text-3: #8aa0ba;          /* tertiary (labels, hints): 6.6:1 */
   --muted-rgb: 163 184 208;
   --shadow-rgb: 0 0 0;
+  --chart-1: #1e9fcf; --chart-2: #d95926; --chart-3: #9085e9; --chart-4: #199e70; --chart-5: #c98500; --chart-6: #d55181;
   --chart: #1e9fcf, #d95926, #9085e9, #199e70, #c98500, #d55181;   /* categorical order, validated for colour-blind separation on the dark surface (DESIGN_SYSTEM.md) */
   --fx-opacity: 1;            /* ambient background effects */
 
@@ -78,6 +79,7 @@
   --text-3: #4f6582;
   --muted-rgb: 62 84 112;
   --shadow-rgb: 20 40 70;
+  --chart-1: #0b7fb0; --chart-2: #eb6834; --chart-3: #6250d6; --chart-4: #1baf7a; --chart-5: #eda100; --chart-6: #e87ba4;
   --chart: #0b7fb0, #eb6834, #6250d6, #1baf7a, #eda100, #e87ba4;
   --fx-opacity: .45;
   --e1: 0 1px 2px rgb(var(--shadow-rgb) / .08), 0 8px 24px -16px rgb(var(--shadow-rgb) / .25);

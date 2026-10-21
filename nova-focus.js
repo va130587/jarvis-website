@@ -119,6 +119,50 @@
       '<details class="small-text"><summary>Show as a table</summary><table class="cmds"><thead><tr><th scope="col">Day</th><th scope="col">' + esc(unit === 'tasks' ? 'Tasks done' : 'Focus') + '</th></tr></thead><tbody>' + days.map(function (d) { return '<tr><th scope="row">' + esc(d.label) + ' ' + esc(d.day) + '</th><td>' + (d.future ? '-' : key === 'focusMin' ? dur(d[key]) : d[key]) + '</td></tr>'; }).join('') + '</tbody></table></details></figure>';
   }
   function delta(a, b, fmt) { if (!b && !a) return 'no change'; if (!b) return 'new this week'; var d = Math.round(100 * (a - b) / b); return (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '% vs last week (' + fmt(b) + ')'; }
+  /* ================= Life Radar (on Weekly Insights) ================= */
+  // Five measures, this week and last week. A measure with no data is left out of the outline and said so in words: no made-up numbers.
+  var RADAR_SHORT = { kept: 'Promises kept', focus: 'Focus', habits: 'Habits', money: 'Budget', overdue: 'No overdue' };
+  function rdWeek(w) { var f = function (iso) { return new Date(iso + 'T12:00:00Z').toLocaleDateString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'short' }); }; return f(w.start) + ' to ' + f(w.through); }
+  function rdText(s, which) { var v = s[which]; return v ? v.score + ' (' + v.detail + ')' : 'not enough data yet'; }
+  function radarHTML(rd) {
+    if (!rd) return '<article class="panel" id="radarPanel"><h2 class="label">Life Radar</h2>' + J.empty('Loading…') + '</article>';
+    var CX = 180, CY = 140, R = 96, n = rd.spokes.length, ang = function (i) { return (-90 + i * 360 / n) * Math.PI / 180; };
+    var pt = function (i, score) { var r = R * score / 100; return [CX + r * Math.cos(ang(i)), CY + r * Math.sin(ang(i))]; };
+    var f = function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); };
+    var rings = [25, 50, 75, 100].map(function (lv) { return '<polygon class="rd-ring" points="' + rd.spokes.map(function (s, i) { return f(pt(i, lv)); }).join(' ') + '"/>'; }).join('');
+    var axes = rd.spokes.map(function (s, i) { return '<line class="rd-axis" x1="' + CX + '" y1="' + CY + '" x2="' + f(pt(i, 100)).split(',')[0] + '" y2="' + f(pt(i, 100)).split(',')[1] + '"/>'; }).join('');
+    function outline(which, cls) {
+      var pts = [], idx = []; rd.spokes.forEach(function (s, i) { if (s[which]) { pts.push(pt(i, s[which].score)); idx.push(i); } });
+      var shape = pts.length >= 3 ? '<polygon class="rd-shape ' + cls + '" points="' + pts.map(f).join(' ') + '"/>' : pts.length === 2 ? '<polyline class="rd-shape ' + cls + '" points="' + pts.map(f).join(' ') + '"/>' : '';
+      return shape + pts.map(function (p, k) { return '<circle class="rd-dot ' + cls + '" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4"/>'; }).join('');
+    }
+    var spokes = rd.spokes.map(function (s, i) {
+      var a = ang(i), lx = CX + (R + 16) * Math.cos(a), ly = CY + (R + 16) * Math.sin(a), cosA = Math.cos(a), anchor = Math.abs(cosA) < 0.2 ? 'middle' : cosA > 0 ? 'start' : 'end';
+      var tip = s.name + ': this week ' + rdText(s, 'this') + ', last week ' + rdText(s, 'last');
+      var end = pt(i, 100);
+      return '<g class="rd-spoke" tabindex="0" role="img" aria-label="' + esc(tip) + '" data-tip="' + esc(tip) + '"><line class="rd-hit" x1="' + CX + '" y1="' + CY + '" x2="' + end[0].toFixed(1) + '" y2="' + end[1].toFixed(1) + '"/>' +
+        '<text class="rd-lbl" x="' + lx.toFixed(1) + '" y="' + (ly + 4).toFixed(1) + '" text-anchor="' + anchor + '">' + esc(RADAR_SHORT[s.id] || s.name) + '</text>' +
+        (s.this ? '' : '<text class="rd-nodata" x="' + lx.toFixed(1) + '" y="' + (ly + 18).toFixed(1) + '" text-anchor="' + anchor + '">no data yet</text>') + '</g>';
+    }).join('');
+    var missing = rd.spokes.filter(function (s) { return !s.this; }).map(function (s) { return s.name; });
+    var rows = rd.spokes.map(function (s) { return '<tr><th scope="row">' + esc(s.name) + '</th><td>' + esc(s.this ? s.this.score + ' · ' + s.this.detail : 'not enough data yet') + '</td><td>' + esc(s.last ? s.last.score + ' · ' + s.last.detail : 'not enough data yet') + '</td></tr>'; }).join('');
+    return '<article class="panel" id="radarPanel"><h2 class="label">Life Radar</h2>' +
+      '<p class="small-text muted">Five measures, each from 0 to 100, from your own data. A bigger shape is a better week.</p>' +
+      '<div class="rd-wrap"><svg class="rd-svg" viewBox="0 0 360 280" role="group" aria-label="Life Radar: ' + esc(rd.spokes.map(function (s) { return RADAR_SHORT[s.id]; }).join(', ')) + '">' + rings + axes + outline('last', 'rd-last') + outline('this', 'rd-this') + spokes + '</svg>' +
+      '<div class="rd-side"><ul class="rd-legend"><li><svg width="34" height="10" aria-hidden="true"><line x1="0" y1="5" x2="34" y2="5" class="rd-key rd-this"/></svg> This week (' + esc(rdWeek(rd.weeks.this)) + ', so far)</li>' +
+      '<li><svg width="34" height="10" aria-hidden="true"><line x1="0" y1="5" x2="34" y2="5" class="rd-key rd-last"/></svg> Last week (' + esc(rdWeek(rd.weeks.last)) + ')</li></ul>' +
+      '<p class="rd-tip" id="rdTip" role="status">Hover or focus a point for the exact numbers.</p>' +
+      (missing.length ? '<p class="small-text muted">Not enough data yet this week, so left out of the outline: ' + esc(missing.join(', ')) + '.</p>' : '') + '</div></div>' +
+      '<details class="small-text"><summary>Show as a table</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Life Radar as a table"><table class="cmds"><thead><tr><th scope="col">Measure</th><th scope="col">This week</th><th scope="col">Last week</th></tr></thead><tbody>' + rows + '</tbody></table></div></details>' +
+      '<h3 class="rd-rules-h">How each measure is scored</h3><ul class="rd-rules">' + rd.spokes.map(function (s) { return '<li><b>' + esc(s.name) + '.</b> ' + esc(s.rule) + '</li>'; }).join('') + '</ul></article>';
+  }
+  function radarWire() {
+    var tip = $('#rdTip'); if (!tip) return;
+    $$('.rd-spoke').forEach(function (g) {
+      ['mouseenter', 'focus'].forEach(function (ev) { g.addEventListener(ev, function () { tip.textContent = g.getAttribute('data-tip'); }); });
+      ['mouseleave', 'blur'].forEach(function (ev) { g.addEventListener(ev, function () { tip.textContent = 'Hover or focus a point for the exact numbers.'; }); });
+    });
+  }
   S.insights = {
     render: function () {
       var r = N.cache.insights, head = J.head('Productivity', 'Weekly Insights', 'Your week in numbers, from your own NOVA data. Nothing is estimated or invented.', '<button type="button" class="btn" data-act="iSpeak">Read it to me</button>');
@@ -130,11 +174,13 @@
         '<div class="stats ins-stats">' + N.h.tile('Tasks done', t.done, delta(t.done, t.doneLastWeek, String)) + N.h.tile('Done on time', t.onTimePct === null ? '–' : t.onTimePct + '%', t.onTimePct === null ? 'no dated tasks done yet' : 'of dated tasks done this week') +
           N.h.tile('Focus time', dur(t.focusMin), delta(t.focusMin, t.focusMinLastWeek, dur)) + N.h.tile('Overdue now', t.overdue, t.overdue ? 'tasks and promises' : 'nothing overdue', t.overdue ? 'gold' : '') + '</div></div>' +
         '<article class="panel"><h2 class="label">What stands out</h2><ul class="ins-lines">' + r.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></article>' +
+        radarHTML(N.cache.radar) +
         '<div class="grid-2">' + '<article class="panel">' + bars('chDone', 'Tasks done per day (' + r.week.start + ' to ' + r.week.end + ')', r.days, 'done', 'tasks') + '</article>' +
         '<article class="panel">' + bars('chFocus', 'Focus time per day', r.days, 'focusMin', 'min') + '</article></div>';
     },
     after: function () {
-      N.h.stale('insights', [['insights', '/api/insights']]);
+      radarWire();
+      N.h.stale('insights', [['insights', '/api/insights'], ['radar', '/api/radar']]);
       $$('.chart').forEach(function (fig) {
         var tip = fig.querySelector('.tip'), box = fig.querySelector('.chart-box');
         function show(g) { var b = g.getBoundingClientRect(), o = box.getBoundingClientRect(); tip.textContent = g.getAttribute('data-tip'); tip.hidden = false; tip.style.left = Math.max(0, Math.min(o.width - 150, b.left - o.left + b.width / 2 - 75)) + 'px'; tip.style.top = '0px'; }
