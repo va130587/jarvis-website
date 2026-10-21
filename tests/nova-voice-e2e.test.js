@@ -153,8 +153,7 @@ test('push-to-talk modes: hold (pointer) and keyboard Space', async () => {
   const { page, ctx } = await open();
   await page.check('input[name="vMode"][value="hold"]');
   await page.waitForFunction(() => document.getElementById('ptt').textContent === 'Hold to talk');
-  const box = await page.locator('#ptt').boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down();   // the middle: a pill-shaped button has no corners
+  await page.locator('#ptt').hover(); await page.mouse.down();   // hover waits until the button has stopped moving (page-change animation) and points at its middle
   await page.waitForFunction(() => document.getElementById('ptt').getAttribute('aria-pressed') === 'true');
   await say(page, [{ t: 'list my notes', final: true }]);
   await page.mouse.up();
