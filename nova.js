@@ -219,7 +219,7 @@
         '<p class="eyebrow">' + esc(J.longDate ? J.longDate(J.today()) : '') + ' · Dubai</p><h1 class="greet">Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening') + ', ' + esc(name()) + '</h1>' +
         '<p class="lead">' + esc((N.daily && N.daily.headline()) || 'From Request to Verified Result.') + '</p><p class="live" id="novaStatusText" role="status">NOVA: ' + esc(STATES[N.state]) + '</p>' +
         '<div class="btn-row"><a class="btn primary" href="#chat">Talk to NOVA</a><a class="btn" href="#briefing">Daily Briefing</a><a class="btn ghost" href="#memory">Memory Vault</a></div></div></section>' +
-        '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'memories and actions' : 'nothing pending', proposed ? 'gold' : '') +
+        (N.demo ? N.demo.banner() : '') + '<div class="stats">' + tile('Saved memories', active, 'approved by you') + tile('Waiting for approval', proposed, proposed ? 'memories and actions' : 'nothing pending', proposed ? 'gold' : '') +
         tile('Replies without AI', rules, 'free rule-based, this month') + tile('Replies from a model', N.session && N.session.aiProvider !== 'local' ? model : 'off', N.session && N.session.aiProvider !== 'local' ? (N.session.aiProvider === 'ollama' ? 'local model, free' : 'this month') : 'no AI model configured') + '</div>' +
         (ap && ap.length ? '<article class="panel gold" id="approvalsPanel"><h2 class="label">Waiting for your approval <span class="n">' + ap.length + '</span></h2>' + ap.map(function (x) { return previewCard({ id: x.runId, pendingApproval: x }); }).join('') + '</article>' : '') +
         (N.daily ? N.daily.dashboardStrip() : '') +

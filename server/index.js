@@ -188,7 +188,13 @@ function createApp(over, deps) {
       if (ctx.body.tour !== 'done') throw new HttpError(400, 'The tour can only be marked as finished.', 'invalid');
       db.prepare('UPDATE users SET tour_done_at = ? WHERE id = ?').run(now(), ctx.auth.user.id);
     }
-    audit(db, now, ctx.auth.user.id, 'profile_updated', Object.keys(ctx.body).filter(k => ['displayName', 'personalization', 'autoLowRisk', 'tour'].includes(k)).join(','), ctx.req.socket.remoteAddress);
+    if (ctx.body.demoStep !== undefined) {
+      const STEPS = ['orbit', 'replay', 'radar', 'receipt', 'effects', 'hidden'];
+      if (!STEPS.includes(ctx.body.demoStep)) throw new HttpError(400, 'That is not a step of the guided demo.', 'invalid');
+      const cur = auth.publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.auth.user.id)).demoSteps;
+      if (!cur.includes(ctx.body.demoStep)) db.prepare('UPDATE users SET demo_steps = ? WHERE id = ?').run(JSON.stringify(cur.concat(ctx.body.demoStep)), ctx.auth.user.id);
+    }
+    audit(db, now, ctx.auth.user.id, 'profile_updated', Object.keys(ctx.body).filter(k => ['displayName', 'personalization', 'autoLowRisk', 'tour', 'demoStep'].includes(k)).join(','), ctx.req.socket.remoteAddress);
     return { status: 200, body: { user: auth.publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.auth.user.id)) } };
   });
   router.get('/api/audit', ctx => ({ status: 200, body: { entries: db.prepare('SELECT ts, action, detail FROM audit_log WHERE user_id = ? ORDER BY id DESC LIMIT 50').all(ctx.auth.user.id).map(r => ({ at: r.ts, action: r.action, detail: r.detail })) } }));

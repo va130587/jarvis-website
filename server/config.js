@@ -37,6 +37,7 @@ function load(env, over) {
     secretKey: env.NOVA_SECRET_KEY || '',
     backupDir: env.NOVA_BACKUP_DIR ? path.resolve(path.join(__dirname, '..'), env.NOVA_BACKUP_DIR) : path.join(__dirname, '..', 'backups'),
     backupKeep: Math.max(1, Math.min(365, +env.NOVA_BACKUP_KEEP || 14)),
+    demo: env.NOVA_DEMO === '1',                                    // set by `npm run demo`: shows the guided demo on the dashboard
     tour: env.NOVA_TOUR !== 'off',                                  // the first-run tour (on by default; tests switch it off)
     scheduler: { enabled: env.NOVA_SCHEDULER !== 'off', intervalMs: +env.NOVA_SCHEDULER_INTERVAL_MS || 30000 },
     // Phone push through ntfy.sh (free; or your own ntfy server). The topic name is the only secret: anyone who knows it can read the messages.
