@@ -230,12 +230,19 @@
 
   /* ---- chat ---- */
   var EDITABLE = { 'tasks.create': [['title', 'Task title', 'text'], ['due', 'Due date (YYYY-MM-DD, optional)', 'text']], 'notes.create': [['text', 'Note', 'text']], 'memory.add': [['text', 'Memory', 'text']] };
+  // "What happens if": facts NOVA looked up in your own data before asking you to approve. null = the check itself failed; undefined = an older request made before this existed.
+  function effectsHTML(fx) {
+    if (fx === undefined) return 'Not checked for this request.';
+    if (fx === null) return 'NOVA could not check what else this affects. Read the changes above carefully.';
+    return fx.length ? '<ul class="plain">' + fx.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : 'No other effects found.';
+  }
   function previewCard(run) {
     var a = run.pendingApproval; if (!a) return '';
     var p = a.preview;
     return '<section class="preview" role="group" aria-label="Review before NOVA acts"><p class="tag gold">Review before NOVA acts</p><dl class="kv">' +
       '<dt>Proposed action</dt><dd>' + esc(p.action) + '</dd><dt>Why</dt><dd>' + esc(p.reason) + '</dd><dt>Where</dt><dd>' + esc(p.target) + '</dd>' +
       '<dt>What will change</dt><dd>' + (p.changes.length ? '<ul class="plain">' + p.changes.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' : 'Nothing') + '</dd>' +
+      '<dt>Effects</dt><dd class="fx">' + effectsHTML(p.effects) + '</dd>' +
       '<dt>Possible consequences</dt><dd>' + esc(p.consequences) + '</dd><dt>Can it be undone?</dt><dd>' + (p.undoable ? 'Yes. ' : '<b>No.</b> ') + esc(p.undoNote || '') + '</dd></dl>' +
       '<div class="btn-row"><button type="button" class="btn small primary" data-act="novaApproveRun" data-id="' + a.id + '">Approve</button><button type="button" class="btn small" data-act="novaRejectRun" data-id="' + a.id + '">Reject</button>' +
       (EDITABLE[a.tool] ? '<button type="button" class="btn small ghost" data-act="novaEditRun" data-id="' + a.id + '">Edit</button>' : '') +

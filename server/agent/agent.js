@@ -20,7 +20,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const voiceApprovable = (tool, preview) => !!tool && tool.risk === 'write' && !!(preview && preview.undoable);
 const needsApproval = (tool, user) => tool.risk !== 'read' && !(tool.risk === 'write' && user.auto_low_risk);
 
-function createAgent(cfg, db, registry, provider, pl) {
+function createAgent(cfg, db, registry, provider, pl, fx) {
   const now = cfg.now, limits = cfg.agent, live = new Map();   // runId -> AbortController for an in-flight model call
 
   const parse = s => { try { return JSON.parse(s); } catch (e) { return null; } };
@@ -108,7 +108,7 @@ function createAgent(cfg, db, registry, provider, pl) {
     if (tool.name === 'tasks.create' && call.input && call.input.due) plStart(run, user, call.input);
     if (needsApproval(tool, user)) {
       const preview = tool.preview(ctxFor(user, run), call.input);
-      const r = db.prepare('INSERT INTO approvals (user_id, run_id, tool, input, preview, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(run.user_id, run.id, tool.name, JSON.stringify(call.input), JSON.stringify(Object.assign({ reason: 'You asked: "' + run.request.slice(0, 120) + '"' }, preview)), now(), now() + limits.approvalTtlMs);
+      const r = db.prepare('INSERT INTO approvals (user_id, run_id, tool, input, preview, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(run.user_id, run.id, tool.name, JSON.stringify(call.input), JSON.stringify(Object.assign({ reason: 'You asked: "' + run.request.slice(0, 120) + '"', effects: fx ? fx.effects(user, tool.name, call.input, run.id) : [] }, preview)), now(), now() + limits.approvalTtlMs);
       step(run, 'approval_requested', 'Waiting for your approval: ' + preview.action + '.', { approvalId: Number(r.lastInsertRowid) });
       run.state.pending = { tool: tool.name, input: call.input, toolUseId: call.toolUseId || null, approvalId: Number(r.lastInsertRowid) };
       if (run.state.commitmentId) { db.prepare('UPDATE approvals SET commitment_id = ? WHERE id = ?').run(run.state.commitmentId, Number(r.lastInsertRowid)); plMove(run, user, 'awaiting_approval', 'Waiting for your approval.'); }

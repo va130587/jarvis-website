@@ -29,6 +29,7 @@ const { createOrbit } = require('./orbit');
 const { createReplay } = require('./replay');
 const { createRadar } = require('./radar');
 const { createVerify } = require('./verify');
+const { createEffects } = require('./effects');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
 // Only the web front end is public. server/, tests/, node_modules, .nova (the database), .env and package files are never served.
@@ -46,7 +47,7 @@ function createApp(over, deps) {
   const provider = deps.provider || (cfg.ai.provider === 'claude' ? createClaude(cfg, deps) : cfg.ai.provider === 'ollama' ? createOllama(cfg, deps) : { name: 'none', kind: 'none', model: null, available: () => false });
   const pl = createProofLoop(db, now), adapters = createAdapters(db);
   const registry = deps.registry || createRegistry({ db, memory, pl });
-  const agent = createAgent(cfg, db, registry, provider, pl);
+  const agent = createAgent(cfg, db, registry, provider, pl, createEffects(db, { now }));
   const verify = createVerify(cfg, db, { now });
   const plApi = createProofLoopApi(cfg, db, pl, adapters, verify);
   const chat = createChat(cfg, db, memory, provider, agent);
