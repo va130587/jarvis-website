@@ -82,6 +82,7 @@
   /* ================= Command palette (Ctrl+K) ================= */
   var PAGES = [['dashboard', 'Dashboard'], ['briefing', 'Daily Briefing'], ['chat', 'NOVA Chat'], ['voice', 'Voice Assistant'], ['email', 'Smart Email'], ['hub', 'Tasks and Calendar'], ['focus', 'Focus and Planner'], ['life', 'Life Tracker'], ['proofloop', 'ProofLoop'], ['insights', 'Weekly Insights'], ['replay', 'Day Replay'], ['automation', 'Automation Centre'], ['identity', 'Personal Identity'], ['memory', 'Memory Vault'], ['knowledge', 'Knowledge Base'], ['usage', 'AI Usage and Cost'], ['connections', 'Connected Apps'], ['security', 'Security and Settings'], ['support', 'Help']];
   var ACTIONS = [
+    { title: 'Capture several things at once…', sub: 'Quick capture', run: function (q) { if (N.capture) N.capture.open(q || ''); }, usesQuery: false },
     { title: 'Plan my day', sub: 'Focus and Planner', run: function () { location.hash = 'focus'; } },
     { title: 'Start a 25-minute focus session', sub: 'Focus and Planner', run: function () { if (N.focus) N.focus.start({ minutes: 25, title: 'Focus' }); location.hash = 'focus'; } },
     { title: 'How was my week?', sub: 'Weekly Insights', run: function () { location.hash = 'insights'; } },
@@ -106,7 +107,7 @@
       q.addEventListener('input', function () { clearTimeout(P.t); P.t = setTimeout(update, 120); });
       q.addEventListener('keydown', function (e) {
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (P.items.length) { P.sel = (P.sel + (e.key === 'ArrowDown' ? 1 : -1) + P.items.length) % P.items.length; paint(); } }
-        else if (e.key === 'Enter') { e.preventDefault(); choose(P.sel); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (P.t) { clearTimeout(P.t); P.t = 0; update(); } choose(P.sel); }
         else if (e.key === 'Escape') { e.preventDefault(); close(); }
         else if (e.key === 'Tab') e.preventDefault();          // focus stays in the dialog
       });
@@ -117,6 +118,7 @@
   function close() { if (!P.el || P.el.hidden) return; P.el.hidden = true; if (P.ret && P.ret.focus) P.ret.focus(); }
   function local(q) {
     var l = q.toLowerCase(), out = [];
+    var cap = /^capture\s*:\s*(.*)$/i.exec(q); if (cap) return [{ kind: 'Capture', title: 'Capture: ' + (cap[1].trim() || '…'), sub: 'Quick capture: you review it, and nothing is added until you approve', run: function () { if (N.capture) N.capture.open(cap[1].trim()); } }];
     if (q.charAt(0) === '>') return [{ kind: 'Ask NOVA', title: 'Ask NOVA: ' + (q.slice(1).trim() || '…'), sub: 'Sends it to NOVA Chat (changes still need your approval)', run: function () { sendToNova(q.slice(1).trim()); } }];
     PAGES.forEach(function (p) { if (!l || p[1].toLowerCase().indexOf(l) >= 0) out.push({ kind: 'Go to', title: p[1], sub: 'Page', run: function () { location.hash = p[0]; } }); });
     ACTIONS.forEach(function (a) { if (!l || a.title.toLowerCase().indexOf(l) >= 0 || (a.usesQuery && l.length > 2)) out.push({ kind: 'Action', title: a.usesQuery && l ? a.title.replace('…', ': "' + q + '"') : a.title, sub: a.sub, run: function () { a.run(a.usesQuery ? q : ''); } }); });
@@ -127,7 +129,7 @@
   function update() {
     var q = $('#palQ').value.trim(), seq = ++P.seq;
     P.items = local(q); P.sel = 0; paint();
-    if (q.length >= 2 && q.charAt(0) !== '>') api('GET', '/api/search?q=' + encodeURIComponent(q)).then(function (r) {
+    if (q.length >= 2 && q.charAt(0) !== '>' && !/^capture\s*:/i.test(q)) api('GET', '/api/search?q=' + encodeURIComponent(q)).then(function (r) {
       if (seq !== P.seq) return;                                         // an older answer arrived late: ignore it
       var found = r.results.map(function (x) { return { kind: KIND[x.type] || x.type, title: x.title, sub: x.sub, run: function () { location.hash = x.link.replace(/^#/, ''); } }; });
       P.items = found.concat(P.items); paint(found.length);

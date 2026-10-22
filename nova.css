@@ -466,3 +466,27 @@ dialog.tour.no-target { background: rgb(var(--deep-rgb) / .74); }
 
 /* Display options */
 .acc-group { margin-top: var(--s3); } .acc-group h3 { margin: 0 0 var(--s2); }
+
+/* Quick capture */
+dialog.capture { width: min(680px, calc(100vw - 24px)); }
+.cap-card { padding: var(--s5); }
+.cap-card h2 { margin-bottom: var(--s3); }
+.cap-card textarea, .cap-card input[type=text], .cap-card input[type=number], .cap-card input[type=date], .cap-card input[type=datetime-local], .cap-card select { width: 100%; }
+.cap-h { margin: 0 0 var(--s2); font-size: var(--fs-16); }
+.cap-list { list-style: none; margin: var(--s3) 0; padding: 0; display: grid; gap: var(--s2); }
+.cap-row { padding: var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); background: rgb(var(--surface-rgb) / .6); }
+.cap-row.unsure { border-style: dashed; }
+.cap-line { display: flex; align-items: center; gap: var(--s2); justify-content: space-between; flex-wrap: wrap; }
+.cap-pick { display: flex; align-items: center; gap: var(--s2); flex: 1 1 220px; min-height: 40px; cursor: pointer; overflow-wrap: anywhere; }
+.cap-pick input { width: 20px; height: 20px; flex: none; }
+.cap-text { min-width: 0; }
+.cap-why { margin: var(--s1) 0 0; color: var(--text-2); }
+.cap-edit { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--edge); }
+.cap-card .btn { min-height: 40px; }
+.cap-card .btn-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+.chip.cap-btn { display: inline-flex; align-items: center; gap: var(--s1); cursor: pointer; background: transparent; color: var(--muted); font: inherit; font-size: var(--fs-12); padding: var(--s1) var(--s2); }
+.chip.cap-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.chip.cap-btn:hover { color: var(--text); border-color: var(--edge-hi); }
+@media (max-width: 1280px) { .cap-btn .cap-label { display: none; } }
+@media (max-width: 1180px) { .chip.cap-btn { display: none; } }
+@media (max-width: 900px) { dialog.capture { max-height: calc(100vh - 96px); margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); } }

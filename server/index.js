@@ -35,6 +35,7 @@ const { createCheck } = require('./check');
 const { createPortable } = require('./portable');
 const { createBackups } = require('./backups');
 const { createUndoList } = require('./undolist');
+const { createCapture } = require('./capture');
 const { createStatic } = require('./static');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
@@ -68,7 +69,7 @@ function createApp(over, deps) {
 
   auth.register(router); memory.register(router); chat.register(router); agent.register(router); plApi.register(router);
   notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router); createCheck(cfg, db, { provider, scheduler }).register(router);
-  const portable = createPortable(cfg, db, { now, memory, kb, plApi }); portable.register(router); backups.register(router); createUndoList(cfg, db, { now, registry, agent, effects: fx }).register(router);
+  const portable = createPortable(cfg, db, { now, memory, kb, plApi }); portable.register(router); backups.register(router); createUndoList(cfg, db, { now, registry, agent, effects: fx }).register(router); createCapture(cfg, db, { now, agent, effects: fx, registry }).register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
