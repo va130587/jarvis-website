@@ -490,3 +490,19 @@ dialog.capture { width: min(680px, calc(100vw - 24px)); }
 @media (max-width: 1280px) { .cap-btn .cap-label { display: none; } }
 @media (max-width: 1180px) { .chip.cap-btn { display: none; } }
 @media (max-width: 900px) { dialog.capture { max-height: calc(100vh - 96px); margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); } }
+
+/* Gmail setup guide */
+.gm-guide { margin-bottom: var(--s4); } .gm-guide summary { cursor: pointer; color: var(--cyan-2); min-height: 24px; }
+.gm-guide h2 { margin: var(--s4) 0 var(--s2); font-size: var(--fs-16); }
+.gm-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.gm-checks li { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); }
+.gm-check-main { min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
+.gm-steps { margin: var(--s3) 0 0; padding-inline-start: var(--s5); display: grid; gap: var(--s3); } .gm-steps li { overflow-wrap: anywhere; }
+.gm-uris { list-style: none; margin: var(--s2) 0 0; padding: 0; display: grid; gap: var(--s2); }
+.gm-uri { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); } .gm-uri-label { flex: 1 1 100%; font-size: var(--fs-12); color: var(--text-2); }
+.gm-uri code, .gm-cmd code { flex: 1 1 200px; min-width: 0; padding: var(--s1) var(--s2); border: 1px solid var(--edge); border-radius: var(--r-sm); overflow-wrap: anywhere; word-break: break-all; }
+.gm-cmd { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin-top: var(--s2); }
+.gm-guide .btn.small { min-height: 40px; }
+.gm-prob { margin: var(--s2) 0; } .gm-prob summary { color: var(--text); }
+.gm-test { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--edge); }
+.gm-result { margin: var(--s2) 0 0; padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); } .gm-result.ok { border-color: rgb(var(--ok-rgb) / .5); } .gm-result.bad { border-color: rgb(var(--danger-rgb) / .5); }

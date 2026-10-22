@@ -198,3 +198,16 @@ Updated, not weakened: tests that counted "four jobs", "ten tasks" or "one notif
 - **The tour's native dialog on Safari and real phones.** Tested in Chromium at four widths.
 - **gzip behind a proxy (nginx, Caddy) and speed on a slow device.** The guard runs on a fast machine; pass `Accept-Encoding` and `If-None-Match` through a proxy.
 - **The guided demo's "Receipt check" step** ticks when you press **Check a receipt**, not when you paste a receipt on the other page (that page is public and does not know who you are).
+
+## Gmail setup guide (stand-in Google)
+
+Tested against a stand-in Google server: `tests/server-gmail-setup.test.js` (11 tests) and `tests/gmail-setup-e2e.test.js` (13 tests, including four widths in both themes with axe and 150% text).
+- The setup answer has the exact addresses for the running server and a checklist that never contains a secret, an ID or any part of one.
+- Each failure (access denied, redirect mismatch, Gmail API off, wrong client ID or secret, read access not granted, expired link, Google unreachable, missing secret key, expired access) lands on its own plain message; a failed connect stores nothing.
+- Test connection reads at most 5 headers with `format=metadata`, stores nothing, and needs the CSRF header. Every request to Gmail is a GET, and the permission asked for is exactly `gmail.readonly`.
+- Disconnect deletes the saved access and revokes it at Google, or says plainly that Google could not be reached.
+
+### UNVERIFIED (needs your Google account)
+- **The real Google login.** Follow "Connect Gmail: step by step" on Smart Email. Expected: Connect Gmail, Google's screen (with "Google hasn't verified this app": Advanced, then Continue), back in NOVA with "Gmail connected (read-only)".
+- **Real inbox reading.** After connecting press **Test connection** (should say Passed) and **Check now** (your real messages appear, sorted with reasons).
+- **Revoke.** Press Disconnect, then open https://myaccount.google.com/permissions: NOVA should no longer be listed. In Testing mode Google also expires access after 7 days, so a weekly reconnect is normal.

@@ -15,7 +15,7 @@
   var PROBLEMS = [
     ['NOVA says the port is already in use', 'NOVA is probably already running in another window. Close the old window (or press Ctrl+C in it) and start NOVA again. If it still fails, restart the computer, then start NOVA once.'],
     ['NOVA says Node.js is too old or missing', 'Go to nodejs.org, download the "LTS" version and install it. Then close the black window, open a new one and start NOVA again.'],
-    ['Gmail will not connect', 'Gmail needs a one-time setup with Google (Connected Apps shows the steps). It is optional: NOVA works with demo e-mail until then. NOVA only reads Gmail and can never send.'],
+    ['Gmail will not connect', 'Gmail needs a one-time setup with Google. Follow "Connect Gmail: step by step" on this page or on the Smart Email page; it shows the exact addresses and a live checklist. It is optional: NOVA works with demo e-mail until then. NOVA only reads Gmail and can never send.'],
     ['Voice does not work in Firefox', 'Firefox cannot listen to speech. Use Chrome or Edge to talk to NOVA, or type in NOVA Chat. NOVA can still read answers aloud in Firefox.'],
     ['I forgot which e-mail I used to sign in', 'On your own computer, the demo uses demo@nova.local. If you signed in with your own address, it is shown in Connected Apps ("Signed in as") once you are in. Each address has its own separate data.']];
 
@@ -46,7 +46,7 @@
 
   S.support = {
     render: function () {
-      return J.head('System', 'Help', 'How to start, what each page does, and what to do when something is wrong.', '') + check() + steps() + problems() + pages();
+      return J.head('System', 'Help', 'How to start, what each page does, and what to do when something is wrong.', '') + check() + steps() + (N.gmail ? N.gmail.guide(false) : '') + problems() + pages();
     }
   };
   J.actions.hpCheck = function () {

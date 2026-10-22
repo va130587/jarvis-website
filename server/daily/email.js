@@ -13,6 +13,24 @@ const { relDay } = require('./briefing');
 const DEMO = require('./gmail-demo.json');
 
 const SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
+// One list of plain "what went wrong, what to do" answers. The Smart Email page, the Help page and the return from Google all use it.
+const PROBLEMS = {
+  denied: { title: 'Google said no (access denied)', cause: 'Google stopped the connection. This usually means you cancelled at Google, or your Gmail address is not listed as a Test user for this app.', fix: 'In Google Cloud open APIs & Services, then OAuth consent screen, then Test users, add your own Gmail address, then press Connect Gmail again. If Google shows "unverified app", choose Advanced, then Continue.' },
+  redirect_mismatch: { title: 'The redirect address does not match', cause: 'The address NOVA sent to Google is not in your OAuth client\'s list of redirect addresses.', fix: 'In Google Cloud open APIs & Services, then Credentials, open your OAuth client and add the Gmail redirect address shown above exactly as written (same http or https, same port, no extra slash). Save, wait a minute, and try again.' },
+  api_disabled: { title: 'The Gmail API is switched off', cause: 'Your Google Cloud project has not enabled the Gmail API, so Google refuses to read mail.', fix: 'In Google Cloud open APIs & Services, then Library, search for Gmail API and press Enable. Then press Connect Gmail again. Nothing was connected.' },
+  bad_client: { title: 'Wrong client ID or secret', cause: 'Google does not recognise the client ID or client secret that NOVA is using.', fix: 'Copy the Client ID and Client secret again from Google Cloud, Credentials, set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, restart NOVA and try again.' },
+  scope: { title: 'Read access was not granted', cause: 'Google did not give NOVA permission to read your mail, so nothing was connected.', fix: 'Press Connect Gmail again and keep the "view your email messages" box ticked on the Google screen.' },
+  reconnect: { title: 'The connection expired', cause: 'Google no longer accepts the saved access. It expired or was removed in your Google account.', fix: 'Press Reconnect Gmail. In Testing mode Google also expires access after 7 days, so a weekly reconnect is normal until the app is published.' },
+  no_secret_key: { title: 'NOVA_SECRET_KEY is missing', cause: 'NOVA has no secret key to lock the saved Gmail access with, so it refuses to store it.', fix: 'Set NOVA_SECRET_KEY to a long random text (the command is in the steps above), restart NOVA, and connect again.' },
+  not_configured: { title: 'Google is not set up on this server', cause: 'NOVA has no Google client ID or client secret yet.', fix: 'Follow the steps above, then set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and restart NOVA.' },
+  expired: { title: 'The link expired', cause: 'The connect link is only valid for ten minutes and works once.', fix: 'Press Connect Gmail again.' },
+  network: { title: 'NOVA could not reach Google', cause: 'The server has no working internet connection to Google right now.', fix: 'Check the internet connection of the computer that runs NOVA, then try again.' },
+  exchange: { title: 'Google refused the connection', cause: 'Google did not accept the code it gave back.', fix: 'Press Connect Gmail again. If it repeats, check the client ID, client secret and redirect address in Google Cloud.' },
+  invalid: { title: 'The answer could not be verified', cause: 'The reply from Google did not match the connect request, so NOVA ignored it.', fix: 'Press Connect Gmail again from this same browser and sign-in.' },
+  signed_out: { title: 'You were signed out', cause: 'NOVA could not tell who you are when Google sent you back.', fix: 'Sign in to NOVA, then press Connect Gmail again.' },
+  google_error: { title: 'Google reported a problem', cause: 'Google stopped the connection and gave a reason NOVA does not recognise.', fix: 'Try again. If it repeats, check the steps above.' }
+};
+const problemText = k => PROBLEMS[k] ? PROBLEMS[k].cause + ' ' + PROBLEMS[k].fix : 'Gmail: something went wrong.';
 const PRIORITY_ORDER = { critical: 0, review: 1, important: 2, normal: 3, low: 4 };
 const sha = s => crypto.createHash('sha256').update(s).digest('hex');
 const rand = n => crypto.randomBytes(n).toString('base64url');
@@ -33,6 +51,20 @@ function createEmail(cfg, db, deps) {
     if (!keyOk()) setup.push('Set NOVA_SECRET_KEY to a long random string (for example: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64url\'))"). It encrypts the stored Gmail tokens.');
     return { connected: !!c && c.status === 'connected', status: c ? c.status : 'not_connected', account: c ? c.account : null, scope: 'read-only (gmail.readonly)', lastSyncAt: c ? c.last_sync_at : null, lastError: c ? c.last_error : null,
       googleConfigured: googleOk(), secretKey: keyOk(), canConnect: googleOk() && keyOk(), setup, demoCount: demo, sending: 'not available: NOVA has read-only access' };
+  }
+
+  // What a first-time user needs, live: the exact addresses for THIS server and a checklist. Only "set / not set": never a value, never a prefix.
+  function setupInfo(req) {
+    const o = origin(req), host = (/^https?:\/\/([^/:]+|\[[^\]]+\])/i.exec(o) || [])[1] || '', local = /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(host), https = /^https:/i.test(o);
+    const checks = [
+      { id: 'client_id', label: 'Google client ID is set', state: cfg.google.clientId ? 'ok' : 'todo', fix: 'Set GOOGLE_CLIENT_ID to the Client ID from Google Cloud, Credentials, and restart NOVA.' },
+      { id: 'client_secret', label: 'Google client secret is set', state: cfg.google.clientSecret ? 'ok' : 'todo', fix: 'Set GOOGLE_CLIENT_SECRET to the Client secret from the same place, and restart NOVA.' },
+      { id: 'secret_key', label: 'NOVA_SECRET_KEY is set (at least 16 characters)', state: keyOk() ? 'ok' : 'todo', fix: 'Set NOVA_SECRET_KEY to a long random text, and restart NOVA. It locks the saved Gmail access.' },
+      { id: 'address', label: 'NOVA is opened at localhost or an https address', state: local || https ? 'ok' : 'todo', fix: 'Google only accepts http for localhost. Open NOVA at http://127.0.0.1:' + cfg.port + ' or put it behind https and set BASE_URL.' },
+      { id: 'redirect', label: 'The redirect addresses are listed in Google Cloud', state: 'manual', fix: 'NOVA cannot see inside Google Cloud. Compare the two addresses above with your OAuth client, letter for letter.' }
+    ];
+    return { origin: o, redirectUris: { signIn: o + '/auth/google/callback', gmail: o + '/auth/gmail/callback' }, scope: SCOPE, keyCommand: 'node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64url\'))"',
+      checks, ready: checks.every(c => c.state !== 'todo'), problems: Object.keys(PROBLEMS).map(k => Object.assign({ id: k }, PROBLEMS[k])), messages: Object.keys(PROBLEMS).reduce((m, k) => { m[k] = problemText(k); return m; }, {}) };
   }
 
   function known(userId) {
@@ -59,7 +91,12 @@ function createEmail(cfg, db, deps) {
   async function google(url, token, o) {
     const r = await doFetch(url, Object.assign({ headers: { Authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(15000) }, o || {}));
     if (r.status === 401) { const e = new Error('Google no longer accepts NOVA\'s access. Reconnect Gmail.'); e.code = 'reconnect'; throw e; }
-    if (!r.ok) throw new Error('Gmail answered HTTP ' + r.status + '.');
+    if (!r.ok) {
+      let body = ''; try { body = await r.text(); } catch (x) { /* the status is enough */ }
+      const e = new Error('Gmail answered HTTP ' + r.status + '.'); e.status = r.status;
+      if (r.status === 403 && /accessNotConfigured|has not been used|SERVICE_DISABLED|is disabled/i.test(body)) { e.code = 'api_disabled'; e.message = problemText('api_disabled'); }
+      throw e;
+    }
     return r.json();
   }
   async function accessToken(c) {
@@ -145,7 +182,7 @@ function createEmail(cfg, db, deps) {
       const c = conn(ctx.auth.user.id);
       if (!c) throw new HttpError(409, 'Gmail is not connected. Connect it first, or load the demo inbox.', 'not_connected');
       try { const out = await sync(ctx.auth.user); audit(db, now, ctx.auth.user.id, 'gmail_sync', String(out.fetched), ctx.req.socket.remoteAddress); return { status: 200, body: { fetched: out.fetched, status: status(ctx.auth.user.id) } }; }
-      catch (e) { throw new HttpError(502, e.message, e.code === 'reconnect' ? 'reconnect' : 'sync_failed'); }
+      catch (e) { throw new HttpError(502, e.message, e.code === 'reconnect' || e.code === 'api_disabled' ? e.code : 'sync_failed'); }
     });
     router.post('/api/email/demo', ctx => {
       const n = loadDemo(ctx.auth.user.id).length;
@@ -159,8 +196,8 @@ function createEmail(cfg, db, deps) {
 
     // Connecting Gmail: a CSRF-protected POST returns Google's consent URL (read-only scope). The callback only accepts a state created by the signed-in person.
     router.post('/api/gmail/connect', ctx => {
-      if (!googleOk()) throw new HttpError(503, 'Google is not configured on this server (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).', 'not_configured');
-      if (!keyOk()) throw new HttpError(503, 'Set NOVA_SECRET_KEY on the server first: it encrypts the Gmail tokens.', 'no_secret_key');
+      if (!googleOk()) throw new HttpError(503, problemText('not_configured'), 'not_configured');
+      if (!keyOk()) throw new HttpError(503, problemText('no_secret_key'), 'no_secret_key');
       const state = rand(24), verifier = rand(48);
       db.prepare('DELETE FROM oauth_states WHERE created_at < ?').run(now() - 10 * 60e3);
       db.prepare("INSERT INTO oauth_states (id, nonce, verifier, created_at, purpose, user_id) VALUES (?, '-', ?, ?, 'gmail', ?)").run(sha(state), verifier, now(), ctx.auth.user.id);
@@ -172,7 +209,8 @@ function createEmail(cfg, db, deps) {
       const back = r => ({ status: 302, headers: { Location: '/?gmail=' + r + '#email' } });
       const p = ctx.url.searchParams, state = p.get('state'), code = p.get('code');
       if (!ctx.auth) return back('signed_out');
-      if (p.get('error')) return back('denied');
+      if (p.get('error')) return back(p.get('error') === 'access_denied' ? 'denied' : 'google_error');
+      if (!keyOk() || !googleOk()) return back(keyOk() ? 'not_configured' : 'no_secret_key');
       if (!state || !code) return back('invalid');
       const row = db.prepare("SELECT * FROM oauth_states WHERE id = ? AND purpose = 'gmail'").get(sha(state));
       db.prepare('DELETE FROM oauth_states WHERE id = ?').run(sha(state));
@@ -182,18 +220,40 @@ function createEmail(cfg, db, deps) {
       try {
         const r = await doFetch(cfg.google.tokenUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: AbortSignal.timeout(10000),
           body: new URLSearchParams({ code, client_id: cfg.google.clientId, client_secret: cfg.google.clientSecret, redirect_uri: origin(ctx.req) + '/auth/gmail/callback', grant_type: 'authorization_code', code_verifier: row.verifier }) });
-        if (!r.ok) return back('exchange');
+        if (!r.ok) { let j = {}; try { j = await r.json(); } catch (x) { /* no details */ } return back(j.error === 'redirect_uri_mismatch' ? 'redirect_mismatch' : j.error === 'invalid_client' ? 'bad_client' : 'exchange'); }
         tok = await r.json();
       } catch (e) { return back('network'); }
       const granted = String(tok.scope || '').split(/\s+/);
       if (!granted.includes(SCOPE)) return back('scope');
       let account = null;
-      try { account = (await google(cfg.gmail.apiUrl + '/gmail/v1/users/me/profile', tok.access_token)).emailAddress || null; } catch (e) { /* the account name is only for display */ }
+      try { account = (await google(cfg.gmail.apiUrl + '/gmail/v1/users/me/profile', tok.access_token)).emailAddress || null; } catch (e) { if (e.code === 'api_disabled') return back('api_disabled'); /* otherwise the account name is only for display */ }
       const enc = seal(cfg.secretKey, { access_token: tok.access_token, refresh_token: tok.refresh_token || null, expires_at: now() + (tok.expires_in || 3600) * 1000 });
       db.prepare("INSERT INTO connections (user_id, provider, account, scope, token_enc, status, created_at, updated_at) VALUES (?, 'gmail', ?, ?, ?, 'connected', ?, ?) ON CONFLICT(user_id, provider) DO UPDATE SET account = excluded.account, scope = excluded.scope, token_enc = excluded.token_enc, status = 'connected', last_error = NULL, updated_at = excluded.updated_at")
         .run(ctx.auth.user.id, account, granted.join(' '), enc, now(), now());
       audit(db, now, ctx.auth.user.id, 'gmail_connected', 'read-only' + (granted.some(s => /gmail\.(send|modify|compose)|mail\.google\.com/.test(s)) ? ' (Google granted more than asked; NOVA uses read only)' : ''), ctx.req.socket.remoteAddress);
       return back('connected');
+    });
+    router.get('/api/gmail/setup', ctx => ({ status: 200, body: setupInfo(ctx.req) }));
+    // "Test connection": reads only the newest 5 message headers, stores nothing, changes nothing at Google.
+    router.post('/api/gmail/test', async ctx => {
+      const c = conn(ctx.auth.user.id);
+      if (!c || c.status === 'disconnected') throw new HttpError(409, 'Gmail is not connected yet. Press Connect Gmail first.', 'not_connected');
+      if (!keyOk()) throw new HttpError(503, problemText('no_secret_key'), 'no_secret_key');
+      try {
+        const token = await accessToken(c), api = cfg.gmail.apiUrl + '/gmail/v1/users/me/messages';
+        const list = await google(api + '?' + new URLSearchParams({ labelIds: 'INBOX', maxResults: '5' }), token);
+        let newest = 0, n = 0;
+        for (const m of (list.messages || []).slice(0, 5)) {
+          const d = await google(api + '/' + encodeURIComponent(m.id) + '?format=metadata&metadataHeaders=From&metadataHeaders=Subject', token);
+          n++; newest = Math.max(newest, +d.internalDate || 0);
+        }
+        audit(db, now, ctx.auth.user.id, 'gmail_test', 'passed, ' + n + ' headers read', ctx.req.socket.remoteAddress);
+        return { status: 200, body: { ok: true, checked: n, newestAt: newest || null, message: n ? 'It works. NOVA read the headers of ' + n + ' recent message' + (n === 1 ? '' : 's') + ' and kept nothing.' : 'It works. Your inbox has no messages to read right now.' } };
+      } catch (e) {
+        const code = e.code === 'reconnect' ? 'reconnect' : e.code === 'api_disabled' ? 'api_disabled' : e.status === 403 ? 'denied' : 'network';
+        audit(db, now, ctx.auth.user.id, 'gmail_test', 'failed: ' + code, ctx.req.socket.remoteAddress);
+        return { status: 200, body: { ok: false, code, message: code === 'reconnect' ? problemText('reconnect') : code === 'api_disabled' ? problemText('api_disabled') : code === 'denied' ? 'Google refused to show the messages. Reconnect Gmail and keep the read access ticked.' : 'The test could not finish: ' + String(e.message).slice(0, 120) + ' ' + problemText('network') } };
+      }
     });
     router.post('/api/gmail/disconnect', async ctx => {
       const c = conn(ctx.auth.user.id), uid = ctx.auth.user.id;
@@ -206,7 +266,7 @@ function createEmail(cfg, db, deps) {
       let removed = 0;
       if (ctx.body.deleteEmails === true) removed = Number(db.prepare('DELETE FROM emails WHERE user_id = ? AND is_demo = 0').run(uid).changes);
       audit(db, now, uid, 'gmail_disconnected', (revoked ? 'revoked at Google' : 'tokens deleted') + (removed ? ', ' + removed + ' messages removed' : ''), ctx.req.socket.remoteAddress);
-      return { status: 200, body: { ok: true, revokedAtGoogle: revoked, removed } };
+      return { status: 200, body: { ok: true, revokedAtGoogle: revoked, hadAccess: !!(c && c.token_enc), removed } };
     });
 
     router.post('/api/email/:id/draft', ctx => {

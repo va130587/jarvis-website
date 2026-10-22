@@ -114,6 +114,7 @@ Honest status after **all five milestones** (local model, ProofLoop, voice, dail
 
 | Feature | Status | Notes |
 |---|---|---|
+| Connect Gmail guide: exact redirect addresses, live checklist, plain cause-and-fix for every failure, Test connection, honest Disconnect | WORKING AND TESTED (stand-in Google) | `GET /api/gmail/setup`, `POST /api/gmail/test`; every Gmail request is a GET and the only permission is gmail.readonly. A real Google login is UNVERIFIED: see NOVA_TEST_REPORT.md |
 | Help page and Check my setup | WORKING AND TESTED | Read-only `GET /api/check`: Node, data, daily jobs, notifications, Gmail, AI model; each OK, Needs attention (exact next step) or Not set up (why that is fine). No paths, secrets or addresses are returned. A test fails if any error message contains a code, "undefined", "[object", "Error:" or a file path (found and fixed 17 developer-style messages). |
 | First-run tour | WORKING AND TESTED | Six steps in a real `<dialog>`; remembered per account in the database (migration 9; people who already had an account are marked done); Esc skips; focus returns; "Show the tour again". |
 | Readable export and safe import | WORKING AND TESTED | Markdown copy; import is preview (counts, duplicates, refused items, notes) then Approve, in one transaction, into your account only; never sessions, tokens, e-mail, other accounts' ids or proof evidence; "verified" commitments return as "awaiting confirmation" because proof is not imported. Limits: 6 MB, 5,000 items. |

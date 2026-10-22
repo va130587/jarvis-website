@@ -164,7 +164,7 @@
       var st = r.status, list = r.emails;
       return J.head('Inbox', 'Smart Email', 'Your e-mail sorted by what needs you, with the reason for every decision. Read-only: NOVA never sends.', st.connected ? '<button type="button" class="btn" data-act="dSync">Check now</button>' : '') +
         (D.gmailMsg ? '<p class="gmail-msg ' + (D.gmailMsg.ok ? 'ok' : '') + '" role="status"><span>' + esc(D.gmailMsg.text) + '</span><button type="button" class="btn small ghost" data-act="dGmailMsgOff">Dismiss</button></p>' : '') +
-        connPanel(st) +
+        connPanel(st) + (N.gmail ? N.gmail.guide(st.connected) : '') +
         (r.counts.all ? '<div class="mail-filters" role="toolbar" aria-label="Filter messages">' + FILTERS.map(function (f) { return '<button type="button" class="chip-btn' + (D.filter === f[0] ? ' on' : '') + '" data-act="dFilter" data-id="' + f[0] + '" aria-pressed="' + (D.filter === f[0]) + '">' + esc(f[1]) + ' <b>' + (r.counts[f[0]] || 0) + '</b></button>'; }).join('') + '</div>' +
           '<div class="mail-grid"><article class="panel mail-list-panel"><h2 class="sr-only">Messages</h2>' + (list.length ? '<ul class="mail-list">' + list.map(mailRow).join('') + '</ul>' : '<p class="empty">No messages match this filter.</p>') + '</article>' + mailDetail() + '</div>'
           : '<article class="panel"><p class="empty">No e-mail yet. ' + (st.connected ? 'Press "Check now".' : 'Connect Gmail (read-only) or try the demo inbox to see how sorting works.') + '</p></article>');
@@ -173,8 +173,11 @@
       H().stale('email', [['email', '/api/email?filter=' + D.filter]]);
       var t = $('#dDraftBody'); if (t) t.addEventListener('input', function () { D.draftDirty = true; });
       var q = new URLSearchParams(location.search).get('gmail');
-      if (q) { var MSG = { connected: 'Gmail connected (read-only). Press "Check now" to read your inbox.', denied: 'Gmail was not connected: you cancelled at Google.', scope: 'Google did not grant read access, so nothing was connected.', expired: 'That link expired. Please try again.', signed_out: 'Please sign in to NOVA first.', exchange: 'Google refused the connection. Check the server settings.', network: 'The server could not reach Google.', invalid: 'The answer from Google could not be verified, so nothing was connected.' };
-        D.gmailMsg = { text: MSG[q] || 'Gmail: ' + q, ok: q === 'connected' }; J.toast(D.gmailMsg.text); history.replaceState(null, '', location.pathname + location.hash); J.render(false); }
+      if (q) {
+        history.replaceState(null, '', location.pathname + location.hash);
+        var show = function () { D.gmailMsg = { text: q === 'connected' ? 'Gmail connected (read-only). Press "Check now" to read your inbox.' : N.gmail ? N.gmail.message(q) : 'Gmail: ' + q, ok: q === 'connected' }; J.toast(D.gmailMsg.text); J.render(false); };
+        if (q !== 'connected' && N.gmail) N.gmail.load().then(show); else show();
+      }
     }
   };
   function reloadEmail() { return api('GET', '/api/email?filter=' + D.filter).then(function (r) { N.cache.email = r; return D.emailSel ? api('GET', '/api/email/' + D.emailSel).then(function (m) { N.cache.mail = m; }) : null; }).then(function () { J.render(false); }).catch(fail); }
@@ -287,5 +290,5 @@
     dAskPerm: function () { if (!('Notification' in window)) return; Promise.resolve(Notification.requestPermission()).then(function () { J.render(false); }); },
     dTestNotif: function () { api('POST', '/api/notifications/test', {}).then(function (r) { J.toast(r.notification ? 'Test sent' + (r.notification.push === 'sent' ? ' (also to your phone).' : r.notification.push && /^failed/.test(r.notification.push) ? '. Phone push failed: ' + r.notification.push.replace('failed: ', '') + '.' : '.') : 'Sent.'); return poll(false); }).catch(fail); }
   });
-  function disconnect() { api('POST', '/api/gmail/disconnect', {}).then(function (r) { J.toast('Gmail disconnected' + (r.revokedAtGoogle ? ' and access revoked at Google.' : '. Tokens deleted.')); reloadEmail(); }).catch(fail); }
+  function disconnect() { api('POST', '/api/gmail/disconnect', {}).then(function (r) { J.toast(r.revokedAtGoogle ? 'Gmail disconnected and access revoked at Google.' : r.hadAccess ? 'Removed from NOVA. Google could not be reached, so also remove NOVA at myaccount.google.com/permissions.' : 'Gmail disconnected.'); if (N.gmail) N.gmail.test = null; reloadEmail(); }).catch(fail); }
 })();
