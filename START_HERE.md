@@ -32,6 +32,7 @@ Run `npm start`. The first time, the terminal prints a setup address and a one-t
 | Daily Briefing | Overdue, due today, follow-ups, important e-mail, and "the one thing" |
 | NOVA Chat | Ask in plain words; NOVA shows a preview and waits for your approval |
 | Voice Assistant | Push-to-talk with an editable transcript |
+| ProofLoop | Your promises tracked to a verified result, with **Can people rely on me?**: how reliable you and others have been, and a heads-up before you promise in a busy week |
 | Smart Email | Gmail (read-only) or a demo inbox, sorted by priority with reasons; never sends. **Connect Gmail: step by step** guides you through the free Google setup, with a live checklist and a Test connection button |
 | Tasks and Calendar | Your NOVA tasks with Done and Delete (preview first), plus the Classic tools |
 | Focus and Planner | Fits your tasks into your working hours; focus timer |

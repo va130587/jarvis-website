@@ -5,6 +5,7 @@ const { HttpError, str, oneOf } = require('../http');
 const { audit } = require('../security');
 const { LABEL, TERMINAL, STATES, EVIDENCE_KINDS, ProofLoopError, dubaiToday, addDays } = require('./machine');
 const { loadDemo, resetDemo } = require('./demo');
+const { createTrust } = require('./trust');
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const when = ms => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dubai', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(ms)) + ' (Dubai)';
@@ -80,6 +81,13 @@ function createProofLoopApi(cfg, db, pl, adapters, verify) {
   }
 
   function register(router) {
+    const trust = createTrust(db, now);
+    router.get('/api/proofloop/trust', ctx => ({ status: 200, body: trust.compute(ctx.auth.user.id) }));
+    router.get('/api/proofloop/heads-up', ctx => {
+      const d = ctx.url.searchParams.get('deadline') || '';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new HttpError(400, 'Enter the date as a date, for example 2026-10-23.', 'invalid');
+      return { status: 200, body: trust.headsUp(ctx.auth.user.id, d) };
+    });
     router.get('/api/proofloop/summary', ctx => { const s = pl.summary(ctx.auth.user.id); return { status: 200, body: Object.assign({}, s, { attention: s.attention.map(view) }) }; });
     router.get('/api/commitments', ctx => {
       const q = ctx.url.searchParams, st = q.get('status'), dir = q.get('direction'), od = q.get('overdue');

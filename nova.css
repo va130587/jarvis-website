@@ -506,3 +506,16 @@ dialog.capture { width: min(680px, calc(100vw - 24px)); }
 .gm-prob { margin: var(--s2) 0; } .gm-prob summary { color: var(--text); }
 .gm-test { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--edge); }
 .gm-result { margin: var(--s2) 0 0; padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); } .gm-result.ok { border-color: rgb(var(--ok-rgb) / .5); } .gm-result.bad { border-color: rgb(var(--danger-rgb) / .5); }
+
+/* Can people rely on me? */
+.trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--s4); margin-top: var(--s3); }
+.trust-side h3 { margin: 0 0 var(--s2); font-size: var(--fs-16); }
+.trust-line { margin: 0 0 var(--s3); font-size: var(--fs-16); overflow-wrap: anywhere; }
+.trust-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--s2); margin: 0 0 var(--s3); }
+.trust-counts div { padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); }
+.trust-counts dt { font-size: var(--fs-12); color: var(--text-2); } .trust-counts dd { margin: 0; font-size: var(--fs-20); font-family: var(--mono); }
+.trust-people { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.trust-people li { display: flex; flex-direction: column; gap: 2px; padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); overflow-wrap: anywhere; }
+.trust-rule { margin-top: var(--s3); } .trust-rule summary { cursor: pointer; color: var(--cyan-2); }
+.trust-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3); margin-top: var(--s4); } .trust-form .field { margin: 0; } .trust-form .btn { min-height: 40px; }
+.trust-heads { margin-top: var(--s3); }

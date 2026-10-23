@@ -10,6 +10,7 @@ const { validate } = require('./agent/schema');
 const { matchIntent, parseDue } = require('./agent/planner');
 const { parseWhen, parseMoney, categorize, CATEGORIES } = require('./life');
 const { parts: dubaiParts } = require('./daily/clock');
+const { createTrust } = require('./proofloop/trust');
 
 const ALLOWED = ['tasks.create', 'notes.create', 'reminders.create', 'expenses.add', 'commitments.create'];
 const KIND = { 'tasks.create': 'Task', 'notes.create': 'Note', 'reminders.create': 'Reminder', 'expenses.add': 'Expense', 'commitments.create': 'Promise' };
@@ -38,7 +39,7 @@ function split(text) {
 }
 
 function createCapture(cfg, db, { now, agent, effects, registry }) {
-  const pending = new Map();
+  const pending = new Map(), trust = createTrust(db, now);
   const sweep = () => { for (const [k, v] of pending) if (v.at + TTL < now()) pending.delete(k); };
   const today = () => dubaiParts(now()).iso;
 
@@ -124,7 +125,9 @@ function createCapture(cfg, db, { now, agent, effects, registry }) {
       if (!duplicate && Array.isArray(fx) && fx.some(e => /already have an open task with the same title/.test(e))) { duplicate = 'You already have an open task with this title.'; confident = false; }
       if (!duplicate && c.tool === 'notes.create' && db.prepare('SELECT 1 FROM notes WHERE user_id = ? AND deleted_at IS NULL AND lower(text) = lower(?)').get(user.id, c.input.text)) { duplicate = 'You already have a note with this text.'; confident = false; }
       if (!duplicate && c.tool === 'commitments.create' && db.prepare("SELECT 1 FROM commitments WHERE user_id = ? AND lower(title) = lower(?) AND direction = ? AND status NOT IN ('completed','failed','cancelled')").get(user.id, c.input.title, c.input.direction)) { duplicate = 'You already track this promise.'; confident = false; }
-      items.push({ key: 'i' + (++n), kind: KIND[c.tool], tool: c.tool, input: c.input, label: label(c.tool, c.input), confident, reason: duplicate || reason, duplicate: !!duplicate, effects: fx });
+      // "Before you promise": a heads-up when this week already holds 3 or more of my open promises
+      const heads = c.tool === 'commitments.create' && c.input.direction === 'i_owe' && c.input.deadline ? trust.headsUp(user.id, c.input.deadline) : null;
+      items.push({ key: 'i' + (++n), kind: KIND[c.tool], tool: c.tool, input: c.input, label: label(c.tool, c.input), confident, reason: duplicate || reason, duplicate: !!duplicate, effects: fx, headsUp: heads && heads.message ? heads.message : null });
     }
     if (!items.length && !no.length) throw new HttpError(400, 'There is nothing to capture in that text.', 'invalid');
     sweep(); for (const [id, v] of pending) if (v.uid === user.id && pending.size >= MAX_PENDING) pending.delete(id);

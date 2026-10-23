@@ -32,7 +32,7 @@
     var on = C.picked[it.key];
     return '<li class="cap-row' + (it.confident ? '' : ' unsure') + '" data-row="' + it.key + '"><div class="cap-line"><label class="cap-pick"><input type="checkbox" data-cap="pick" data-key="' + it.key + '"' + (on ? ' checked' : '') + '><span class="tag cap-kind">' + esc(it.kind) + '</span> <span class="cap-text">' + esc(C.edits[it.key] ? '(edited) ' + it.label : it.label) + '</span></label>' +
       '<button type="button" class="btn small ghost" data-cap="edit" data-key="' + it.key + '" aria-label="Edit: ' + esc(it.label) + '">Edit</button></div>' +
-      (it.reason ? '<p class="small-text cap-why">' + esc(it.reason) + '</p>' : '') + (C.edits[it.key] ? '<p class="small-text muted">Edited: the facts below are for the original wording.</p>' : '') + fxHTML(it.effects) + editHTML(it) + '</li>';
+      (it.reason ? '<p class="small-text cap-why">' + esc(it.reason) + '</p>' : '') + (it.headsUp ? '<p class="small-text cap-why"><b>Before you promise:</b> ' + esc(it.headsUp) + '</p>' : '') + (C.edits[it.key] ? '<p class="small-text muted">Edited: the facts below are for the original wording.</p>' : '') + fxHTML(it.effects) + editHTML(it) + '</li>';
   }
   function noRow(n) {
     return '<li class="cap-row unsure" data-row="' + n.key + '"><div class="cap-line"><label class="cap-pick"><input type="checkbox" data-cap="pick" data-key="' + n.key + '"' + (C.picked[n.key] ? ' checked' : '') + '><span class="tag dim cap-kind">Not understood</span> <span class="cap-text">' + esc(n.text) + '</span></label></div><p class="small-text cap-why">' + esc(n.reason) + ' Tick it to keep the text as a note.</p></li>';
