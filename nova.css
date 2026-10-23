@@ -528,3 +528,10 @@ dialog.capture { width: min(680px, calc(100vw - 24px)); }
 .wi-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); } .wi-list li { display: flex; flex-direction: column; gap: 2px; padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); overflow-wrap: anywhere; }
 .wi-rules { margin-top: var(--s3); } .wi-rules summary { cursor: pointer; color: var(--cyan-2); }
 #wiForm { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3); } #wiForm .field { flex: 1 1 320px; margin: 0; } #wiForm input[type=text] { width: 100%; } #wiForm .btn { min-height: 40px; }
+
+/* Weekly Review */
+.wr-pick { max-width: 420px; } .wr-pick select { width: 100%; }
+.wr-week { margin: var(--s2) 0 0; font-size: var(--fs-16); }
+.wr-big { margin: 0 0 var(--s3); font-size: var(--fs-20); }
+.wr-sec { margin-bottom: var(--s4); } .wr-none { margin: 0; }
+.wr-prio { margin: 0 0 var(--s3); padding-inline-start: var(--s5); display: grid; gap: var(--s3); } .wr-prio li { display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }

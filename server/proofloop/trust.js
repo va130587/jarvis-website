@@ -57,6 +57,6 @@ function createTrust(db, now) {
     return { week: { from, to }, open: open.length, items: open.slice(0, 10).map(c => ({ title: c.title, counterparty: c.counterparty, deadline: c.deadline })),
       message: open.length >= MIN ? 'You already have ' + open.length + ' open promises due the week of ' + from + ': ' + open.slice(0, 3).map(c => c.title).join('; ') + (open.length > 3 ? '; and ' + (open.length - 3) + ' more.' : '.') + ' Think about whether a new one fits.' : null };
   }
-  return { compute, headsUp, MIN, RULE, TERMINAL };
+  return { compute, headsUp, bucket, keptAt, MIN, RULE, TERMINAL };
 }
 module.exports = { createTrust, MIN };

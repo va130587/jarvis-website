@@ -38,6 +38,7 @@ const STEPS = {
   focus: async p => { await p.waitForSelector('.timeline-plan .blk, .plan .empty'); },
   life: async p => { await p.fill('#lifeQ', 'how much did I spend this month'); await p.press('#lifeQ', 'Enter'); await p.waitForSelector('.cap-reply'); },
   proofloop: async p => { await p.locator('button[data-act="plOpen"]').first().click(); await p.waitForSelector('#formDialog[open]'); await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('#formDialog[open]')); },
+  weekreview: async p => { await p.waitForSelector('#wrWeek'); await p.click('button[data-act="wrCopy"]'); },
   whatif: async p => { await p.fill('#wiText', 'Join the workshop tomorrow 2pm to 5pm'); await p.press('#wiText', 'Enter'); await p.waitForSelector('#wiResult'); },
   insights: async p => { await p.waitForSelector('.chart'); await p.focus('#chDone .bm'); await p.waitForSelector('#chDone .tip:not([hidden])'); },
   replay: async p => { await p.waitForSelector('#rpTime'); await p.focus('#rpTime'); await p.keyboard.press('Home'); await p.waitForSelector('#rpReadout'); },
@@ -52,7 +53,7 @@ const STEPS = {
 };
 
 for (const [width, theme] of [[390, 'dark'], [768, 'dark'], [1024, 'dark'], [1440, 'dark'], [390, 'light'], [1440, 'light']]) {
-  test('smoke walk at ' + width + ' px, ' + (theme === 'light' ? 'Daylight' : 'Deep Space') + ' theme: all 20 pages are clean after their main interaction', async () => {
+  test('smoke walk at ' + width + ' px, ' + (theme === 'light' ? 'Daylight' : 'Deep Space') + ' theme: all 21 pages are clean after their main interaction', async () => {
     const init = theme === 'light' ? "try { localStorage.setItem('nova.theme', 'light'); } catch (e) {}" : undefined;
     const { page, ctx, errors } = await H.openApp(browser, { base, hash: '', width, height: width === 390 ? 844 : 900, init });
     const failed = [];

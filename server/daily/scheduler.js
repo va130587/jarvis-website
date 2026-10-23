@@ -16,6 +16,7 @@ const KINDS = {
   deadlines: { name: 'Deadline check', description: 'Tells you what is overdue or due tomorrow, only if there is something.', hour: 17, minute: 0, days: 'daily', enabled: 1 },
   followups: { name: 'Follow-up nudges', description: 'Reminds you to chase things people owe you once their follow-up date arrives. It never contacts anyone.', hour: 10, minute: 0, days: 'weekdays', enabled: 1 },
   backup: { name: 'Backup', description: 'Saves a checked copy of your NOVA data and keeps the newest copies (14 by default). It stays on this computer.', hour: 3, minute: 30, days: 'daily', enabled: 1 },
+  weekly_review: { name: 'Weekly review notification', description: 'On Sunday evening adds one notification that opens your Weekly Review. It only reads your own data and is off until you turn it on.', hour: 18, minute: 0, days: '0', enabled: 0 },
   email: { name: 'E-mail check', description: 'Reads new Gmail messages (read-only), sorts them and tells you about critical ones. Skipped when Gmail is not connected.', hour: 8, minute: 0, days: 'daily', enabled: 1 }
 };
 

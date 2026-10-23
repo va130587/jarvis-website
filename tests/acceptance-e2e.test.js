@@ -105,7 +105,7 @@ test('NOVA_DEMO_GUIDE.md, step by step, on the demo data', async () => {
   assert.match(await page.evaluate(() => J.voice.command('any important emails?').then(o => typeof o === 'string' ? o : o.text)), /Critical: "Interview invitation/);
   // 6. Automation and notifications
   await page.evaluate(() => { location.hash = 'automation'; }); await page.waitForSelector('.sched');
-  assert.equal(await page.locator('.sched').count(), 5);
+  assert.equal(await page.locator('.sched').count(), 6);
   await page.locator('.sched[data-kind="followups"] button[data-act="dRunNow"]').click(); await page.waitForSelector('.runs td:has-text("Follow-up nudges")');
   await page.click('button[data-act="dTestNotif"]'); await page.waitForFunction(() => NOVA.daily.unread > 0);
   await page.click('#novaBell'); await page.waitForSelector('#novaNotifs .notif-item'); await page.keyboard.press('Escape');

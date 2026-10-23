@@ -37,6 +37,7 @@ const { createBackups } = require('./backups');
 const { createUndoList } = require('./undolist');
 const { createCapture } = require('./capture');
 const { createWhatIf } = require('./whatif');
+const { createReview } = require('./review');
 const { createStatic } = require('./static');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
@@ -72,6 +73,7 @@ function createApp(over, deps) {
   notifier.register(router); scheduler.register(router); email.register(router); kb.register(router); prod.register(router); life.register(router); orbit.register(router); replay.register(router); radar.register(router); verify.register(router); createCheck(cfg, db, { provider, scheduler }).register(router);
   const portable = createPortable(cfg, db, { now, memory, kb, plApi }); portable.register(router); backups.register(router); createUndoList(cfg, db, { now, registry, agent, effects: fx }).register(router); createCapture(cfg, db, { now, agent, effects: fx, registry }).register(router);
   createWhatIf(cfg, db).register(router);
+  const review = createReview(cfg, db); review.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
@@ -110,6 +112,11 @@ function createApp(over, deps) {
     return {
       everyTick: () => life.deliver(),
       backup: (user, run) => backups.job(user, run),
+      async weekly_review(user) {
+        const w = review.compute(user.id), nothing = w.finished.empty && w.promises.empty && w.focus.empty && w.spending.empty;
+        await notifier.notify(user.id, { kind: 'review', title: 'Your weekly review is ready', body: (nothing ? 'Not much was recorded for ' + w.week.label + ' yet. ' : 'Finished ' + w.finished.total + ' task' + (w.finished.total === 1 ? '' : 's') + ', ' + w.promises.onTime + ' promise' + (w.promises.onTime === 1 ? '' : 's') + ' kept on time, ' + w.slipped.total + ' slipped. ') + 'Open it to see the three suggested priorities.', link: '#weekreview', dedupe: 'weekly-review:' + w.week.from });
+        return { summary: 'Weekly review for ' + w.week.label + '.' };
+      },
       async briefing(user, run) {
         const b = briefing.create(user, 'schedule');
         await notifier.notify(user.id, { kind: 'briefing', title: 'Your briefing for ' + b.weekday, body: b.headline + (b.focus ? ' Focus: ' + b.focus.text + '.' : '') + (run.missed ? ' (NOVA was not running for ' + plural(run.missed, 'earlier briefing') + '; this one replaces them.)' : ''), link: '#briefing', dedupe: 'briefing-run-' + run.id, tags: 'sunrise' });

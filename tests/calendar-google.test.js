@@ -73,6 +73,7 @@ test('connect (read-only): Client ID checks, scopes, events in week + month view
   assert.equal(req.scope, READ, 'read-only asks for calendar.readonly only');
   assert.equal(req.prompt, 'consent');
   assert.match(await page.textContent('#cal-google'), /Signed in as roshan@gmail\.com/);
+  await page.waitForFunction(() => /Last synced/.test(document.querySelector('#cal-google').textContent));     // the first sync finishes by itself (slower on a busy machine)
   assert.match(await page.textContent('#cal-google'), /Last synced/);
   assert.match(await page.textContent('#cal-google'), /It cannot change anything/);
   const ext = await page.evaluate(() => J.data.extEvents.map(e => e.title).sort());

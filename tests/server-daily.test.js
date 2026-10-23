@@ -120,7 +120,7 @@ test('schedules API: edit time and days (validated), run now, history, isolation
   const k = fakeClock(T0);
   const { s, c } = await setup({}, { now: k.now });
   const sch = (await c.get('/api/schedules')).json;
-  assert.deepEqual(sch.schedules.map(x => x.kind), ['briefing', 'deadlines', 'followups', 'backup', 'email']);
+  assert.deepEqual(sch.schedules.map(x => x.kind), ['briefing', 'deadlines', 'followups', 'backup', 'weekly_review', 'email']);
   assert.match(sch.scheduler.timeZone, /Asia\/Dubai/);
   const b = sch.schedules[0];
   let r = await c.patch('/api/schedules/' + b.id, { time: '06:45', days: 'weekdays' });

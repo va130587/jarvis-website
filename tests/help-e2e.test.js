@@ -37,7 +37,7 @@ test('the Help page: how to start, the five common problems, every page explaine
   const problems = await page.$$eval('.hp-prob summary', s => s.map(x => x.textContent));
   assert.equal(problems.length, 5); for (const w of [/port/i, /Node\.js/, /Gmail/, /Firefox/, /e-mail I used/]) assert.ok(problems.some(p => w.test(p)), String(w));
   await page.locator('.hp-prob summary', { hasText: 'Firefox' }).click(); assert.match(await page.innerText('.hp-prob[open] p'), /Chrome or Edge/);
-  assert.equal(await page.locator('.hp-pages dt').count(), 19);
+  assert.equal(await page.locator('.hp-pages dt').count(), 20);
   assert.equal(await page.getAttribute('.nav a[data-view="support"]', 'href'), '#support');
   await page.evaluate(() => { location.hash = 'dashboard'; }); await page.keyboard.press('Control+k'); await page.waitForSelector('#novaPalette:not([hidden])'); await page.keyboard.type('Help'); await page.waitForTimeout(300);
   assert.match(await page.innerText('#novaPalette'), /Help/); await page.keyboard.press('Enter'); await page.waitForFunction(() => J.current() === 'support');
