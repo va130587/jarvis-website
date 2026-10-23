@@ -39,6 +39,7 @@ const { createCapture } = require('./capture');
 const { createWhatIf } = require('./whatif');
 const { createReview } = require('./review');
 const { createEnergy } = require('./energy');
+const { createDecisions } = require('./decisions');
 const { createStatic } = require('./static');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
@@ -63,6 +64,7 @@ function createApp(over, deps) {
   const plApi = createProofLoopApi(cfg, db, pl, adapters, verify);
   const chat = createChat(cfg, db, memory, provider, agent);
   const notifier = createNotifier(cfg, db, deps), life = createLife(cfg, db, { notifier }), briefing = createBriefing(cfg, db), email = createEmail(cfg, db, { fetch: deps.fetch, pl });
+  const decisions = createDecisions(cfg, db, { now, notifier, agent });
   const backups = createBackups(cfg, db, { now });
   const scheduler = createScheduler(cfg, db, deps.jobs || dailyJobs());
   const kb = createKb(cfg, db), energy = createEnergy(cfg, db), prod = createProductivity(cfg, db, { energy }), orbit = createOrbit(cfg, db, { now }), replay = createReplay(cfg, db, { now }), radar = createRadar(cfg, db, { now });
@@ -76,6 +78,7 @@ function createApp(over, deps) {
   createWhatIf(cfg, db).register(router);
   const review = createReview(cfg, db); review.register(router);
   energy.register(router);
+  decisions.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
@@ -112,7 +115,7 @@ function createApp(over, deps) {
   function dailyJobs() {
     const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
     return {
-      everyTick: () => life.deliver(),
+      everyTick: () => Promise.all([life.deliver(), decisions.deliver()]),
       backup: (user, run) => backups.job(user, run),
       async weekly_review(user) {
         const w = review.compute(user.id), nothing = w.finished.empty && w.promises.empty && w.focus.empty && w.spending.empty;
@@ -160,6 +163,7 @@ function createApp(over, deps) {
   function registerDailyTools() {
     if (registry.has('briefing.today')) return;
     life.registerTools(registry);
+    decisions.registerTools(registry);
     registry.register({ name: 'plan.today', risk: 'read', description: 'Suggest a time-blocked plan for the owner\'s working day from overdue and due tasks and promises. It only suggests; nothing is changed.', schema: { type: 'object', properties: {} },
       preview: () => ({ action: 'Plan your day', target: 'NOVA tasks and ProofLoop', changes: [], consequences: 'Nothing changes. It is a suggestion.', undoable: true }),
       run: ctx => prod.plan(db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.user.id)),

@@ -11,7 +11,7 @@ const { checkLayout } = require('../tests/layout-check');
 const { createApp } = require('../server');
 const { seed } = require('./demo');
 
-const PAGES = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'focus', 'life', 'weekreview', 'proofloop', 'whatif', 'insights', 'replay', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security', 'support'];
+const PAGES = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'focus', 'life', 'weekreview', 'journal', 'proofloop', 'whatif', 'insights', 'replay', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security', 'support'];
 const WIDTHS = [390, 768, 1024, 1440];
 
 (async () => {

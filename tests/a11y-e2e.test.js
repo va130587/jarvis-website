@@ -14,8 +14,8 @@ const { createApp } = require('../server');
 const { seed } = require('../scripts/demo');
 
 const AXE = fs.readFileSync(path.join(__dirname, '..', 'node_modules', 'axe-core', 'axe.min.js'), 'utf8');
-const PAGES = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'focus', 'life', 'weekreview', 'proofloop', 'whatif', 'insights', 'replay', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security', 'support'];
-const TITLES = { dashboard: 'Dashboard', briefing: 'Daily Briefing', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', focus: 'Focus and Planner', life: 'Life Tracker', weekreview: 'Weekly Review', proofloop: 'ProofLoop', whatif: 'What if I say yes?', insights: 'Weekly Insights', replay: 'Day Replay', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings', support: 'Help' };
+const PAGES = ['dashboard', 'briefing', 'chat', 'voice', 'email', 'hub', 'focus', 'life', 'weekreview', 'journal', 'proofloop', 'whatif', 'insights', 'replay', 'automation', 'identity', 'memory', 'knowledge', 'usage', 'connections', 'security', 'support'];
+const TITLES = { dashboard: 'Dashboard', briefing: 'Daily Briefing', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', focus: 'Focus and Planner', life: 'Life Tracker', weekreview: 'Weekly Review', journal: 'Decision Journal', proofloop: 'ProofLoop', whatif: 'What if I say yes?', insights: 'Weekly Insights', replay: 'Day Replay', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings', support: 'Help' };
 let browser, app, base;
 test.before(async () => {
   browser = await H.launch();

@@ -32,6 +32,7 @@ Run `npm start`. The first time, the terminal prints a setup address and a one-t
 | Daily Briefing | Overdue, due today, follow-ups, important e-mail, and "the one thing" |
 | NOVA Chat | Ask in plain words; NOVA shows a preview and waits for your approval |
 | Voice Assistant | Push-to-talk with an editable transcript |
+| Decision Journal | Write down a decision and what you expect; NOVA asks later how it turned out and builds an honest record |
 | Weekly Review | Your last full week from your own data, with three suggested priorities for next week, and an optional Sunday evening reminder |
 | What if I say yes? | Try a possible commitment first: see its effect on that day before you agree, nothing is changed |
 | ProofLoop | Your promises tracked to a verified result, with **Can people rely on me?**: how reliable you and others have been, and a heads-up before you promise in a busy week |

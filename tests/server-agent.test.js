@@ -40,7 +40,7 @@ test('browser and server agree on which phrases are NOVA actions (one shared int
 
 test('registry: every tool is complete; state-changing tools can verify; model tool list has strict schemas', async () => {
   const { s } = await setup(); const reg = s.app.registry;
-  assert.deepEqual(reg.list().map(t => t.name).sort(), ['ask.clarify', 'briefing.today', 'commitments.confirm', 'commitments.create', 'commitments.list', 'email.list', 'expenses.add', 'expenses.summary', 'habits.check', 'insights.week', 'kb.search', 'memory.add', 'memory.delete', 'memory.search', 'notes.create', 'notes.list', 'plan.today', 'reminders.create', 'tasks.complete', 'tasks.create', 'tasks.delete', 'tasks.list', 'time.now']);
+  assert.deepEqual(reg.list().map(t => t.name).sort(), ['ask.clarify', 'briefing.today', 'commitments.confirm', 'commitments.create', 'commitments.list', 'decisions.add', 'decisions.review', 'email.list', 'expenses.add', 'expenses.summary', 'habits.check', 'insights.week', 'kb.search', 'memory.add', 'memory.delete', 'memory.search', 'notes.create', 'notes.list', 'plan.today', 'reminders.create', 'tasks.complete', 'tasks.create', 'tasks.delete', 'tasks.list', 'time.now']);
   for (const t of reg.list()) { assert.ok(t.description && t.summarize && t.preview); if (t.risk !== 'read') assert.equal(typeof t.verify, 'function', t.name); }
   assert.throws(() => reg.register({ name: 'bad', risk: 'read', schema: { type: 'object' }, run() {}, preview() {}, summarize() {} }), /bad tool name/);
   assert.throws(() => reg.register({ name: 'x.y', risk: 'write', schema: { type: 'object' }, run() {}, preview() {}, summarize() {} }), /must verify/);

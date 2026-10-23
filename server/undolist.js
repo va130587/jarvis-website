@@ -16,10 +16,10 @@ const NEVER = {
 };
 // What the original action did, if the saved preview is missing
 const PLAIN = { 'tasks.create': 'Created a task', 'tasks.complete': 'Marked a task as done', 'tasks.delete': 'Deleted a task', 'notes.create': 'Saved a note', 'memory.add': 'Saved a memory', 'memory.delete': 'Deleted a memory',
-  'commitments.create': 'Started tracking a commitment', 'commitments.confirm': 'Confirmed a commitment', 'reminders.create': 'Set a reminder', 'expenses.add': 'Recorded an expense', 'habits.check': 'Checked in a habit' };
+  'commitments.create': 'Started tracking a commitment', 'commitments.confirm': 'Confirmed a commitment', 'reminders.create': 'Set a reminder', 'expenses.add': 'Recorded an expense', 'habits.check': 'Checked in a habit', 'decisions.add': 'Recorded a decision', 'decisions.review': 'Recorded how a decision turned out' };
 // What undoing does, in a sentence
 const WILL = { 'tasks.create': 'The task is removed.', 'tasks.complete': 'The task goes back to open.', 'tasks.delete': 'The task is restored.', 'notes.create': 'The note is removed.', 'memory.add': 'The memory is deleted.',
-  'commitments.create': 'The commitment is cancelled.', 'reminders.create': 'The reminder is cancelled.', 'expenses.add': 'The expense is removed.', 'habits.check': 'The check-in is removed.' };
+  'commitments.create': 'The commitment is cancelled.', 'reminders.create': 'The reminder is cancelled.', 'expenses.add': 'The expense is removed.', 'habits.check': 'The check-in is removed.', 'decisions.add': 'The decision is removed from the journal.', 'decisions.review': 'The decision goes back to waiting for its review.' };
 
 function createUndoList(cfg, db, { now, registry, agent, effects }) {
   const pending = new Map();
@@ -38,6 +38,8 @@ function createUndoList(cfg, db, { now, registry, agent, effects }) {
       case 'reminders.create': { const r = row('reminders', o.id); return !r ? 'That reminder no longer exists.' : r.status !== 'pending' ? 'That reminder has already gone off or been cancelled.' : null; }
       case 'expenses.add': { const e = row('expenses', o.id); return !e || e.deleted_at ? 'That expense is already removed.' : null; }
       case 'habits.check': return db.prepare('SELECT 1 FROM habit_checks WHERE habit_id = ? AND user_id = ? AND day = ?').get(o.id, uid, o.day) ? null : 'That check-in is already removed.';
+      case 'decisions.add': { const d = row('decisions', o.id); return !d || d.deleted_at ? 'That decision is already removed.' : null; }
+      case 'decisions.review': { const d = row('decisions', o.id); return !d || d.deleted_at ? 'That decision is gone now.' : d.status !== 'reviewed' ? 'That decision is not marked as reviewed any more.' : null; }
       default: return null;
     }
   }

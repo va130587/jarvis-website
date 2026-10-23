@@ -163,7 +163,12 @@ const MIGRATIONS = [
   // 11: energy marks (high, medium or low at three points of the day) and whether the planner may use my own pattern
   `CREATE TABLE energy_marks (
      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, day TEXT NOT NULL, slot TEXT NOT NULL, level TEXT NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (user_id, day, slot));
-   ALTER TABLE users ADD COLUMN energy_plan INTEGER NOT NULL DEFAULT 0;`
+   ALTER TABLE users ADD COLUMN energy_plan INTEGER NOT NULL DEFAULT 0;`,
+  // 12: the decision journal: what I decided, why, what I expect and when to look back; later how it turned out
+  `CREATE TABLE decisions (
+     id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL, why TEXT, expected TEXT NOT NULL, review_on TEXT NOT NULL,
+     status TEXT NOT NULL DEFAULT 'open', outcome TEXT, outcome_note TEXT, reviewed_at INTEGER, notified_at INTEGER, run_id INTEGER, created_at INTEGER NOT NULL, deleted_at INTEGER);
+   CREATE INDEX decisions_user ON decisions(user_id, status);`
 ];
 
 function migrate(db) {

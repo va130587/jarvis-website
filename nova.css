@@ -541,3 +541,8 @@ dialog.capture { width: min(680px, calc(100vw - 24px)); }
 .en-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2); padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); }
 .en-slot { display: flex; flex-direction: column; } .en-btns { display: flex; flex-wrap: wrap; gap: var(--s2); } .en-btns .chip-btn { min-height: 40px; }
 .en-summary { margin: 0 0 var(--s3); overflow-wrap: anywhere; } .en-plan p { margin: var(--s1) 0 0; }
+
+/* Decision Journal */
+#jnForm .field { margin-bottom: var(--s3); } #jnForm input[type=text], #jnForm textarea, #jnForm input[type=date] { width: 100%; max-width: 560px; } #jnForm .btn { min-height: 40px; }
+.jn-item .btn-row { margin-top: var(--s2); display: flex; flex-wrap: wrap; gap: var(--s2); } .jn-item .btn { min-height: 40px; }
+.jn-line { margin: 0 0 var(--s3); font-size: var(--fs-16); }
