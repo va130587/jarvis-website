@@ -211,3 +211,37 @@ Tested against a stand-in Google server: `tests/server-gmail-setup.test.js` (11 
 - **The real Google login.** Follow "Connect Gmail: step by step" on Smart Email. Expected: Connect Gmail, Google's screen (with "Google hasn't verified this app": Advanced, then Continue), back in NOVA with "Gmail connected (read-only)".
 - **Real inbox reading.** After connecting press **Test connection** (should say Passed) and **Check now** (your real messages appear, sorted with reasons).
 - **Revoke.** Press Disconnect, then open https://myaccount.google.com/permissions: NOVA should no longer be listed. In Testing mode Google also expires access after 7 days, so a weekly reconnect is normal.
+
+## Quick capture, Gmail guide and the new features (Parts 1 to 7)
+
+**Final result: 822 tests, 821 passed, 0 failed, 1 skipped, three full runs in a row** (the skipped test is the one that was skipped before). Speed and size guard: first page 401 KB of a 430 KB limit.
+
+What was added and tested (server tests with exact numbers on fixtures, browser tests with the keyboard, four widths in both themes with axe including best-practice, and 150% text):
+- **Quick capture** (`tests/server-capture.test.js`, `tests/capture-e2e.test.js`): one combined preview, nothing written before Approve, unsure parts unticked, "Not understood" for anything that is not an add, every added item verified and in the Undo list.
+- **Connect Gmail guide** (`tests/server-gmail-setup.test.js`, `tests/gmail-setup-e2e.test.js`): stand-in Google server; each failure has its own plain message; every request to Gmail is a GET; the permission is exactly gmail.readonly; no secret in any response.
+- **Can people rely on me? / Before I promise** (`tests/server-trust.test.js`, `tests/trust-e2e.test.js`).
+- **What if I say yes?** (`tests/server-whatif.test.js`, `tests/whatif-e2e.test.js`): writes nothing.
+- **Weekly Review** and its Sunday notification (`tests/server-review.test.js`, `tests/review-e2e.test.js`): a fixture week with exact numbers, Dubai-midnight edges, an empty week, one notification per week.
+- **Energy marks and the energy-aware plan** (`tests/server-energy.test.js`, `tests/energy-e2e.test.js`).
+- **Decision Journal** (`tests/server-decisions.test.js`, `tests/journal-e2e.test.js`): preview, approval, verification and the Undo list.
+- **Life Timeline** (`tests/server-timeline.test.js`, `tests/timeline-e2e.test.js`): 1,250 events paged exactly once each; a 750-event day.
+- **Privacy** (`tests/server-privacy.test.js`, `tests/privacy-e2e.test.js`): every kind deletes completely, another person's rows are never touched.
+
+Problems found while building, and fixed at the cause:
+- **Old-database migration test:** it rebuilt an old database by dropping columns, and had to also drop the two tables added since (the test was updated, not weakened).
+- **Lists that count things changed legitimately:** the number of scheduled jobs (5 to 6, the weekly review is off by default), the number of pages Help explains, the number of pages in the smoke and accessibility walks, and the list of agent tools (two decision tools).
+- **A timing race in the Google Calendar tests:** they read a message before it had arrived on a busy machine, and failed at random on different tests. They now wait for the message.
+- **Job data older than 12 hours:** the jobs page then fetches live data from the browser, and a voice test saw those outside requests. This is a date effect, not a bug in NOVA; pulling the latest `main` fixed it.
+- **The week picker and energy buttons lost keyboard focus** after the page redrew; focus is now restored.
+- **Accessibility:** a definition list had a stray element inside, and the Gmail guide skipped a heading level; both fixed.
+- **The Privacy page title was so long that the top bar pushed the clock off screen at 1024 px;** the menu name is now "Privacy".
+- **The Weekly Review printed the weekday twice** (seen in a screenshot); fixed.
+
+### Not tested (needs your devices or your accounts): UNVERIFIED
+- **A real Google login for Gmail.** Follow "Connect Gmail: step by step" on Smart Email. Expected: Connect Gmail, at Google choose Advanced then Continue on the "unverified app" screen, back in NOVA with "Gmail connected (read-only)", then **Test connection** says Passed and **Check now** shows your real messages. In Testing mode Google expires access after 7 days.
+- **Real Google and Outlook calendars in What if I say yes?** Tested with calendar events supplied by the browser.
+- **The Sunday 18:00 notification over a real week.** Tested on a fake clock. Turn on the job in Automation Centre and check the bell on Sunday evening.
+- **The Decision Journal notification over real days.** Tested on a fake clock. Record a decision with a review date of today and look for "How did it turn out?" after 09:00 Dubai time.
+- **Real screen readers** (NVDA, VoiceOver) on the new pages: see `docs/ACCESSIBILITY_CHECKLIST.md`.
+- **Screenshots** of each new page are in `docs/screenshots/after/new-features/` (36 images, both themes, 390 and 1440 px). They are fictional demo data.
+
