@@ -295,6 +295,7 @@ test('spoken reminder before events, clashes, free time', async () => {
   await page.keyboard.press('Escape');
   await page.fill('#capIn', 'Meet Sara today at 10:30am');
   await page.press('#capIn', 'Enter');
+  await page.waitForFunction(() => /Added: Meet Sara/.test((document.querySelector('#toast') || {}).textContent || ''));     // the quick add answers a moment later on a busy machine
   assert.match(await toast(page), /Added: Meet Sara.*Heads up: you already have "Team sync" at 10 am\./);
   // Free time inside working hours (9–6), from 8:00 am "now"
   const free = await page.evaluate(() => J.cal.freeSlots('2026-10-15'));
