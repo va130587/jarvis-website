@@ -546,3 +546,10 @@ dialog.capture { width: min(680px, calc(100vw - 24px)); }
 #jnForm .field { margin-bottom: var(--s3); } #jnForm input[type=text], #jnForm textarea, #jnForm input[type=date] { width: 100%; max-width: 560px; } #jnForm .btn { min-height: 40px; }
 .jn-item .btn-row { margin-top: var(--s2); display: flex; flex-wrap: wrap; gap: var(--s2); } .jn-item .btn { min-height: 40px; }
 .jn-line { margin: 0 0 var(--s3); font-size: var(--fs-16); }
+
+/* Life Timeline */
+#tlForm { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3); margin-bottom: var(--s3); } #tlForm .field { flex: 1 1 260px; margin: 0; } #tlForm input { width: 100%; } #tlForm .btn { min-height: 40px; }
+.tl-day { margin-bottom: var(--s3); } .tl-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.tl-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); }
+.tl-time { color: var(--text-2); font-size: var(--fs-12); } .tl-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; } .tl-row .btn { min-height: 40px; }
+@media (max-width: 520px) { .tl-row { grid-template-columns: minmax(0, 1fr) auto; } .tl-time { grid-column: 1 / -1; } }

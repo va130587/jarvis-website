@@ -40,6 +40,7 @@ const { createWhatIf } = require('./whatif');
 const { createReview } = require('./review');
 const { createEnergy } = require('./energy');
 const { createDecisions } = require('./decisions');
+const { createTimeline } = require('./timeline');
 const { createStatic } = require('./static');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
@@ -79,6 +80,7 @@ function createApp(over, deps) {
   const review = createReview(cfg, db); review.register(router);
   energy.register(router);
   decisions.register(router);
+  createTimeline(cfg, db).register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
