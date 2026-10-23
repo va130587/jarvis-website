@@ -519,3 +519,12 @@ dialog.capture { width: min(680px, calc(100vw - 24px)); }
 .trust-rule { margin-top: var(--s3); } .trust-rule summary { cursor: pointer; color: var(--cyan-2); }
 .trust-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3); margin-top: var(--s4); } .trust-form .field { margin: 0; } .trust-form .btn { min-height: 40px; }
 .trust-heads { margin-top: var(--s3); }
+
+/* What if I say yes? */
+.wi-result h2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); overflow-wrap: anywhere; } .wi-result h3 { margin: var(--s4) 0 var(--s2); font-size: var(--fs-16); }
+.wi-summary { margin: 0 0 var(--s2); font-size: var(--fs-16); overflow-wrap: anywhere; }
+.wi-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s2); margin: var(--s3) 0; }
+.wi-stat { padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); display: flex; flex-direction: column; gap: 2px; } .wi-stat dt { font-size: var(--fs-12); color: var(--text-2); } .wi-stat dd { margin: 0; font-size: var(--fs-20); font-family: var(--mono); display: flex; flex-direction: column; gap: 2px; } .wi-stat dd .small-text { font-family: inherit; font-size: var(--fs-12); }
+.wi-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); } .wi-list li { display: flex; flex-direction: column; gap: 2px; padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); overflow-wrap: anywhere; }
+.wi-rules { margin-top: var(--s3); } .wi-rules summary { cursor: pointer; color: var(--cyan-2); }
+#wiForm { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3); } #wiForm .field { flex: 1 1 320px; margin: 0; } #wiForm input[type=text] { width: 100%; } #wiForm .btn { min-height: 40px; }
