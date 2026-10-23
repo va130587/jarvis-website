@@ -159,7 +159,11 @@ const MIGRATIONS = [
   `ALTER TABLE users ADD COLUMN tour_done_at INTEGER;
    UPDATE users SET tour_done_at = created_at;`,
   // 10: the guided demo: which of its five steps this person has done (a JSON list, or NULL)
-  `ALTER TABLE users ADD COLUMN demo_steps TEXT;`
+  `ALTER TABLE users ADD COLUMN demo_steps TEXT;`,
+  // 11: energy marks (high, medium or low at three points of the day) and whether the planner may use my own pattern
+  `CREATE TABLE energy_marks (
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, day TEXT NOT NULL, slot TEXT NOT NULL, level TEXT NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (user_id, day, slot));
+   ALTER TABLE users ADD COLUMN energy_plan INTEGER NOT NULL DEFAULT 0;`
 ];
 
 function migrate(db) {

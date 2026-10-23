@@ -41,8 +41,8 @@ function guessMinutes(title) {
   return 30;
 }
 
-function createProductivity(cfg, db) {
-  const now = cfg.now;
+function createProductivity(cfg, db, deps) {
+  const now = cfg.now, energy = (deps && deps.energy) || null;
 
   /* ---------------- plan my day ---------------- */
   function plan(user, o) {
@@ -77,7 +77,23 @@ function createProductivity(cfg, db) {
       blocks.push({ start: hm(Math.max(s0, lunch[0], from)), end: hm(lunch[1]), kind: 'lunch', title: 'Lunch', why: 'Protected time' }); lunchDone = true; sinceBreak = 0;
       return Math.max(s0, lunch[1]);
     };
-    for (const it of items) {
+    // My own energy pattern (only when I switched it on and there are 7 days of marks): hard tasks (60 minutes or more) are tried in my high-energy hours.
+    // Urgency still comes first: the order only changes inside a group of items with the same urgency.
+    const wins = energy ? energy.windows(uid) : null, HARD = 60, inHigh = m => !!wins && wins.some(w => m >= w[0] && m < w[1]);
+    const minOf = it => Math.min(it.est || guessMinutes(it.title), 180);
+    let ordered = items;
+    if (wins && wins.length) {
+      ordered = []; let cursor = from, lunchSeen = !lunch || from >= lunch[1];
+      for (const rank of [0, 1, 2, 3]) {
+        const group = items.filter(x => x.rank === rank), hard = group.filter(x => minOf(x) >= HARD), easy = group.filter(x => minOf(x) < HARD);
+        while (hard.length || easy.length) {
+          const pick = (inHigh(cursor) ? (hard.length ? hard : easy) : (easy.length ? easy : hard)).shift();
+          ordered.push(pick); cursor += minOf(pick) + 10;
+          if (!lunchSeen && lunch && cursor > lunch[0]) { cursor += lunch[1] - lunch[0]; lunchSeen = true; }
+        }
+      }
+    }
+    for (const it of ordered) {
       const minutes = Math.min(it.est || guessMinutes(it.title), 180), guessed = !it.est;
       if (sinceBreak >= 90 && cur + 10 <= end && (lunchDone || cur + 10 <= lunch[0])) { blocks.push({ start: hm(cur), end: hm(cur + 10), kind: 'break', title: 'Short break', why: 'After 90 minutes of focus' }); cur += 10; sinceBreak = 0; }
       const before = blocks.length, wasDone = lunchDone; let s0 = pastLunch(cur, minutes);
@@ -88,7 +104,7 @@ function createProductivity(cfg, db) {
         unscheduled.push({ title: it.title, why: it.why + '. Needs ' + dur(minutes) + (guessed ? ' (estimated)' : '') + ', which does not fit in the time left.', taskId: it.taskId || null });
         continue;
       }
-      blocks.push({ start: hm(s0), end: hm(s0 + minutes), kind: it.kind, title: it.title, why: it.why, minutes, guessed, taskId: it.taskId || null, commitmentId: it.commitmentId || null });
+      blocks.push({ start: hm(s0), end: hm(s0 + minutes), kind: it.kind, title: it.title, why: it.why + (minutes >= HARD && inHigh(s0) ? '. Placed in your high-energy time' : ''), minutes, guessed, taskId: it.taskId || null, commitmentId: it.commitmentId || null });
       cur = s0 + minutes + 10; sinceBreak += minutes;
     }
     // With calendar events there can be free gaps between them: what did not fit in order may still fit in an earlier gap (most urgent first).
@@ -113,7 +129,7 @@ function createProductivity(cfg, db) {
     const around = cal && (cal.events || cal.allDay.length) ? ' Planned around ' + (cal.events ? cal.events + ' calendar event' + (cal.events === 1 ? '' : 's') + ' (' + dur(busyMin) + ' busy)' : 'no timed calendar events') + (cal.allDay.length ? ', plus ' + cal.allDay.length + ' all-day event' + (cal.allDay.length === 1 ? '' : 's') + ' that do not block time' : '') + '.' : '';
     const summary = (!items.length ? 'Nothing is due or overdue. Your time is yours: pick something you care about.' :
       'Planned ' + blocks.filter(b => b.minutes).length + ' of ' + items.length + ' item' + (items.length === 1 ? '' : 's') + ' (' + dur(planned) + ' of focused work)' + (unscheduled.length ? '; ' + unscheduled.length + ' do' + (unscheduled.length === 1 ? 'es' : '') + ' not fit.' : '.') + (work ? ' Start with "' + work.title + '" at ' + work.start + '.' : '')) + around;
-    return { day, weekday: DAY_NAMES[new Date(day + 'T12:00:00Z').getUTCDay()], window: { start: hm(start), end: hm(end), from: hm(from), lunch: lunch ? [hm(lunch[0]), hm(lunch[1])] : null }, blocks, unscheduled, totals: { plannedMin: planned, freeMin: Math.max(0, windowMin - planned - busyMin) }, calendar: cal, note, summary, generatedAt: t };
+    return { energy: wins && wins.length ? { used: true, windows: wins.map(w => hm(w[0]) + ' to ' + hm(w[1])), note: 'Hard tasks (60 minutes or more) are placed in your usual high-energy time when they fit. Urgent items still come first.' } : null, day, weekday: DAY_NAMES[new Date(day + 'T12:00:00Z').getUTCDay()], window: { start: hm(start), end: hm(end), from: hm(from), lunch: lunch ? [hm(lunch[0]), hm(lunch[1])] : null }, blocks, unscheduled, totals: { plannedMin: planned, freeMin: Math.max(0, windowMin - planned - busyMin) }, calendar: cal, note, summary, generatedAt: t };
   }
 
   /* ---------------- focus sessions ---------------- */

@@ -27,7 +27,7 @@ test('people who already had an account when this was added are marked as done',
   const os = require('os'), path = require('path'), fs = require('fs'), { DatabaseSync } = require('node:sqlite');
   const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'nova-tour-')), 't.db');
   const first = await boot({ NOVA_DB: file }); first.client(); await first.client().login('roshan@example.com');
-  const raw = new DatabaseSync(file); raw.exec('ALTER TABLE users DROP COLUMN tour_done_at'); raw.exec('ALTER TABLE users DROP COLUMN demo_steps'); raw.exec('UPDATE schema_version SET v = 8'); raw.close();     // as it was before the tour existed
+  const raw = new DatabaseSync(file); raw.exec('ALTER TABLE users DROP COLUMN tour_done_at'); raw.exec('ALTER TABLE users DROP COLUMN demo_steps'); raw.exec('DROP TABLE energy_marks'); raw.exec('ALTER TABLE users DROP COLUMN energy_plan'); raw.exec('UPDATE schema_version SET v = 8'); raw.close();     // as it was before the tour existed
   await first.close();
   const second = await boot({ NOVA_DB: file }); const c = second.client(); await c.login('roshan@example.com');
   assert.equal((await c.get('/api/profile')).json.user.tourSeen, true);

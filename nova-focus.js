@@ -82,7 +82,7 @@
       var head = J.head('Productivity', 'Focus and Planner', 'NOVA fits your overdue and due tasks and your promises into your working day, with the reason for each. Then focus on one thing at a time.', '');
       if (!p) return head + J.empty('Planning…');
       var pr = p.proposal, w = pr.window;
-      return head + '<div class="focus-grid"><div class="focus-side">' + timerHTML() +
+      return head + '<div class="focus-grid"><div class="focus-side">' + timerHTML() + (N.energy ? N.energy.panel() : '') +
         '<article class="panel"><h2 class="label">Focus today</h2>' + (f ? '<p class="focus-total"><b class="num">' + dur(f.todayMin) + '</b> today · ' + dur(f.weekMin) + ' this week</p>' + (f.today.length ? '<ul class="mini-list">' + f.today.map(function (x) { return '<li><span class="when">' + new Date(x.startedAt).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit' }) + '</span><span class="what">' + esc(x.title) + '<small>' + (x.status === 'running' ? 'running' : x.minutes + ' min · ' + x.status) + '</small></span></li>'; }).join('') + '</ul>' : '<p class="empty">No sessions yet today.</p>') : '…') + '</article></div>' +
         '<article class="panel plan"><div class="panel-head"><h2 class="label">' + (pr.note ? 'Tomorrow' : 'Today') + ' · ' + esc(pr.weekday) + '</h2><span class="small-text muted">' + esc(w.start) + '–' + esc(w.end) + ' Dubai</span></div>' +
           (pr.note ? '<p class="gmail-msg"><span>' + esc(pr.note) + '</span></p>' : '') +
@@ -94,7 +94,7 @@
           '<div class="btn-row"><button type="button" class="btn" data-act="fSavePlan">Save this plan</button><span class="small-text muted">' + (p.saved ? 'Saved at ' + new Date(p.saved.savedAt).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit' }) + '. ' : '') + 'Planning changes nothing; it is a suggestion.</span></div></article></div>';
     },
     after: function () {
-      N.h.stale('focus', [['plan', planUrl()], ['tasks', '/api/tasks']]);
+      N.h.stale('focus', [['plan', planUrl()], ['tasks', '/api/tasks'], ['energy', '/api/energy']]);
       load().catch(function () {});
       ['pStart', 'pEnd'].forEach(function (id) { var el = $('#' + id); if (el) el.addEventListener('change', function () { st()[id === 'pStart' ? 'planStart' : 'planEnd'] = el.value; J.persist(); replan(); }); });
       var l = $('#pLunch'); if (l) l.addEventListener('change', function () { st().planLunch = l.checked; J.persist(); replan(); });

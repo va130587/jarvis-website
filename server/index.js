@@ -38,6 +38,7 @@ const { createUndoList } = require('./undolist');
 const { createCapture } = require('./capture');
 const { createWhatIf } = require('./whatif');
 const { createReview } = require('./review');
+const { createEnergy } = require('./energy');
 const { createStatic } = require('./static');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.ics': 'text/calendar', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8' };
@@ -64,7 +65,7 @@ function createApp(over, deps) {
   const notifier = createNotifier(cfg, db, deps), life = createLife(cfg, db, { notifier }), briefing = createBriefing(cfg, db), email = createEmail(cfg, db, { fetch: deps.fetch, pl });
   const backups = createBackups(cfg, db, { now });
   const scheduler = createScheduler(cfg, db, deps.jobs || dailyJobs());
-  const kb = createKb(cfg, db), prod = createProductivity(cfg, db), orbit = createOrbit(cfg, db, { now }), replay = createReplay(cfg, db, { now }), radar = createRadar(cfg, db, { now });
+  const kb = createKb(cfg, db), energy = createEnergy(cfg, db), prod = createProductivity(cfg, db, { energy }), orbit = createOrbit(cfg, db, { now }), replay = createReplay(cfg, db, { now }), radar = createRadar(cfg, db, { now });
   registerDailyTools();
   const router = new Router();
   const hdr = securityHeaders(cfg), files = createStatic({ root: cfg.root, types: TYPES, headers: hdr });
@@ -74,6 +75,7 @@ function createApp(over, deps) {
   const portable = createPortable(cfg, db, { now, memory, kb, plApi }); portable.register(router); backups.register(router); createUndoList(cfg, db, { now, registry, agent, effects: fx }).register(router); createCapture(cfg, db, { now, agent, effects: fx, registry }).register(router);
   createWhatIf(cfg, db).register(router);
   const review = createReview(cfg, db); review.register(router);
+  energy.register(router);
 
   // One search across everything you own (the Ctrl+K command palette). Read-only, per user, at most 5 per kind.
   router.get('/api/search', ctx => {
