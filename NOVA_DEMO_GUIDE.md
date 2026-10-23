@@ -114,6 +114,18 @@ Open **Voice Assistant**.
 - **Voice:** the sentence under the status says what your browser can do; **Test my microphone** (needs a microphone) shows a level for 10 seconds and records nothing.
 - **Accessibility:** **Security and Settings → Contrast and text size**: **High contrast**, **Larger (150%)**. Press **Tab** on any page: **Skip to content** appears.
 
+## 9c. The newest features (4 minutes)
+
+- **Quick capture:** press **Capture** in the top bar (or Ctrl+K, then type `capture:`). Paste: `call Sara tomorrow 3pm, AED 40 lunch, note: visa photos need a white background, I promised Sam the slides by Friday, delete my tasks`. One preview: a reminder, an expense, a note and a promise are ticked; the unsure part is not; "delete my tasks" is "Not understood" because Quick capture only adds. Nothing is added until **Approve selected**; then each one is in the Undo list.
+- **Can people rely on me?** (ProofLoop): how many promises you kept on time, per person, with the rule shown. With fewer than 3 counted promises it says "not enough data yet". **Before I promise** (a date) warns when that week already holds 3 or more open promises.
+- **What if I say yes?** (Work): type `Join the workshop tomorrow 2pm to 5pm`. NOVA shows the effect on that day (clashes, free hours, tight tasks and promises, the most at-risk item) and changes nothing. **Add it for real** opens Quick capture.
+- **Weekly Review** (Life): the last full Dubai week with a week picker, three priorities for next week with the rule behind each, **Copy as text** and **Download as Markdown**. In **Automation Centre**, the **Weekly review notification** (Sunday 18:00) is off until you turn it on.
+- **Energy marks** (Focus and Planner): tap High, Medium or Low for the morning, afternoon and evening. The demo has 8 days of marks, so it shows "You usually mark high energy in the morning (6 of 8 days)" and the planner switch is available.
+- **Decision Journal** (Life): the demo has five answered decisions (so the record shows), one waiting for its answer today, and two coming up. Record a new one: a preview first, nothing saved until you approve.
+- **Life Timeline** (Life): everything per day, newest first. Filter by kind, search, press **Show more**.
+- **Privacy** (System, "What NOVA knows about me"): real counts, connected accounts and what each may do, what is encrypted, what NOVA never does, a download, and **Delete…** for one kind of data (preview, type DELETE, approve; it cannot be undone).
+- **Connect Gmail: step by step** (Smart Email, also on Help): the exact addresses for your server with Copy buttons and a live checklist. Real Gmail needs your own Google account (UNVERIFIED here).
+
 ## 9b. Look and feel (30 seconds)
 
 - **Security and Settings → Appearance**: switch between **Deep Space** (dark) and **Daylight** (light). The choice is remembered in this browser and applied before the page appears.

@@ -94,6 +94,7 @@
     cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', loop: '<path d="M5 12a7 7 0 0 1 12-5l2-2v6h-6l2.2-2.2A4.5 4.5 0 0 0 7.5 12M19 12a7 7 0 0 1-12 5l-2 2v-6h6l-2.2 2.2A4.5 4.5 0 0 0 16.5 12"/>',
     auto: '<path d="M13 3 5 13h6l-1 8 8-10h-6z"/>', id: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', mem: '<path d="M12 3c-4 0-7 2-7 5v8c0 3 3 5 7 5s7-2 7-5V8c0-3-3-5-7-5z"/><path d="M5 8c0 3 3 5 7 5s7-2 7-5M5 14c0 3 3 5 7 5s7-2 7-5"/>',
     book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>', cost: '<path d="M4 19h16"/><path d="M7 16V9M12 16V5M17 16v-4"/>', plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
+    eye: '<path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/>',
     tline: '<path d="M7 4v16"/><circle cx="7" cy="8" r="1.6"/><circle cx="7" cy="14" r="1.6"/><path d="M11 8h8M11 14h8"/>',
     week: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M8 15h3"/>',
     fork: '<path d="M5 5v6a4 4 0 0 0 4 4h10"/><path d="m16 11 4 4-4 4"/><circle cx="5" cy="5" r="1.6"/>',
@@ -105,10 +106,10 @@
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', tool: '<circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.4"/>'
   };
   var NOVA_NAV = [['dashboard', 'Dashboard', 'dash'], ['briefing', 'Daily Briefing', 'sun'], ['chat', 'NOVA Chat', 'chat'], ['voice', 'Voice Assistant', 'mic'], ['email', 'Smart Email', 'mail'], ['hub', 'Tasks and Calendar', 'cal'], ['focus', 'Focus and Planner', 'clock'], ['life', 'Life Tracker', 'heart'], ['weekreview', 'Weekly Review', 'week'], ['journal', 'Decision Journal', 'book'], ['timeline', 'Life Timeline', 'tline'], ['proofloop', 'ProofLoop', 'loop'], ['whatif', 'What if I say yes?', 'fork'], ['insights', 'Weekly Insights', 'cost'], ['replay', 'Day Replay', 'replay'],
-    ['automation', 'Automation Centre', 'auto'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock'], ['support', 'Help', 'help']];
+    ['automation', 'Automation Centre', 'auto'], ['identity', 'Personal Identity', 'id'], ['memory', 'Memory Vault', 'mem'], ['knowledge', 'Knowledge Base', 'book'], ['usage', 'AI Usage and Cost', 'cost'], ['connections', 'Connected Apps', 'plug'], ['security', 'Security and Settings', 'lock'], ['privacy', 'Privacy', 'eye'], ['support', 'Help', 'help']];
   // The sidebar in five groups, by when you need them.
   var NAV_GROUPS = [['Today', ['dashboard', 'briefing', 'chat', 'voice']], ['Work', ['email', 'hub', 'focus', 'proofloop', 'whatif', 'automation']], ['Life', ['life', 'weekreview', 'journal', 'timeline', 'insights', 'replay', 'identity']],
-    ['Knowledge', ['knowledge', 'memory']], ['System', ['usage', 'connections', 'security', 'support']]];
+    ['Knowledge', ['knowledge', 'memory']], ['System', ['usage', 'connections', 'security', 'privacy', 'support']]];
   var TOOLS_NAV = [['today', 'Today', 'tool'], ['tasks', 'Tasks', 'tool'], ['calendar', 'Calendar', 'cal'], ['notes', 'Notes', 'book'], ['matches', 'Jobs for you', 'tool'], ['jobs', 'Job finder', 'tool'], ['applications', 'Applications', 'tool'], ['growth', 'Growth', 'cost'], ['review', 'Weekly review', 'cost'], ['profile', 'Job profile', 'id'], ['settings', 'Tool settings', 'tool'], ['help', 'Voice commands', 'mic']];
   function link(v, label, ic, badge) { return '<a href="#' + v + '" data-view="' + v + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (IC[ic] || IC.tool) + '</svg><span>' + esc(label) + '</span>' + (badge ? '<em class="count soon" aria-hidden="true">Soon</em><span class="sr-only"> (upcoming, not built yet)</span>' : '') + '</a>'; }
   function buildNav() {
@@ -185,7 +186,7 @@
 
   /* ================= screens ================= */
   var S = J.screens;
-  Object.assign(J.titles, { life: 'Life Tracker', focus: 'Focus and Planner', insights: 'Weekly Insights', replay: 'Day Replay', briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings', support: 'Help', whatif: 'What if I say yes?', weekreview: 'Weekly Review', journal: 'Decision Journal', timeline: 'Life Timeline' });
+  Object.assign(J.titles, { life: 'Life Tracker', focus: 'Focus and Planner', insights: 'Weekly Insights', replay: 'Day Replay', briefing: 'Daily Briefing', dashboard: 'Dashboard', chat: 'NOVA Chat', voice: 'Voice Assistant', email: 'Smart Email', hub: 'Tasks and Calendar', proofloop: 'ProofLoop', automation: 'Automation Centre', identity: 'Personal Identity', memory: 'Memory Vault', knowledge: 'Knowledge Base', usage: 'AI Usage and Cost', connections: 'Connected Apps', security: 'Security and Settings', support: 'Help', whatif: 'What if I say yes?', weekreview: 'Weekly Review', journal: 'Decision Journal', timeline: 'Life Timeline', privacy: 'Privacy' });
   /* ---- Promise Orbit: open promises, deadlines and tasks circle the orb; distance = how soon, shape + colour + words = state ---- */
   var OSTATE = { overdue: 'Overdue', waiting: 'Waiting for proof', verified: 'Verified', normal: 'Open' }, OGLYPH = { overdue: '!', waiting: '…', verified: '✓', normal: '' };
   function orbitHTML() {

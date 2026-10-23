@@ -553,3 +553,8 @@ dialog.capture { width: min(680px, calc(100vw - 24px)); }
 .tl-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: var(--s2) var(--s3); border: 1px solid var(--edge); border-radius: var(--r-md); }
 .tl-time { color: var(--text-2); font-size: var(--fs-12); } .tl-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; } .tl-row .btn { min-height: 40px; }
 @media (max-width: 520px) { .tl-row { grid-template-columns: minmax(0, 1fr) auto; } .tl-time { grid-column: 1 / -1; } }
+
+/* What NOVA knows about me */
+.pv-sec { margin-bottom: var(--s4); } .pv-row { display: flex; flex-direction: row !important; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2); }
+.pv-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 220px; } .pv-row .btn { min-height: 40px; }
+.pv-del { border-color: rgb(var(--danger-rgb) / .55); margin-bottom: var(--s4); } #pvForm .field { max-width: 280px; } #pvForm .btn { min-height: 40px; }

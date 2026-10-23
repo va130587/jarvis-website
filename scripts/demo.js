@@ -116,10 +116,22 @@ function seed(app, opts) {
     const iso = addDays(today, -back), [h, m] = DEMO_HOURS[(i * 3 + 2) % DEMO_HOURS.length], done = dayStart(iso) + (h * 60 + m) * 60e3;
     db.prepare("INSERT INTO tasks (user_id, title, due, status, source, created_at, completed_at) VALUES (?, ?, ?, 'done', 'demo', ?, ?)").run(uid, title, iso, done - DAYMS, done);
   });
-  spreadActivity(db, uid, now, today); spreadProofLoop(db, uid, now, today);
+  spreadActivity(db, uid, now, today); spreadProofLoop(db, uid, now, today); spreadNewPages(db, uid, now, today);
   app.briefing.create(db.prepare('SELECT * FROM users WHERE id = ?').get(uid), 'schedule');
   app.notifier.notify(uid, { kind: 'briefing', title: 'Your briefing is ready (demo)', body: 'Open Daily Briefing to see what matters today.', link: '#briefing', push: false });
   return { uid, seeded: true };
+}
+
+// The newer pages look alive in the demo: eight days of energy marks (high in the morning on six of them), and a Decision Journal with five answered
+// decisions (so the record shows), one waiting for its answer today and two coming up. All of it is only in the demo database.
+function spreadNewPages(db, uid, now, today) {
+  for (let i = 1; i <= 8; i++) {
+    const day = addDays(today, -i), put = (slot, level) => db.prepare('INSERT OR REPLACE INTO energy_marks (user_id, day, slot, level, updated_at) VALUES (?, ?, ?, ?, ?)').run(uid, day, slot, level, now);
+    put('morning', i <= 6 ? 'high' : 'low'); put('afternoon', i % 3 === 0 ? 'low' : 'medium'); if (i <= 5) put('evening', 'low');
+  }
+  const add = (title, why, expected, reviewOn, status, outcome) => db.prepare('INSERT INTO decisions (user_id, title, why, expected, review_on, status, outcome, reviewed_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(uid, title, why, expected, reviewOn, status, outcome || null, outcome ? now - DAYMS : null, now - 20 * DAYMS);
+  [['Join the study group', 'as_expected'], ['Start the data course early', 'better'], ['Apply to five roles a week', 'as_expected'], ['Skip the career fair', 'worse'], ['Use flash cards for revision', 'as_expected']].forEach(([t, o], i) => add(t, 'A choice I made this term', 'It helps me prepare', addDays(today, -3 - i * 4), 'reviewed', o));
+  add('Take the evening interview slot', 'It is the only slot this week', 'I will be calm and prepared', addDays(today, -1), 'open'); add('Move my notes into NOVA', 'One place for everything', 'I stop losing notes', addDays(today, 9), 'open'); add('Buy a second monitor', 'Study comfort', 'Longer focus sessions', addDays(today, 24), 'open');
 }
 
 async function main() {

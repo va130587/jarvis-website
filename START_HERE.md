@@ -32,6 +32,7 @@ Run `npm start`. The first time, the terminal prints a setup address and a one-t
 | Daily Briefing | Overdue, due today, follow-ups, important e-mail, and "the one thing" |
 | NOVA Chat | Ask in plain words; NOVA shows a preview and waits for your approval |
 | Voice Assistant | Push-to-talk with an editable transcript |
+| Privacy | What NOVA stores about you, who may read what, and how to download or delete one kind of data |
 | Life Timeline | Everything that happened, day by day, with filters and a search |
 | Decision Journal | Write down a decision and what you expect; NOVA asks later how it turned out and builds an honest record |
 | Weekly Review | Your last full week from your own data, with three suggested priorities for next week, and an optional Sunday evening reminder |
