@@ -2,16 +2,16 @@
 
 This file is written by `scripts/collect-jobs.js` every time the collector runs. Do not edit it by hand.
 
-**Last run:** 2026-11-03 18:58 UTC · **34 of 57 sources work**
+**Last run:** 2026-11-04 01:09 UTC · **34 of 57 sources work**
 
 A source can fail because the company has no public board with that name (HTTP 404), the company moved to another system, or the service was down. Failed sources are skipped quietly. After 4 failures in a row a source is only retried on Mondays. To fix a wrong board name, edit `data/sources.json`.
 
 | Company | Board type | Board name | Last checked | Status | Jobs listed | Kept for you |
 | --- | --- | --- | --- | --- | --- | --- |
-| Careem | greenhouse | `careem` | 2026-11-03 18:58 UTC | ✅ works | 11 | 0 |
-| Cobblestone Energy | greenhouse | `cobblestoneenergy4` | 2026-11-03 18:58 UTC | ✅ works | 2 | 0 |
+| Careem | greenhouse | `careem` | 2026-11-04 01:09 UTC | ✅ works | 11 | 0 |
+| Cobblestone Energy | greenhouse | `cobblestoneenergy4` | 2026-11-04 01:09 UTC | ✅ works | 2 | 0 |
 | Tabby | greenhouse | `tabby` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Tamara | greenhouse | `tamara` | 2026-11-03 18:58 UTC | ✅ works | 43 | 4 |
+| Tamara | greenhouse | `tamara` | 2026-11-04 01:09 UTC | ✅ works | 43 | 4 |
 | Talabat | greenhouse | `talabat` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
 | Noon | greenhouse | `noon` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
 | Property Finder | greenhouse | `propertyfinder` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
@@ -21,47 +21,47 @@ A source can fail because the company has no public board with that name (HTTP 4
 | Swvl | greenhouse | `swvl` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
 | Anghami | greenhouse | `anghami` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
 | Delivery Hero | greenhouse | `deliveryhero` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Datadog | greenhouse | `datadog` | 2026-11-03 18:58 UTC | ✅ works | 400 | 0 |
-| Databricks | greenhouse | `databricks` | 2026-11-03 18:58 UTC | ✅ works | 910 | 0 |
-| MongoDB | greenhouse | `mongodb` | 2026-11-03 18:58 UTC | ✅ works | 358 | 0 |
-| GitLab | greenhouse | `gitlab` | 2026-11-03 18:58 UTC | ✅ works | 239 | 0 |
-| Stripe | greenhouse | `stripe` | 2026-11-03 18:58 UTC | ✅ works | 740 | 0 |
-| Cloudflare | greenhouse | `cloudflare` | 2026-11-03 18:58 UTC | ✅ works | 465 | 1 |
-| Twilio | greenhouse | `twilio` | 2026-11-03 18:58 UTC | ✅ works | 134 | 0 |
-| Okta | greenhouse | `okta` | 2026-11-03 18:58 UTC | ✅ works | 392 | 0 |
-| Elastic | greenhouse | `elastic` | 2026-11-03 18:58 UTC | ✅ works | 414 | 0 |
+| Datadog | greenhouse | `datadog` | 2026-11-04 01:09 UTC | ✅ works | 398 | 0 |
+| Databricks | greenhouse | `databricks` | 2026-11-04 01:09 UTC | ✅ works | 914 | 0 |
+| MongoDB | greenhouse | `mongodb` | 2026-11-04 01:09 UTC | ✅ works | 361 | 0 |
+| GitLab | greenhouse | `gitlab` | 2026-11-04 01:09 UTC | ✅ works | 239 | 0 |
+| Stripe | greenhouse | `stripe` | 2026-11-04 01:09 UTC | ✅ works | 745 | 0 |
+| Cloudflare | greenhouse | `cloudflare` | 2026-11-04 01:09 UTC | ✅ works | 468 | 1 |
+| Twilio | greenhouse | `twilio` | 2026-11-04 01:09 UTC | ✅ works | 133 | 0 |
+| Okta | greenhouse | `okta` | 2026-11-04 01:09 UTC | ✅ works | 393 | 0 |
+| Elastic | greenhouse | `elastic` | 2026-11-04 01:09 UTC | ✅ works | 414 | 0 |
 | HubSpot | greenhouse | `hubspot` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Coinbase | greenhouse | `coinbase` | 2026-11-03 18:58 UTC | ✅ works | 264 | 0 |
-| Anthropic | greenhouse | `anthropic` | 2026-11-03 18:58 UTC | ✅ works | 675 | 0 |
-| Figma | greenhouse | `figma` | 2026-11-03 18:58 UTC | ✅ works | 144 | 0 |
-| Monzo | greenhouse | `monzo` | 2026-11-03 18:58 UTC | ✅ works | 56 | 0 |
+| Coinbase | greenhouse | `coinbase` | 2026-11-04 01:09 UTC | ✅ works | 270 | 0 |
+| Anthropic | greenhouse | `anthropic` | 2026-11-04 01:09 UTC | ✅ works | 682 | 0 |
+| Figma | greenhouse | `figma` | 2026-11-04 01:09 UTC | ✅ works | 145 | 0 |
+| Monzo | greenhouse | `monzo` | 2026-11-04 01:09 UTC | ✅ works | 56 | 0 |
 | Checkout.com | greenhouse | `checkoutcom` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
 | Airwallex | greenhouse | `airwallex` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Samsara | greenhouse | `samsara` | 2026-11-03 18:58 UTC | ✅ works | 330 | 0 |
-| Remote.com | greenhouse | `remotecom` | 2026-11-03 18:58 UTC | ✅ works | 0 | 0 |
+| Samsara | greenhouse | `samsara` | 2026-11-04 01:09 UTC | ✅ works | 326 | 0 |
+| Remote.com | greenhouse | `remotecom` | 2026-11-04 01:09 UTC | ✅ works | 0 | 0 |
 | Rippling | greenhouse | `rippling` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Culture Amp | greenhouse | `cultureamp` | 2026-11-03 18:58 UTC | ✅ works | 33 | 0 |
+| Culture Amp | greenhouse | `cultureamp` | 2026-11-04 01:09 UTC | ✅ works | 32 | 0 |
 | Wise | greenhouse | `wiseplc` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Huspy | greenhouse-eu | `huspy` | 2026-11-03 18:58 UTC | ❌ fetch failed |  |  |
-| SumUp | greenhouse-eu | `sumup` | 2026-11-03 18:58 UTC | ❌ fetch failed |  |  |
-| N26 | greenhouse-eu | `n26` | 2026-11-03 18:58 UTC | ❌ fetch failed |  |  |
-| Binance | lever | `binance` | 2026-11-03 18:58 UTC | ✅ works | 5 | 0 |
+| Huspy | greenhouse-eu | `huspy` | 2026-11-04 01:09 UTC | ❌ fetch failed |  |  |
+| SumUp | greenhouse-eu | `sumup` | 2026-11-04 01:09 UTC | ❌ fetch failed |  |  |
+| N26 | greenhouse-eu | `n26` | 2026-11-04 01:09 UTC | ❌ fetch failed |  |  |
+| Binance | lever | `binance` | 2026-11-04 01:09 UTC | ✅ works | 5 | 0 |
 | Kitopi | lever | `kitopi` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Spotify | lever | `spotify` | 2026-11-03 18:58 UTC | ✅ works | 86 | 0 |
-| Palantir | lever | `palantir` | 2026-11-03 18:58 UTC | ✅ works | 304 | 0 |
+| Spotify | lever | `spotify` | 2026-11-04 01:09 UTC | ✅ works | 86 | 0 |
+| Palantir | lever | `palantir` | 2026-11-04 01:09 UTC | ✅ works | 305 | 0 |
 | Rapyd | lever | `rapyd` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
 | Plaid | lever | `plaid` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Outreach | lever | `outreach` | 2026-11-03 18:58 UTC | ✅ works | 19 | 0 |
-| Mistral AI | lever | `mistral` | 2026-11-03 18:58 UTC | ✅ works | 0 | 0 |
-| Crypto.com | lever | `crypto` | 2026-11-03 18:58 UTC | ✅ works | 98 | 0 |
-| Deel | ashby | `deel` | 2026-11-03 18:58 UTC | ✅ works | 0 | 0 |
-| Notion | ashby | `notion` | 2026-11-03 18:58 UTC | ✅ works | 146 | 0 |
-| Ramp | ashby | `ramp` | 2026-11-03 18:58 UTC | ✅ works | 169 | 0 |
-| OpenAI | ashby | `openai` | 2026-11-03 18:58 UTC | ✅ works | 808 | 0 |
-| Linear | ashby | `linear` | 2026-11-03 18:58 UTC | ✅ works | 31 | 0 |
-| Supabase | ashby | `supabase` | 2026-11-03 18:58 UTC | ✅ works | 69 | 2 |
-| Perplexity | ashby | `perplexity` | 2026-11-03 18:58 UTC | ✅ works | 136 | 0 |
-| Cohere | ashby | `cohere` | 2026-11-03 18:58 UTC | ✅ works | 119 | 0 |
+| Outreach | lever | `outreach` | 2026-11-04 01:09 UTC | ✅ works | 19 | 0 |
+| Mistral AI | lever | `mistral` | 2026-11-04 01:09 UTC | ✅ works | 0 | 0 |
+| Crypto.com | lever | `crypto` | 2026-11-04 01:09 UTC | ✅ works | 98 | 0 |
+| Deel | ashby | `deel` | 2026-11-04 01:09 UTC | ✅ works | 0 | 0 |
+| Notion | ashby | `notion` | 2026-11-04 01:09 UTC | ✅ works | 146 | 0 |
+| Ramp | ashby | `ramp` | 2026-11-04 01:09 UTC | ✅ works | 168 | 0 |
+| OpenAI | ashby | `openai` | 2026-11-04 01:09 UTC | ✅ works | 810 | 0 |
+| Linear | ashby | `linear` | 2026-11-04 01:09 UTC | ✅ works | 32 | 0 |
+| Supabase | ashby | `supabase` | 2026-11-04 01:09 UTC | ✅ works | 69 | 2 |
+| Perplexity | ashby | `perplexity` | 2026-11-04 01:09 UTC | ✅ works | 137 | 0 |
+| Cohere | ashby | `cohere` | 2026-11-04 01:09 UTC | ✅ works | 119 | 0 |
 | Remote | ashby | `remote` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
 | Bitpanda | ashby | `bitpanda` | 2026-11-02 18:59 UTC | ❌ Board not found (HTTP 404) |  |  |
-| Remotive (free remote-jobs API) | remotive | `all` | 2026-11-03 18:58 UTC | ✅ works | 10 | 2 |
+| Remotive (free remote-jobs API) | remotive | `all` | 2026-11-03 18:58 UTC | ⏭ skipped (checked recently) | 10 | 2 |
