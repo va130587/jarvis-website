@@ -1,12 +1,7 @@
 {
- "checkedAt": "2026-10-30T01:05:09.028Z",
- "ok": 36,
+ "checkedAt": "2026-11-06T01:15:33.414Z",
+ "ok": 37,
  "broken": [
-  {
-   "url": "https://linuxjourney.com/",
-   "http": 403,
-   "error": ""
-  },
   {
    "url": "https://www.tableau.com/learn/training",
    "http": 403,
